@@ -30,17 +30,23 @@ static int32_t get_pos(void* audiotap)
 }
 
 static struct wav2prg_tolerance turbotape_tolerances[]={{40,40},{40,40}};
+static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,60},{60,60}};
+
+/*prototypes*/
+const struct wav2prg_plugin_functions* kernal_get_get_plugin(void);
 
 
 int main(int argc, char** argv)
 {
-  struct wav2prg_plugin_conf* turbotape = turbotape_get_get_plugin();
+  const struct wav2prg_plugin_functions* turbotape = kernal_get_get_plugin();/*turbotape_get_get_plugin();*/
+  struct wav2prg_plugin_conf conf;
 
   if(argc<2)
     return 1;
   FILE* file = fopen(argv[1],"rb");
+  turbotape->get_new_plugin_state(&conf);
   wav2prg_get_new_context(
   getrawpulse, iseof, get_pos,
-  wav2prg_adaptively_tolerant,  turbotape, turbotape_tolerances, file);
+  wav2prg_adaptively_tolerant, &conf, turbotape, kernal_tolerances/*turbotape_tolerances*/, file);
   return 0;
 }
