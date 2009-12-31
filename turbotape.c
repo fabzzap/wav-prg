@@ -56,10 +56,8 @@ static const struct wav2prg_plugin_functions turbotape_functions = {
     NULL
 };
 
-static const struct wav2prg_plugin_functions* turbotape_get(void)
+PLUGIN_ENTRY(turbotape)
 {
-  return &turbotape_functions;
+  register_loader_func(&turbotape_functions, "Turbo Tape 64");
 }
-
-PLUGIN_ENTRY(turbotape_get)
 

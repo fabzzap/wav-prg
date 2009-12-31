@@ -55,6 +55,7 @@ enum wav2prg_checksum_state {
 struct wav2prg_context;
 struct wav2prg_functions;
 struct wav2prg_plugin_conf;
+struct wav2prg_plugin_functions;
 
 typedef enum wav2prg_return_values (*wav2prg_get_rawpulse_func)(void* audiotap, uint32_t* rawpulse);
 typedef uint8_t                    (*wav2prg_test_eof_func)(void* audiotap);
@@ -72,6 +73,7 @@ typedef enum wav2prg_return_values (*wav2prg_check_checksum)(struct wav2prg_cont
 typedef void                       (*wav2prg_check_checksum_against)(struct wav2prg_context*, uint8_t);
 typedef void                       (*wav2prg_add_byte_to_block)(struct wav2prg_context*, struct wav2prg_plugin_conf*, uint8_t);
 typedef void                       (*wav2prg_get_new_plugin_state)(struct wav2prg_plugin_conf*);
+typedef void                       (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
 
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
@@ -123,9 +125,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
 #elif defined DSDS
 #else
 #define PLUGIN_ENTRY(x) \
-  const struct wav2prg_plugin_functions* x##_get_plugin(void) \
-  { \
-    return x(); \
-  }
+  const void x##_get_plugin(wav2prg_register_loader register_loader_func)
 #endif
 

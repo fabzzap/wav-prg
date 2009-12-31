@@ -338,7 +338,10 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     printf("checksum starts at %d \n",pos);
     context.subclassed_functions.check_checksum_func(&context, &functions, conf);
     pos = get_pos_func(audiotap);
-    printf("name %s start %u end %u ends at %d\n", context.block.name, context.block.start, context.block.end, pos);
+    printf("name %s start %u end %u ends at %d result %s\n", context.block.name, context.block.start, context.block.end, pos,
+	context.checksum_state == wav2prg_checksum_state_unverified ? "unverified" :
+    context.checksum_state == wav2prg_checksum_state_correct ? "correct" :
+    "load error");
   };
   free(context.adaptive_tolerances);
 }

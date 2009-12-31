@@ -160,10 +160,7 @@ static const struct wav2prg_plugin_functions kernal_headerchunk_firstcopy_functi
 	kernal_firstcopy_get_new_state
 };
 
-static const struct wav2prg_plugin_functions* kernal_get(void)
+PLUGIN_ENTRY(kernal)
 {
-  return &kernal_headerchunk_firstcopy_functions;
+  register_loader_func(&kernal_headerchunk_firstcopy_functions, "Kernal header chunk 1st copy");
 }
-
-PLUGIN_ENTRY(kernal_get)
-
