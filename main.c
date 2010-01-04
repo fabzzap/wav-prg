@@ -41,10 +41,12 @@ int main(int argc, char** argv)
 {
   const struct wav2prg_plugin_functions* turbotape;
   struct wav2prg_plugin_conf conf;
+  FILE* file;
 
   if(argc<2)
     return 1;
-  FILE* file = fopen(argv[1],"rb");
+  
+  file = fopen(argv[1],"rb");
   
   register_loaders();
   turbotape = get_loader_by_name("Kernal header chunk 1st copy");

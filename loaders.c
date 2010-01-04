@@ -1,5 +1,8 @@
 #include "wav2prg_api.h"
 
+#include <string.h>
+#include <malloc.h>
+
 struct loader {
 	const struct wav2prg_plugin_functions* functions;
 	const char* name;
