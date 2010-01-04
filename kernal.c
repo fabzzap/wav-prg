@@ -126,9 +126,9 @@ static enum wav2prg_return_values kernal_headerchunk_get_block(struct wav2prg_co
     return kernal_get_block(context, functions, conf, block_size, skipped_at_beginning);
 }
 
-enum wav2prg_return_values kernal_check_checksum(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+enum wav2prg_return_values kernal_get_loaded_checksum(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
-    functions->check_checksum_against(context, 0);
+    *byte = 0;
     return wav2prg_ok;
 }
 
@@ -156,8 +156,9 @@ static const struct wav2prg_plugin_functions kernal_headerchunk_firstcopy_functi
 	kernal_get_first_sync,
 	kernal_headerchunk_get_block_info,
 	kernal_headerchunk_get_block,
-	kernal_check_checksum,
-	kernal_firstcopy_get_new_state
+	kernal_firstcopy_get_new_state,
+  NULL,
+  kernal_get_loaded_checksum
 };
 
 PLUGIN_ENTRY(kernal)

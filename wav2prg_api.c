@@ -7,6 +7,7 @@ struct wav2prg_context {
   wav2prg_test_eof_func test_eof_func;
   wav2prg_get_pos_func get_pos_func;
   wav2prg_get_first_sync get_first_sync;
+  wav2prg_update_checksum update_checksum_func;
   struct wav2prg_functions subclassed_functions;
   struct wav2prg_tolerance* adaptive_tolerances;
   struct wav2prg_tolerance* strict_tolerances;
@@ -97,9 +98,9 @@ static enum wav2prg_return_values get_bit_default(struct wav2prg_context* contex
   if (context->subclassed_functions.get_pulse_func(context, functions, conf, &pulse) == wav2prg_invalid)
     return wav2prg_invalid;
   switch(pulse) {
-case 0 : *bit = 0; return wav2prg_ok;
-case 1 : *bit = 1; return wav2prg_ok;
-default:           return wav2prg_invalid;
+  case 0 : *bit = 0; return wav2prg_ok;
+  case 1 : *bit = 1; return wav2prg_ok;
+  default:           return wav2prg_invalid;
   }
 }
 
@@ -113,13 +114,18 @@ static void wav2prg_reset_checksum(struct wav2prg_context* context)
   wav2prg_reset_checksum_to(context, 0);
 }
 
-static void wav2prg_update_checksum(struct wav2prg_context* context, struct wav2prg_plugin_conf* conf, uint8_t byte)
+static void update_checksum_add(struct wav2prg_context* context, uint8_t byte)
 {
-  switch (conf->checksum_type) {
-case wav2prg_xor_checksum: context->checksum ^= byte; return;
-case wav2prg_add_checksum: context->checksum += byte; return;
-default:;
-  }
+  context->checksum += byte;
+}
+
+static void update_checksum_xor(struct wav2prg_context* context, uint8_t byte)
+{
+  context->checksum ^= byte;
+}
+
+static void dont_update_checksum(struct wav2prg_context* context, uint8_t byte)
+{
 }
 
 static enum wav2prg_return_values evolve_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
@@ -240,30 +246,33 @@ static void check_checksum_against_default(struct wav2prg_context* context, uint
 
 static enum wav2prg_return_values check_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  uint8_t loaded_checksum;
+  if (conf->checksum_type != wav2prg_no_checksum)
+  {
+    uint8_t loaded_checksum;
 
-  printf("computed checksum %u (%02x)", context->checksum, context->checksum);
-  if (context->subclassed_functions.get_byte_func(context, functions, conf, &loaded_checksum))
-    return wav2prg_invalid;
-  printf("loaded checksum %u (%02x)\n", loaded_checksum, loaded_checksum);
-  check_checksum_against_default(context, loaded_checksum);
+    printf("computed checksum %u (%02x)", context->checksum, context->checksum);
+    if (context->subclassed_functions.get_loaded_checksum_func(context, functions, conf, &loaded_checksum) == wav2prg_invalid)
+      return wav2prg_invalid;
+    printf("loaded checksum %u (%02x)\n", loaded_checksum, loaded_checksum);
+    check_checksum_against_default(context, loaded_checksum);
+  }
   return wav2prg_ok;
 }
 
 static void add_byte_to_block_default(struct wav2prg_context *context, struct wav2prg_plugin_conf* conf, uint8_t byte)
 {
   context->block.data[context->block_current_size++] = byte;
-  wav2prg_update_checksum(context, conf, byte);
+  context->update_checksum_func(context, byte);
 }
 
 void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
                              wav2prg_test_eof_func test_eof_func,
                              wav2prg_get_pos_func get_pos_func,
                              enum wav2prg_tolerance_type tolerance_type,
-struct wav2prg_plugin_conf* conf,
-  const struct wav2prg_plugin_functions* plugin_functions,
-struct wav2prg_tolerance* tolerances,
-  void* audiotap)
+                             struct wav2prg_plugin_conf* conf,
+                             const struct wav2prg_plugin_functions* plugin_functions,
+                             struct wav2prg_tolerance* tolerances,
+                             void* audiotap)
 {
   struct wav2prg_context context =
   {
@@ -272,17 +281,21 @@ struct wav2prg_tolerance* tolerances,
     get_pos_func,
     plugin_functions->get_first_sync ? plugin_functions->get_first_sync :
     conf->findpilot_type == wav2prg_synconbit ? sync_to_bit : sync_to_byte,
+    plugin_functions->update_checksum_func ? plugin_functions->update_checksum_func :
+    conf->checksum_type == wav2prg_add_checksum ? update_checksum_add :
+    conf->checksum_type == wav2prg_xor_checksum ? update_checksum_xor :
+    dont_update_checksum,
     {
       get_sync,
-        get_pulse_intolerant,
-        plugin_functions->get_bit_func ? plugin_functions->get_bit_func : get_bit_default,
-        plugin_functions->get_byte_func ? plugin_functions->get_byte_func : get_byte_default,
-        get_word_default,
-        get_word_bigendian_default,
-        plugin_functions->get_block_func ? plugin_functions->get_block_func : get_block_default,
-        plugin_functions->check_checksum_func ? plugin_functions->check_checksum_func : check_checksum_default,
-        check_checksum_against_default,
-        add_byte_to_block_default
+      get_pulse_intolerant,
+      plugin_functions->get_bit_func ? plugin_functions->get_bit_func : get_bit_default,
+      plugin_functions->get_byte_func ? plugin_functions->get_byte_func : get_byte_default,
+      get_word_default,
+      get_word_bigendian_default,
+      plugin_functions->get_block_func ? plugin_functions->get_block_func : get_block_default,
+      check_checksum_default,
+      plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_byte_default,
+      add_byte_to_block_default
     },
     tolerance_type == wav2prg_adaptively_tolerant ?
     calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths) : NULL,
@@ -301,7 +314,7 @@ struct wav2prg_tolerance* tolerances,
     get_word_bigendian_default,
     get_block_default,
     check_checksum_default,
-    check_checksum_against_default,
+    get_byte_default,
     add_byte_to_block_default
   };
 
@@ -317,8 +330,8 @@ struct wav2prg_tolerance* tolerances,
     if(res != wav2prg_ok)
       continue;
     functions.get_pulse_func = tolerance_type == wav2prg_tolerant ? get_pulse_tolerant :
-      tolerance_type == wav2prg_adaptively_tolerant ?
-get_pulse_adaptively_tolerant : get_pulse_intolerant;
+      tolerance_type == wav2prg_adaptively_tolerant ? get_pulse_adaptively_tolerant :
+      get_pulse_intolerant;
 
     printf("found something starting at %d \n",pos);
     pos = get_pos_func(audiotap);
