@@ -31,11 +31,7 @@ static int32_t get_pos(void* audiotap)
 }
 
 static struct wav2prg_tolerance turbotape_tolerances[]={{40,40},{40,40}};
-static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,60},{60,60}};
-
-/*prototypes*/
-const struct wav2prg_plugin_functions* kernal_get_get_plugin(void);
-
+static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,65},{60,60}};
 
 int main(int argc, char** argv)
 {
@@ -50,9 +46,8 @@ int main(int argc, char** argv)
   
   register_loaders();
   turbotape = get_loader_by_name("Kernal header chunk 1st copy");
-  turbotape->get_new_plugin_state(&conf);
   wav2prg_get_new_context(
   getrawpulse, iseof, get_pos,
-  wav2prg_adaptively_tolerant, &conf, turbotape, kernal_tolerances/*turbotape_tolerances*/, file);
+  wav2prg_adaptively_tolerant, turbotape, kernal_tolerances/*turbotape_tolerances*/, file);
   return 0;
 }

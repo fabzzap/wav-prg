@@ -265,15 +265,49 @@ static void add_byte_to_block_default(struct wav2prg_context *context, struct wa
   context->update_checksum_func(context, byte);
 }
 
+static enum wav2prg_return_values get_loaded_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+{
+  return context->subclassed_functions.get_byte_func(context, functions, conf, byte);
+}
+
+static struct wav2prg_plugin_conf* get_new_state(const struct wav2prg_plugin_functions* plugin_functions)
+{
+  struct wav2prg_plugin_conf* conf = calloc(1, sizeof(struct wav2prg_plugin_conf));
+  const struct wav2prg_plugin_conf *model_conf = plugin_functions->get_new_plugin_state();
+  const struct wav2prg_size_of_private_state* size_of_private_state = (const struct wav2prg_size_of_private_state*)model_conf->private_state;
+
+  conf->endianness = model_conf->endianness;
+  conf->checksum_type = model_conf->checksum_type;
+  conf->findpilot_type = model_conf->findpilot_type;
+  conf->pilot_byte = model_conf->pilot_byte;
+
+  conf->num_pulse_lengths = model_conf->num_pulse_lengths;
+  conf->ideal_pulse_lengths = malloc(conf->num_pulse_lengths * sizeof(uint16_t));
+  memcpy(conf->ideal_pulse_lengths, model_conf->ideal_pulse_lengths, conf->num_pulse_lengths * sizeof(uint16_t));
+  conf->thresholds = malloc((conf->num_pulse_lengths - 1) * sizeof(uint16_t));
+  memcpy(conf->thresholds, model_conf->thresholds, (conf->num_pulse_lengths - 1) * sizeof(uint16_t));
+
+  conf->len_of_pilot_sequence = model_conf->len_of_pilot_sequence;
+  conf->pilot_sequence = malloc(conf->len_of_pilot_sequence);
+  memcpy(conf->pilot_sequence, model_conf->pilot_sequence, conf->len_of_pilot_sequence);
+
+  if (size_of_private_state)
+  {
+    conf->private_state = malloc(size_of_private_state->size_of_private_state);
+  }
+
+  return conf;
+}
+
 void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
                              wav2prg_test_eof_func test_eof_func,
                              wav2prg_get_pos_func get_pos_func,
                              enum wav2prg_tolerance_type tolerance_type,
-                             struct wav2prg_plugin_conf* conf,
                              const struct wav2prg_plugin_functions* plugin_functions,
                              struct wav2prg_tolerance* tolerances,
                              void* audiotap)
 {
+  struct wav2prg_plugin_conf* conf = get_new_state(plugin_functions);
   struct wav2prg_context context =
   {
     rawpulse_func,
@@ -294,7 +328,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       get_word_bigendian_default,
       plugin_functions->get_block_func ? plugin_functions->get_block_func : get_block_default,
       check_checksum_default,
-      plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_byte_default,
+      plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default,
       add_byte_to_block_default
     },
     tolerance_type == wav2prg_adaptively_tolerant ?
@@ -314,7 +348,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     get_word_bigendian_default,
     get_block_default,
     check_checksum_default,
-    get_byte_default,
+    get_loaded_checksum_default,
     add_byte_to_block_default
   };
 
@@ -324,12 +358,12 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     int32_t pos;
 
     context.checksum = 0;
-    functions.get_pulse_func = get_pulse_intolerant;
+    context.subclassed_functions.get_pulse_func = functions.get_pulse_func = get_pulse_intolerant;
     pos = get_pos_func(audiotap);
     res = get_sync(&context, &functions, conf);
     if(res != wav2prg_ok)
       continue;
-    functions.get_pulse_func = tolerance_type == wav2prg_tolerant ? get_pulse_tolerant :
+    context.subclassed_functions.get_pulse_func = functions.get_pulse_func = tolerance_type == wav2prg_tolerant ? get_pulse_tolerant :
       tolerance_type == wav2prg_adaptively_tolerant ? get_pulse_adaptively_tolerant :
       get_pulse_intolerant;
 

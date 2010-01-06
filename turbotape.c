@@ -25,26 +25,27 @@ static enum wav2prg_return_values turbotape_get_block_info(struct wav2prg_contex
   return wav2prg_ok;
 }
 
-static void turbotape_get_state(struct wav2prg_plugin_conf* conf)
-{
-  uint16_t turbotape_thresholds[]={263};
-  uint16_t turbotape_ideal_pulse_lengths[]={224, 336};
-  uint8_t turbotape_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
+static uint16_t turbotape_thresholds[]={263};
+static uint16_t turbotape_ideal_pulse_lengths[]={224, 336};
+static uint8_t turbotape_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
-	const struct wav2prg_plugin_conf turbotape =
-	{
-	  msbf,
-	  wav2prg_xor_checksum,
-	  2,
-	  turbotape_thresholds,
-	  turbotape_ideal_pulse_lengths,
-	  wav2prg_synconbyte,
-	  2,
-	  9,
-	  turbotape_pilot_sequence,
-	  NULL
-	};
-	memcpy(conf, &turbotape, sizeof(struct wav2prg_plugin_conf));
+static const struct wav2prg_plugin_conf turbotape =
+{
+  msbf,
+  wav2prg_xor_checksum,
+  2,
+  turbotape_thresholds,
+  turbotape_ideal_pulse_lengths,
+  wav2prg_synconbyte,
+  2,
+  9,
+  turbotape_pilot_sequence,
+  NULL
+};
+
+static const struct wav2prg_plugin_conf* turbotape_get_state(void)
+{
+  return &turbotape;
 }
 
 static const struct wav2prg_plugin_functions turbotape_functions = {
@@ -53,7 +54,7 @@ static const struct wav2prg_plugin_functions turbotape_functions = {
     NULL,
     turbotape_get_block_info,
     NULL,
-    NULL,
+    turbotape_get_state,
     NULL,
     NULL
 };
