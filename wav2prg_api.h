@@ -135,6 +135,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
 #elif defined DSDS
 #else
 #define PLUGIN_ENTRY(x) \
-  const void x##_get_plugin(wav2prg_register_loader register_loader_func)
+  void x##_get_plugin(wav2prg_register_loader register_loader_func)
 #endif
 

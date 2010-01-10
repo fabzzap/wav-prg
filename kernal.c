@@ -198,3 +198,4 @@ PLUGIN_ENTRY(kernal)
   register_loader_func(&kernal_headerchunk_firstcopy_functions, "Kernal header chunk 1st copy");
   register_loader_func(&kernal_headerchunk_secondcopy_functions, "Kernal header chunk 2nd copy");
 }
+

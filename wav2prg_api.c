@@ -1,6 +1,7 @@
 #include "wav2prg_api.h"
 
 #include <malloc.h>
+#include <string.h>
 
 struct wav2prg_context {
   wav2prg_get_rawpulse_func get_rawpulse;
