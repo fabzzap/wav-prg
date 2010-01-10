@@ -75,7 +75,8 @@ typedef enum wav2prg_sync_return_values (*wav2prg_get_first_sync)(struct wav2prg
 typedef enum wav2prg_return_values (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, char*, uint16_t*, uint16_t*);
 typedef enum wav2prg_return_values (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef enum wav2prg_return_values (*wav2prg_get_loaded_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
-typedef void                       (*wav2prg_update_checksum)(struct wav2prg_context* context, uint8_t byte);
+typedef void                       (*wav2prg_update_checksum)(struct wav2prg_context*, uint8_t byte);
+typedef uint8_t                    (*wav2prg_compute_checksum_step)(uint8_t, uint8_t);
 typedef void                       (*wav2prg_add_byte_to_block)(struct wav2prg_context*, struct wav2prg_plugin_conf*, uint8_t);
 typedef const struct wav2prg_plugin_conf*(*wav2prg_get_new_plugin_state)(void);
 typedef void                       (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
@@ -90,6 +91,7 @@ struct wav2prg_functions {
   wav2prg_get_block_func get_block_func;
   wav2prg_check_checksum check_checksum_func;
   wav2prg_get_loaded_checksum get_loaded_checksum_func;
+  wav2prg_update_checksum update_checksum_func;
   wav2prg_add_byte_to_block add_byte_to_block;
 };
 
@@ -105,7 +107,7 @@ struct wav2prg_plugin_functions {
   wav2prg_get_block_info get_block_info;
   wav2prg_get_block_func get_block_func;
   wav2prg_get_new_plugin_state get_new_plugin_state;
-  wav2prg_update_checksum update_checksum_func;
+  wav2prg_compute_checksum_step compute_checksum_step;
   wav2prg_get_loaded_checksum get_loaded_checksum_func;
 };
 

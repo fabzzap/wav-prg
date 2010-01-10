@@ -8,7 +8,7 @@ struct wav2prg_context {
   wav2prg_test_eof_func test_eof_func;
   wav2prg_get_pos_func get_pos_func;
   wav2prg_get_first_sync get_first_sync;
-  wav2prg_update_checksum update_checksum_func;
+  wav2prg_compute_checksum_step compute_checksum_step;
   struct wav2prg_functions subclassed_functions;
   struct wav2prg_tolerance* adaptive_tolerances;
   struct wav2prg_tolerance* strict_tolerances;
@@ -115,18 +115,24 @@ static void wav2prg_reset_checksum(struct wav2prg_context* context)
   wav2prg_reset_checksum_to(context, 0);
 }
 
-static void update_checksum_add(struct wav2prg_context* context, uint8_t byte)
+static void update_checksum_default(struct wav2prg_context* context, uint8_t byte)
 {
-  context->checksum += byte;
+  context->checksum = context->compute_checksum_step(context->checksum, byte);
 }
 
-static void update_checksum_xor(struct wav2prg_context* context, uint8_t byte)
+static uint8_t compute_checksum_step_add(uint8_t old_checksum, uint8_t byte)
 {
-  context->checksum ^= byte;
+  return old_checksum + byte;
 }
 
-static void dont_update_checksum(struct wav2prg_context* context, uint8_t byte)
+static uint8_t compute_checksum_step_xor(uint8_t old_checksum, uint8_t byte)
 {
+  return old_checksum ^ byte;
+}
+
+static uint8_t compute_checksum_step_nothing(uint8_t old_checksum, uint8_t byte)
+{
+  return old_checksum;
 }
 
 static enum wav2prg_return_values evolve_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
@@ -136,9 +142,9 @@ static enum wav2prg_return_values evolve_byte(struct wav2prg_context* context, c
   if (res == wav2prg_invalid)
     return wav2prg_invalid;
   switch (conf->endianness) {
-case lsbf: *byte = (*byte >> 1) | (128 * bit); return wav2prg_ok;
-case msbf: *byte = (*byte << 1) |        bit ; return wav2prg_ok;
-default  : return wav2prg_invalid;
+  case lsbf: *byte = (*byte >> 1) | (128 * bit); return wav2prg_ok;
+  case msbf: *byte = (*byte << 1) |        bit ; return wav2prg_ok;
+  default  : return wav2prg_invalid;
   }
 }
 
@@ -263,7 +269,7 @@ static enum wav2prg_return_values check_checksum_default(struct wav2prg_context*
 static void add_byte_to_block_default(struct wav2prg_context *context, struct wav2prg_plugin_conf* conf, uint8_t byte)
 {
   context->block.data[context->block_current_size++] = byte;
-  context->update_checksum_func(context, byte);
+  update_checksum_default(context, byte);
 }
 
 static enum wav2prg_return_values get_loaded_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
@@ -316,10 +322,10 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     get_pos_func,
     plugin_functions->get_first_sync ? plugin_functions->get_first_sync :
     conf->findpilot_type == wav2prg_synconbit ? sync_to_bit : sync_to_byte,
-    plugin_functions->update_checksum_func ? plugin_functions->update_checksum_func :
-    conf->checksum_type == wav2prg_add_checksum ? update_checksum_add :
-    conf->checksum_type == wav2prg_xor_checksum ? update_checksum_xor :
-    dont_update_checksum,
+    plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step :
+    conf->checksum_type == wav2prg_add_checksum ? compute_checksum_step_add :
+    conf->checksum_type == wav2prg_xor_checksum ? compute_checksum_step_xor :
+    compute_checksum_step_nothing,
     {
       get_sync,
       get_pulse_intolerant,
@@ -330,6 +336,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       plugin_functions->get_block_func ? plugin_functions->get_block_func : get_block_default,
       check_checksum_default,
       plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default,
+      update_checksum_default,
       add_byte_to_block_default
     },
     tolerance_type == wav2prg_adaptively_tolerant ?
@@ -350,6 +357,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     get_block_default,
     check_checksum_default,
     get_loaded_checksum_default,
+    update_checksum_default,
     add_byte_to_block_default
   };
 
