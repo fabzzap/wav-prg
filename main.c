@@ -36,7 +36,6 @@ static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,65},{60,60}};
 int main(int argc, char** argv)
 {
   const struct wav2prg_plugin_functions* turbotape;
-  struct wav2prg_plugin_conf conf;
   FILE* file;
 
   if(argc<2)

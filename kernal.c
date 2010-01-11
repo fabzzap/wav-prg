@@ -1,14 +1,9 @@
 #include "wav2prg_api.h"
 
-struct kernal_state {
-  uint8_t headerchunk_first_byte;
-};
-
 static uint16_t kernal_thresholds[]={448, 576};
 static uint16_t kernal_ideal_pulse_lengths[]={384, 512, 688};
 static uint8_t kernal_1stcopy_pilot_sequence[]={137,136,135,134,133,132,131,130,129};
 static uint8_t kernal_2ndcopy_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
-static struct wav2prg_size_of_private_state size_of_private_state = {sizeof(struct kernal_state)};
 
 const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
 {
@@ -21,7 +16,7 @@ const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
   0,/*ignored, overriding get_first_sync*/
   9,
   kernal_1stcopy_pilot_sequence,
-  &size_of_private_state
+  NULL
 };
 
 const struct wav2prg_plugin_conf kernal_headerchunk_second_copy =
@@ -35,7 +30,7 @@ const struct wav2prg_plugin_conf kernal_headerchunk_second_copy =
   0,/*ignored, overriding get_first_sync*/
   9,
   kernal_2ndcopy_pilot_sequence,
-  &size_of_private_state
+  NULL
 };
 
 static enum wav2prg_return_values kernal_get_bit_func(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit)
@@ -106,17 +101,33 @@ enum wav2prg_return_values kernal_get_byte(struct wav2prg_context* context, cons
 
 enum wav2prg_return_values kernal_headerchunk_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, char* name, uint16_t* start, uint16_t* end)
 {
-  uint8_t byte;
-  if(sync_with_byte_and_get_it(context, functions, conf, &byte, 0)!=byte_found)
+  uint16_t skipped_at_beginning;
+  uint16_t num_of_necessary_bytes = 21;
+  uint8_t first_byte;
+  uint8_t i;
+
+  functions->enable_checksum_func(context);
+
+  if (functions->get_block_func(context, functions, conf, &num_of_necessary_bytes, &skipped_at_beginning) == wav2prg_invalid)
+  {
     return wav2prg_invalid;
-  if(byte!=1 && byte!=3)
+  }
+  first_byte = functions->peek_block_func(context, 0);
+  if (first_byte != 1 && first_byte != 3){
     return wav2prg_invalid;
+  }
+  for(i = 0; i < 16; i++)
+    name[i] = functions->peek_block_func(context, i + 5);
+
   *start=828;
   *end=1020;
-  ((struct kernal_state*)conf->private_state)->headerchunk_first_byte = byte;
+
   return wav2prg_ok;
 }
 
+/* This differs from the default implementation, functions->get_block_func(), because it is
+   aware that sync_with_byte_and_get_it() can return eof_marker_found. In that case,
+   the block is shorter than expected but still valid */
 static enum wav2prg_return_values kernal_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* block_size, uint16_t* skipped_at_beginning)
 {
   uint16_t bytes_received = 0;
@@ -151,8 +162,12 @@ static enum wav2prg_return_values kernal_datachunk_get_block(struct wav2prg_cont
 
 static enum wav2prg_return_values kernal_headerchunk_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* block_size, uint16_t* skipped_at_beginning)
 {
-  functions->add_byte_to_block(context, conf, ((struct kernal_state*)conf->private_state)->headerchunk_first_byte);
-  return kernal_get_block(context, functions, conf, block_size, skipped_at_beginning);
+  enum wav2prg_return_values ret;
+  (*block_size) -= 20;
+  ret = kernal_get_block(context, functions, conf, block_size, skipped_at_beginning);
+  if(ret == wav2prg_ok)
+    (*block_size) += 20;
+  return ret;
 }
 
 enum wav2prg_return_values kernal_get_loaded_checksum(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)

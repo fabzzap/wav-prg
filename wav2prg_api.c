@@ -18,6 +18,7 @@ struct wav2prg_context {
   struct wav2prg_block block;
   uint16_t block_total_size;
   uint16_t block_current_size;
+  uint8_t checksum_enabled;
 };
 
 static enum wav2prg_return_values get_pulse_tolerant(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
@@ -117,6 +118,11 @@ static void wav2prg_reset_checksum(struct wav2prg_context* context)
 
 static void update_checksum_default(struct wav2prg_context* context, uint8_t byte)
 {
+  if (!context->checksum_enabled)
+  {
+    return;
+  }
+
   context->checksum = context->compute_checksum_step(context->checksum, byte);
 }
 
@@ -133,6 +139,16 @@ static uint8_t compute_checksum_step_xor(uint8_t old_checksum, uint8_t byte)
 static uint8_t compute_checksum_step_nothing(uint8_t old_checksum, uint8_t byte)
 {
   return old_checksum;
+}
+
+static void enable_checksum_default(struct wav2prg_context* context)
+{
+  context->checksum_enabled = 1;
+}
+
+static void disable_checksum_default(struct wav2prg_context* context)
+{
+  context->checksum_enabled = 0;
 }
 
 static enum wav2prg_return_values evolve_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
@@ -156,6 +172,8 @@ static enum wav2prg_return_values get_byte_default(struct wav2prg_context* conte
     if(evolve_byte(context, functions, conf, byte) == wav2prg_invalid)
       return wav2prg_invalid;
   }
+
+  update_checksum_default(context, *byte);
 
   return wav2prg_ok;
 }
@@ -269,12 +287,16 @@ static enum wav2prg_return_values check_checksum_default(struct wav2prg_context*
 static void add_byte_to_block_default(struct wav2prg_context *context, struct wav2prg_plugin_conf* conf, uint8_t byte)
 {
   context->block.data[context->block_current_size++] = byte;
-  update_checksum_default(context, byte);
 }
 
 static enum wav2prg_return_values get_loaded_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
   return context->subclassed_functions.get_byte_func(context, functions, conf, byte);
+}
+
+static uint8_t peek_block_default(struct wav2prg_context* context, uint16_t where)
+{
+  return context->block.data[where];
 }
 
 static struct wav2prg_plugin_conf* get_new_state(const struct wav2prg_plugin_functions* plugin_functions)
@@ -337,14 +359,23 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       check_checksum_default,
       plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default,
       update_checksum_default,
-      add_byte_to_block_default
+      add_byte_to_block_default,
+      enable_checksum_default,
+      disable_checksum_default,
+      peek_block_default
     },
     tolerance_type == wav2prg_adaptively_tolerant ?
     calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths) : NULL,
     tolerances,
     audiotap,
     0,
-    wav2prg_no_checksum
+    wav2prg_checksum_state_unverified,
+    {
+      0,0,"                "
+    },
+    0,
+    0,
+    0
   };
   struct wav2prg_functions functions =
   {
@@ -358,7 +389,10 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     check_checksum_default,
     get_loaded_checksum_default,
     update_checksum_default,
-    add_byte_to_block_default
+    add_byte_to_block_default,
+    enable_checksum_default,
+    disable_checksum_default,
+    peek_block_default
   };
 
   while(!context.test_eof_func(context.audiotap)){
@@ -369,6 +403,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     context.checksum = 0;
     context.subclassed_functions.get_pulse_func = functions.get_pulse_func = get_pulse_intolerant;
     pos = get_pos_func(audiotap);
+    disable_checksum_default(&context);
     res = get_sync(&context, &functions, conf);
     if(res != wav2prg_ok)
       continue;
@@ -388,6 +423,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     printf("block info ends at %d\n",pos);
     real_block_size = context.block_total_size = context.block.end - context.block.start;
     context.block_current_size = 0;
+    enable_checksum_default(&context);
     res = context.subclassed_functions.get_block_func(&context, &functions, conf, &real_block_size, &skipped_at_beginning);
     if(res != wav2prg_ok)
       continue;
