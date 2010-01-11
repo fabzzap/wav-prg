@@ -262,22 +262,18 @@ static enum wav2prg_return_values get_sync(struct wav2prg_context* context, cons
   return wav2prg_ok;
 }
 
-static void check_checksum_against_default(struct wav2prg_context* context, uint8_t loaded_checksum)
-{
-  context->checksum_state = context->checksum == loaded_checksum ? wav2prg_checksum_state_correct : wav2prg_checksum_state_load_error;
-}
-
 static enum wav2prg_return_values check_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   if (conf->checksum_type != wav2prg_no_checksum)
   {
     uint8_t loaded_checksum;
+    uint8_t computed_checksum = context->checksum;
 
-    printf("computed checksum %u (%02x)", context->checksum, context->checksum);
+    printf("computed checksum %u (%02x)", computed_checksum, computed_checksum);
     if (context->subclassed_functions.get_loaded_checksum_func(context, functions, conf, &loaded_checksum) == wav2prg_invalid)
       return wav2prg_invalid;
     printf("loaded checksum %u (%02x)\n", loaded_checksum, loaded_checksum);
-    check_checksum_against_default(context, loaded_checksum);
+    context->checksum_state = computed_checksum == loaded_checksum ? wav2prg_checksum_state_correct : wav2prg_checksum_state_load_error;
   }
   return wav2prg_ok;
 }
