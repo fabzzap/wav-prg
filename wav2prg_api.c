@@ -14,7 +14,6 @@ struct wav2prg_context {
   struct wav2prg_tolerance* strict_tolerances;
   void *audiotap;
   uint8_t checksum;
-  enum wav2prg_checksum_state checksum_state;
   struct wav2prg_block block;
   uint16_t block_total_size;
   uint16_t block_current_size;
@@ -262,20 +261,19 @@ static enum wav2prg_return_values get_sync(struct wav2prg_context* context, cons
   return wav2prg_ok;
 }
 
-static enum wav2prg_return_values check_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_checksum_state check_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  if (conf->checksum_type != wav2prg_no_checksum)
-  {
-    uint8_t loaded_checksum;
-    uint8_t computed_checksum = context->checksum;
+  uint8_t loaded_checksum;
+  uint8_t computed_checksum = context->checksum;
 
-    printf("computed checksum %u (%02x)", computed_checksum, computed_checksum);
-    if (context->subclassed_functions.get_loaded_checksum_func(context, functions, conf, &loaded_checksum) == wav2prg_invalid)
-      return wav2prg_invalid;
-    printf("loaded checksum %u (%02x)\n", loaded_checksum, loaded_checksum);
-    context->checksum_state = computed_checksum == loaded_checksum ? wav2prg_checksum_state_correct : wav2prg_checksum_state_load_error;
-  }
-  return wav2prg_ok;
+  if (conf->checksum_type == wav2prg_no_checksum)
+    return wav2prg_checksum_state_unverified;
+
+  printf("computed checksum %u (%02x)", computed_checksum, computed_checksum);
+  if (context->subclassed_functions.get_loaded_checksum_func(context, functions, conf, &loaded_checksum) == wav2prg_invalid)
+    return wav2prg_checksum_state_unverified;
+  printf("loaded checksum %u (%02x)\n", loaded_checksum, loaded_checksum);
+  return computed_checksum == loaded_checksum ? wav2prg_checksum_state_correct : wav2prg_checksum_state_load_error;
 }
 
 static enum wav2prg_return_values get_loaded_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
@@ -351,7 +349,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     tolerances,
     audiotap,
     0,
-    wav2prg_checksum_state_unverified,
     {
       0,0,"                "
     },
@@ -379,6 +376,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     uint16_t skipped_at_beginning, real_block_size;
     enum wav2prg_return_values res;
     int32_t pos;
+    enum wav2prg_checksum_state endres;
 
     context.checksum = 0;
     context.subclassed_functions.get_pulse_func = functions.get_pulse_func = get_pulse_intolerant;
@@ -409,12 +407,20 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       continue;
     pos = get_pos_func(audiotap);
     printf("checksum starts at %d \n",pos);
-    context.subclassed_functions.check_checksum_func(&context, &functions, conf);
+    endres = context.subclassed_functions.check_checksum_func(&context, &functions, conf);
     pos = get_pos_func(audiotap);
-    printf("name %s start %u end %u ends at %d result %s\n", context.block.name, context.block.start, context.block.end, pos,
-      context.checksum_state == wav2prg_checksum_state_unverified ? "unverified" :
-      context.checksum_state == wav2prg_checksum_state_correct ? "correct" :
-      "load error");
+    printf("name %s start %u end %u ends at %d\n", context.block.name, context.block.start, context.block.end, pos);
+    switch(endres){
+    case wav2prg_checksum_state_correct:
+      printf("correct\n");
+      break;
+    case wav2prg_checksum_state_load_error:      
+      printf("load error\n");
+      break;
+    default:
+      if (conf->checksum_type != wav2prg_no_checksum)
+        printf("Huh? Something went wrong while verifying the checksum\n");
+    }
   };
   free(context.adaptive_tolerances);
 }
