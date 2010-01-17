@@ -115,16 +115,6 @@ static void wav2prg_reset_checksum(struct wav2prg_context* context)
   wav2prg_reset_checksum_to(context, 0);
 }
 
-static void update_checksum_default(struct wav2prg_context* context, uint8_t byte)
-{
-  if (!context->checksum_enabled)
-  {
-    return;
-  }
-
-  context->checksum = context->compute_checksum_step(context->checksum, byte);
-}
-
 static uint8_t compute_checksum_step_add(uint8_t old_checksum, uint8_t byte)
 {
   return old_checksum + byte;
@@ -172,7 +162,8 @@ static enum wav2prg_return_values get_byte_default(struct wav2prg_context* conte
       return wav2prg_invalid;
   }
 
-  update_checksum_default(context, *byte);
+  if (context->checksum_enabled)
+    context->checksum = context->compute_checksum_step(context->checksum, *byte);
 
   return wav2prg_ok;
 }
@@ -340,7 +331,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       plugin_functions->get_block_func ? plugin_functions->get_block_func : get_block_default,
       check_checksum_default,
       plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default,
-      update_checksum_default,
       enable_checksum_default,
       disable_checksum_default
     },
@@ -367,7 +357,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     get_block_default,
     check_checksum_default,
     get_loaded_checksum_default,
-    update_checksum_default,
     enable_checksum_default,
     disable_checksum_default
   };
@@ -409,7 +398,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     printf("checksum starts at %d \n",pos);
     endres = context.subclassed_functions.check_checksum_func(&context, &functions, conf);
     pos = get_pos_func(audiotap);
-    printf("name %s start %u end %u ends at %d\n", context.block.name, context.block.start, context.block.end, pos);
+    printf("name %s start %u end %u ends at %d ", context.block.name, context.block.start, context.block.end, pos);
     switch(endres){
     case wav2prg_checksum_state_correct:
       printf("correct\n");

@@ -1,3 +1,3 @@
-wav2prg: wav2prg_api.o main.o turbotape.o kernal.o loaders.o
+wav2prg: wav2prg_api.o main.o turbotape.o kernal.o loaders.o novaload.o
 	$(CC) -o $@ $^
 

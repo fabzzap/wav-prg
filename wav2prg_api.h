@@ -92,7 +92,6 @@ struct wav2prg_functions {
   wav2prg_get_block_func get_block_func;
   wav2prg_check_checksum check_checksum_func;
   wav2prg_get_loaded_checksum get_loaded_checksum_func;
-  wav2prg_update_checksum update_checksum_func;
   wav2prg_enable_checksum enable_checksum_func;
   wav2prg_disable_checksum disable_checksum_func;
 };
