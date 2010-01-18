@@ -11,8 +11,8 @@ const struct wav2prg_plugin_conf novaload_conf =
   sizeof(novaload_ideal_pulse_lengths)/sizeof(*novaload_ideal_pulse_lengths),
   novaload_thresholds,
   novaload_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_synconbyte,/*ignored, overriding get_first_sync*/
+  0,                 /*ignored, overriding get_first_sync*/
   sizeof(novaload_pilot_sequence),
   novaload_pilot_sequence,
   NULL
@@ -32,7 +32,6 @@ enum wav2prg_sync_return_values novaload_get_first_sync(struct wav2prg_context* 
 
 enum wav2prg_return_values novaload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, char* name, uint16_t* start, uint16_t* end)
 {
-  uint16_t skipped_at_beginning;
   uint8_t i;
   uint8_t namelen;
   uint16_t unused;
@@ -60,13 +59,10 @@ enum wav2prg_return_values novaload_get_block_info(struct wav2prg_context* conte
   if (functions->get_word_func(context, functions, conf, &blocklen) == wav2prg_invalid)
     return wav2prg_invalid;
 
-  *start+=256;
-  if (blocklen < 256)
-    return wav2prg_invalid;
-  blocklen-=256;
-  if (*start + blocklen > 65536)
+  if (blocklen < 256 || *start + blocklen > 65536)
     return wav2prg_invalid;
   *end = *start + blocklen;
+  *start+=256;
   return wav2prg_ok;
 }
 
