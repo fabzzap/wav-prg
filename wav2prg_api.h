@@ -76,11 +76,13 @@ typedef enum wav2prg_return_values (*wav2prg_get_block_info)(struct wav2prg_cont
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef enum wav2prg_return_values (*wav2prg_get_loaded_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef void                       (*wav2prg_update_checksum)(struct wav2prg_context*, uint8_t);
-typedef uint8_t                    (*wav2prg_compute_checksum_step)(uint8_t, uint8_t);
+typedef uint8_t                    (*wav2prg_compute_checksum_step)(struct wav2prg_plugin_conf*, uint8_t, uint8_t);
 typedef void                       (*wav2prg_enable_checksum)(struct wav2prg_context*);
 typedef void                       (*wav2prg_disable_checksum)(struct wav2prg_context*);
 typedef const struct wav2prg_plugin_conf* (*wav2prg_get_new_plugin_state)(void);
 typedef void                       (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
+typedef uint8_t                    (*wav2prg_recognize_block_as_mine)(uint8_t*, uint16_t, uint16_t);
+typedef uint8_t                    (*wav2prg_recognize_block_as_mine_with_start_end)(uint8_t*, uint16_t, uint16_t, char*, uint16_t*, uint16_t*);
 
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
@@ -96,9 +98,10 @@ struct wav2prg_functions {
   wav2prg_disable_checksum disable_checksum_func;
 };
 
-struct wav2prg_size_of_private_state 
+struct wav2prg_generate_private_state 
 {
-  uint32_t size_of_private_state ;
+  uint32_t size;
+  const void* model;
 };
 
 struct wav2prg_plugin_functions {
@@ -110,6 +113,19 @@ struct wav2prg_plugin_functions {
   wav2prg_get_new_plugin_state get_new_plugin_state;
   wav2prg_compute_checksum_step compute_checksum_step;
   wav2prg_get_loaded_checksum get_loaded_checksum_func;
+  wav2prg_recognize_block_as_mine recognize_block_as_mine_func;
+  wav2prg_recognize_block_as_mine_with_start_end recognize_block_as_mine_with_start_end_func;
+};
+
+enum wav2prg_kernal_dependency {
+  wav2prg_kernal_header,
+  wav2prg_kernal_data
+};
+
+struct wav2prg_dependency {
+  enum wav2prg_kernal_dependency kernal_dependency;
+  const char *other_dependency;
+  uint8_t dependency_is_recommended;
 };
 
 struct wav2prg_plugin_conf {
@@ -122,7 +138,14 @@ struct wav2prg_plugin_conf {
   uint8_t pilot_byte;
   uint8_t len_of_pilot_sequence;
   uint8_t *pilot_sequence;
+  struct wav2prg_dependency* dependency;
   void* private_state;
+};
+
+struct plugin_tree {
+  const char* node;
+  struct plugin_tree* first_child;
+  struct plugin_tree* first_sibling;
 };
 
 struct wav2prg_context;
@@ -131,7 +154,8 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
                              wav2prg_test_eof_func test_eof_func,
                              wav2prg_get_pos_func get_pos_func,
                              enum wav2prg_tolerance_type tolerance_type,
-                             const struct wav2prg_plugin_functions* plugin_functions,
+                             const char* loader_name,
+                             const char** loader_names,
                              struct wav2prg_tolerance* tolerances,
                              void* audiotap);
 #if 0 //defined _WIN32

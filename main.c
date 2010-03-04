@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include "wav2prg_api.h"
-#include "loaders.h"
 
 static enum wav2prg_return_values getrawpulse(void* audiotap, uint32_t* pulse)
 {
@@ -35,8 +34,8 @@ static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,65},{60,60}};
 
 int main(int argc, char** argv)
 {
-  const struct wav2prg_plugin_functions* turbotape;
   FILE* file;
+  const char* loader_names[] = {"Kernal data chunk 1st copy", NULL};
 
   if(argc<2)
     return 1;
@@ -44,9 +43,9 @@ int main(int argc, char** argv)
   file = fopen(argv[1],"rb");
   
   register_loaders();
-  turbotape = get_loader_by_name("Kernal header chunk 1st copy");
   wav2prg_get_new_context(
   getrawpulse, iseof, get_pos,
-  wav2prg_adaptively_tolerant, turbotape, kernal_tolerances/*turbotape_tolerances*/, file);
+  wav2prg_adaptively_tolerant, NULL, loader_names,
+  kernal_tolerances/*turbotape_tolerances*/, file);
   return 0;
 }
