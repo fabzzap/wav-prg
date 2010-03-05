@@ -1,6 +1,8 @@
 #include "wav2prg_api.h"
 #include "loaders.h"
-#include "malloc.h"
+
+#include <malloc.h>
+#include <string.h>
 
 static const char* get_plugin_this_is_dependent_on(const char* this_plugin_name) {
   const struct wav2prg_plugin_functions* this_plugin = get_loader_by_name(this_plugin_name);

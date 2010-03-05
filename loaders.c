@@ -57,19 +57,3 @@ const struct wav2prg_plugin_functions* get_loader_by_name(const char* name) {
   }
   return NULL;
 }
-
-const struct loader* get_loader_iterator(void) {
-  return loader_list;
-}
-
-const struct loader* increment_loader_iterator(const struct loader* loader_iterator) {
-  return loader_iterator->next;
-}
-
-const struct wav2prg_plugin_functions* get_loader_from_iterator(const struct loader* loader_iterator) {
-  return loader_iterator ? loader_iterator->functions : NULL;
-}
-
-const char* get_loader_name_from_iterator(const struct loader* loader_iterator) {
-  return loader_iterator ? loader_iterator->name : NULL;
-}

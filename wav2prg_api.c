@@ -5,13 +5,6 @@
 #include <malloc.h>
 #include <string.h>
 
-struct wav2prg_comparison_block {
-  uint16_t start;
-  uint16_t end;
-  char name[17];
-  struct wav2prg_block* block;
-};
-
 struct wav2prg_context {
   wav2prg_get_rawpulse_func get_rawpulse;
   wav2prg_test_eof_func test_eof_func;
@@ -386,7 +379,12 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     enable_checksum_default,
     disable_checksum_default
   };
-  struct wav2prg_comparison_block *old_comparison_block = NULL;
+  struct wav2prg_comparison_block {
+    uint16_t start;
+    uint16_t end;
+    char name[17];
+    struct wav2prg_block block;
+  } *old_comparison_block = NULL;
   
   if(loader_names != NULL) {
     digest_list(loader_names, &dependency_tree);
@@ -400,7 +398,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     int32_t pos;
     enum wav2prg_checksum_state endres;
     struct wav2prg_block block;
-    struct wav2prg_comparison_block *comparison_block;
 
     if (plugin_functions == NULL)
       plugin_functions = get_plugin_functions(loader_name, &context);
@@ -462,10 +459,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       if (conf->checksum_type != wav2prg_no_checksum)
         printf("Huh? Something went wrong while verifying the checksum\n");
     }
-    comparison_block = malloc(sizeof(struct wav2prg_comparison_block));
-    comparison_block->name[16] = 0;
-    comparison_block->block = malloc(sizeof block);
-    memcpy(comparison_block->block, &block, sizeof block);
+
     if (endres == wav2prg_checksum_state_correct && current_plugin_in_tree != NULL) {
       struct plugin_tree* dependency_being_checked;
       enum {
@@ -474,9 +468,13 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
         block_recognized_by_datachunk,
         block_recognized_with_start_end
       } recognition_state = block_unrecognized;
-      uint8_t keep_comparison_block = 0;
+      struct wav2prg_comparison_block comparison_block;
+      uint8_t keep_old_comparison_block = 0;
       uint8_t loader_changes = 0;
-    
+
+      comparison_block.name[16] = 0;
+      memcpy(&comparison_block.block, &block, sizeof block);
+
       for(dependency_being_checked = current_plugin_in_tree->first_child;
           dependency_being_checked != NULL;
           dependency_being_checked = dependency_being_checked->first_sibling) {
@@ -491,7 +489,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
         } 
         if (plugin_to_test_functions
          && plugin_to_test_functions->recognize_block_as_mine_with_start_end_func
-         && plugin_to_test_functions->recognize_block_as_mine_with_start_end_func(block.data, block.start, block.end, comparison_block->name, &comparison_block->start, &comparison_block->end)) {
+         && plugin_to_test_functions->recognize_block_as_mine_with_start_end_func(block.data, block.start, block.end, comparison_block.name, &comparison_block.start, &comparison_block.end)) {
           loader_changes = 1;
           current_plugin_in_tree = dependency_being_checked;
           if(!strcmp(dependency_being_checked->node, "Kernal data chunk 1st copy")
@@ -503,28 +501,26 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
           }
         }
       }
-      if (recognition_state == block_unrecognized
-       || recognition_state == block_recognized_without_start_end) {
-        free(comparison_block->block);
-        free(comparison_block);
-        comparison_block = NULL;
-      }
+
       if (recognition_state == block_unrecognized
       && old_comparison_block != NULL){
-        if (plugin_functions->recognize_block_as_mine_with_start_end_func(old_comparison_block->block->data, old_comparison_block->block->start, old_comparison_block->block->end, old_comparison_block->name, &old_comparison_block->start, &old_comparison_block->end))
-          keep_comparison_block = 1;
+        if (plugin_functions->recognize_block_as_mine_with_start_end_func(old_comparison_block->block.data, old_comparison_block->block.start, old_comparison_block->block.end, old_comparison_block->name, &old_comparison_block->start, &old_comparison_block->end))
+          keep_old_comparison_block = 1;
         else{
           loader_changes = 1;
           current_plugin_in_tree = dependency_tree;
         }
       }
-      if (!keep_comparison_block){
-        if (old_comparison_block != NULL) {
-          free(old_comparison_block->block);
-          free(old_comparison_block);
-        }
-        old_comparison_block = comparison_block;
+      if (!keep_old_comparison_block){
+        free(old_comparison_block);
+        old_comparison_block=NULL;
       }
+      if (recognition_state == block_recognized_with_start_end
+       || recognition_state == block_recognized_by_datachunk){
+         old_comparison_block = malloc(sizeof *old_comparison_block);
+         memcpy(old_comparison_block, &comparison_block, sizeof comparison_block);
+      }
+
       if(loader_changes){
         loader_name = current_plugin_in_tree->node;
         free(conf);
