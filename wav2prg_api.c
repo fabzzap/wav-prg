@@ -511,6 +511,13 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
         delete_state(plugin_to_test_conf);
       }
 
+      if ((just_find_conf != NULL
+       || also_set_start_end_conf != NULL)
+       && datachunk_conf != NULL){
+        delete_state(datachunk_conf);
+        datachunk_conf = NULL;
+      }
+
       if (just_find_conf == NULL
       && also_set_start_end_conf == NULL
       && datachunk_conf == NULL
@@ -534,7 +541,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
 
       if(loader_changes){
         loader_name = current_plugin_in_tree->node;
-        free(conf);
+        delete_state(conf);
         conf = also_set_start_end_conf != NULL ? also_set_start_end_conf :
                datachunk_conf          != NULL ? datachunk_conf          :
                just_find_conf          != NULL ? just_find_conf          :
