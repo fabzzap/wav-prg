@@ -251,14 +251,20 @@ static const struct wav2prg_plugin_conf* kernal_datachunk_secondcopy_get_new_sta
   return &kernal_datachunk_second_copy;
 }
 
-static uint8_t is_headerchunk(uint8_t* headerchunk_block, uint16_t headerchunk_start, uint16_t headerchunk_end, char* name, uint16_t* start, uint16_t* end)
+static uint8_t is_headerchunk(struct wav2prg_plugin_conf* conf, uint8_t* headerchunk_block, uint16_t headerchunk_start, uint16_t headerchunk_end, char* name, uint16_t* start, uint16_t* end)
 {
+  struct datachunk_private_state *state = (struct datachunk_private_state *)conf->private_state;
+
+  if(state->type != 0)
+    return 0;
+    
   if(headerchunk_start == 828
   && headerchunk_end >= 849
   && headerchunk_end <= 1020
   && (headerchunk_block[0] == 1 || headerchunk_block[0] == 3)){
     int i;
     
+    state->type = headerchunk_block[0];
     *start = headerchunk_block[1] + (headerchunk_block[2] << 8);
     *end   = headerchunk_block[3] + (headerchunk_block[4] << 8);
     for (i = 0; i < 16; i++)

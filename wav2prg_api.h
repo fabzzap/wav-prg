@@ -81,8 +81,8 @@ typedef void                       (*wav2prg_enable_checksum)(struct wav2prg_con
 typedef void                       (*wav2prg_disable_checksum)(struct wav2prg_context*);
 typedef const struct wav2prg_plugin_conf* (*wav2prg_get_new_plugin_state)(void);
 typedef void                       (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
-typedef uint8_t                    (*wav2prg_recognize_block_as_mine)(uint8_t*, uint16_t, uint16_t);
-typedef uint8_t                    (*wav2prg_recognize_block_as_mine_with_start_end)(uint8_t*, uint16_t, uint16_t, char*, uint16_t*, uint16_t*);
+typedef uint8_t                    (*wav2prg_recognize_block_as_mine)(struct wav2prg_plugin_conf*, uint8_t*, uint16_t, uint16_t);
+typedef uint8_t                    (*wav2prg_recognize_block_as_mine_with_start_end)(struct wav2prg_plugin_conf*, uint8_t*, uint16_t, uint16_t, char*, uint16_t*, uint16_t*);
 
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
