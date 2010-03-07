@@ -196,7 +196,7 @@ static enum wav2prg_return_values kernal_get_block(struct wav2prg_context* conte
       ret = wav2prg_invalid;
       /*fallback*/
     case eof_marker_found:
-      *block_size = bytes_received;
+      *block_size = bytes_received--;
     }
   }
   return ret;
@@ -267,8 +267,7 @@ static uint8_t is_headerchunk(struct wav2prg_plugin_conf* conf, uint8_t* headerc
     state->type = headerchunk_block[0];
     *start = headerchunk_block[1] + (headerchunk_block[2] << 8);
     *end   = headerchunk_block[3] + (headerchunk_block[4] << 8);
-    for (i = 0; i < 16; i++)
-      name[i] = headerchunk_block[5+i];
+
     return 1;
   }
   return 0;

@@ -476,7 +476,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       uint8_t loader_changes = 0;
       struct wav2prg_plugin_conf* just_find_conf = NULL, *also_set_start_end_conf = NULL, *datachunk_conf = NULL;
 
-      comparison_block.name[16] = 0;
+      memcpy(comparison_block.name, block.name, sizeof block.name);
       memcpy(&comparison_block.block, &block, sizeof block);
 
       for(dependency_being_checked = current_plugin_in_tree->first_child;
