@@ -143,9 +143,9 @@ static enum
   return parity?byte_found:could_not_sync;
 }
 
-enum wav2prg_sync_return_values kernal_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+enum wav2prg_return_values kernal_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
-  return sync_with_byte_and_get_it(context, functions, conf, byte, 1)==byte_found?wav2prg_synced_and_one_byte_got:wav2prg_notsynced;
+  return sync_with_byte_and_get_it(context, functions, conf, byte, 1)==byte_found?wav2prg_ok:wav2prg_invalid;
 }
 
 enum wav2prg_return_values kernal_get_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
@@ -262,8 +262,6 @@ static uint8_t is_headerchunk(struct wav2prg_plugin_conf* conf, uint8_t* headerc
   && headerchunk_end >= 849
   && headerchunk_end <= 1020
   && (headerchunk_block[0] == 1 || headerchunk_block[0] == 3)){
-    int i;
-    
     state->type = headerchunk_block[0];
     *start = headerchunk_block[1] + (headerchunk_block[2] << 8);
     *end   = headerchunk_block[3] + (headerchunk_block[4] << 8);
@@ -277,6 +275,7 @@ static const struct wav2prg_plugin_functions kernal_headerchunk_firstcopy_functi
 {
   kernal_get_bit_func,
   kernal_get_byte,
+  NULL,
   kernal_get_first_sync,
   kernal_headerchunk_get_block_info,
   kernal_headerchunk_get_block,
@@ -291,6 +290,7 @@ static const struct wav2prg_plugin_functions kernal_headerchunk_secondcopy_funct
 {
   kernal_get_bit_func,
   kernal_get_byte,
+  NULL,
   kernal_get_first_sync,
   kernal_headerchunk_get_block_info,
   kernal_headerchunk_get_block,
@@ -305,6 +305,7 @@ static const struct wav2prg_plugin_functions kernal_datachunk_firstcopy_function
 {
   kernal_get_bit_func,
   kernal_get_byte,
+  NULL,
   kernal_get_first_sync,
   NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
   kernal_datachunk_get_block,
@@ -319,6 +320,7 @@ static const struct wav2prg_plugin_functions kernal_datachunk_secondcopy_functio
 {
   kernal_get_bit_func,
   kernal_get_byte,
+  NULL,
   kernal_get_first_sync,
   NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
   kernal_datachunk_get_block,

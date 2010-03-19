@@ -52,6 +52,7 @@ static const struct wav2prg_plugin_functions turbotape_functions = {
     NULL,
     NULL,
     NULL,
+    NULL,
     turbotape_get_block_info,
     NULL,
     turbotape_get_state,
@@ -124,6 +125,7 @@ static uint8_t is_connection(struct wav2prg_plugin_conf* conf, uint8_t* datachun
 }
 
 static const struct wav2prg_plugin_functions connection_functions = {
+    NULL,
     NULL,
     NULL,
     NULL,

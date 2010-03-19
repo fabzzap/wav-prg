@@ -37,12 +37,6 @@ enum wav2prg_findpilot_type {
   wav2prg_synconbyte
 };
 
-enum wav2prg_sync_return_values {
-  wav2prg_notsynced,
-  wav2prg_synced,
-  wav2prg_synced_and_one_byte_got
-};
-
 struct wav2prg_block {
   uint16_t start;
   uint16_t end;
@@ -71,7 +65,8 @@ typedef enum wav2prg_return_values (*wav2prg_get_word_func)(struct wav2prg_conte
 typedef enum wav2prg_return_values (*wav2prg_get_word_bigendian_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
 typedef enum wav2prg_return_values (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*, uint16_t*, uint16_t*);
 typedef enum wav2prg_return_values (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
-typedef enum wav2prg_sync_return_values (*wav2prg_get_first_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
+typedef enum wav2prg_return_values (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
+typedef enum wav2prg_return_values (*wav2prg_get_sync_byte)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_return_values (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, char*, uint16_t*, uint16_t*);
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef enum wav2prg_return_values (*wav2prg_get_loaded_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
@@ -107,7 +102,8 @@ struct wav2prg_generate_private_state
 struct wav2prg_plugin_functions {
   wav2prg_get_bit_func get_bit_func;
   wav2prg_get_byte_func get_byte_func;
-  wav2prg_get_first_sync get_first_sync;
+  wav2prg_get_sync get_sync;
+  wav2prg_get_sync_byte get_sync_byte;
   wav2prg_get_block_info get_block_info;
   wav2prg_get_block_func get_block_func;
   wav2prg_get_new_plugin_state get_new_plugin_state;
@@ -135,9 +131,14 @@ struct wav2prg_plugin_conf {
   uint16_t *thresholds;
   uint16_t *ideal_pulse_lengths;
   enum wav2prg_findpilot_type findpilot_type;
-  uint8_t pilot_byte;
-  uint8_t len_of_pilot_sequence;
-  uint8_t *pilot_sequence;
+  union{
+    struct{
+      uint8_t pilot_byte;
+      uint8_t len_of_pilot_sequence;
+      uint8_t *pilot_sequence;
+    } byte_sync;
+    uint8_t bit_sync;
+  };
   struct wav2prg_dependency* dependency;
   void* private_state;
 };

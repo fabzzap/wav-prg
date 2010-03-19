@@ -18,7 +18,7 @@ const struct wav2prg_plugin_conf novaload_conf =
   NULL
 };
 
-enum wav2prg_sync_return_values novaload_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+enum wav2prg_return_values novaload_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t shift_reg = 0xFF;
   uint8_t bit;
@@ -27,7 +27,7 @@ enum wav2prg_sync_return_values novaload_get_first_sync(struct wav2prg_context* 
       return wav2prg_invalid;
     shift_reg = (shift_reg >> 1) | (bit << 7);
   }while(!bit || (shift_reg & 1));
-  return wav2prg_synced;
+  return wav2prg_ok;
 }
 
 enum wav2prg_return_values novaload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, char* name, uint16_t* start, uint16_t* end)
@@ -95,9 +95,12 @@ static const struct wav2prg_plugin_functions novaload_functions =
   NULL,
   NULL,
   novaload_get_first_sync,
+  NULL,
   novaload_get_block_info,
   novaload_get_block,
   novaload_get_new_state,
+  NULL,
+  NULL,
   NULL,
   NULL
 };

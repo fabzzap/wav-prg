@@ -9,7 +9,7 @@ struct wav2prg_context {
   wav2prg_get_rawpulse_func get_rawpulse;
   wav2prg_test_eof_func test_eof_func;
   wav2prg_get_pos_func get_pos_func;
-  wav2prg_get_first_sync get_first_sync;
+  wav2prg_get_sync_byte get_sync_byte;
   wav2prg_compute_checksum_step compute_checksum_step;
   struct wav2prg_functions subclassed_functions;
   struct wav2prg_tolerance* adaptive_tolerances;
@@ -201,54 +201,60 @@ static enum wav2prg_return_values get_block_default(struct wav2prg_context* cont
   return wav2prg_ok;
 }
 
-static enum wav2prg_sync_return_values get_first_sync_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+static enum wav2prg_return_values get_sync_byte_using_shift_register(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
-  switch(conf->findpilot_type) {
-  case wav2prg_synconbit:
+  *byte = 0;
+  do{
+    if(evolve_byte(context, functions, conf, byte) == wav2prg_invalid)
+      return wav2prg_invalid;
+  }while(*byte != conf->byte_sync.pilot_byte);
+  do{
+    if(context->subclassed_functions.get_byte_func(context, functions, conf, byte) == wav2prg_invalid)
+      return wav2prg_invalid;
+  } while (*byte == conf->byte_sync.pilot_byte);
+  return wav2prg_ok;
+};
+
+static enum wav2prg_return_values sync_to_bit_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+{
+  uint8_t bit;
+  do{
+    enum wav2prg_return_values res = context->subclassed_functions.get_bit_func(context, functions, conf, &bit);
+    if (res == wav2prg_invalid || (bit != 0 && bit != 1))
+      return wav2prg_invalid;
+  }while(bit != conf->bit_sync);
+  return wav2prg_ok;
+};
+
+static enum wav2prg_return_values sync_to_byte_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+{
+  uint8_t bytes_sync;
+  do{
+    uint8_t byte;
+
+    enum wav2prg_return_values res = context->get_sync_byte(context, functions, conf, &byte);
+    if(res == wav2prg_invalid)
+      return wav2prg_invalid;
+
+    bytes_sync = 0;
+    while(byte == conf->byte_sync.pilot_sequence[bytes_sync])
     {
-      uint8_t bit;
-      do{
-        enum wav2prg_return_values res = context->subclassed_functions.get_bit_func(context, functions, conf, &bit);
-        if (res == wav2prg_invalid)
-          return wav2prg_notsynced;
-      }while(bit != conf->pilot_byte);
-      return wav2prg_synced;
+      if(++bytes_sync == conf->byte_sync.len_of_pilot_sequence)
+        break;
+      if(context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_invalid)
+        return wav2prg_invalid;
     }
-  case wav2prg_synconbyte:
-    {
-      *byte = 0;
-      do{
-        if(evolve_byte(context, functions, conf, byte) == wav2prg_invalid)
-          return wav2prg_notsynced;
-      }while(*byte != conf->pilot_byte);
-      do{
-        if (context->subclassed_functions.get_byte_func(context, functions, conf, byte) == wav2prg_invalid)
-          return wav2prg_notsynced;
-      }while(*byte == conf->pilot_byte);
-      return wav2prg_synced_and_one_byte_got;
-    }
-  }
-}
+  }while(bytes_sync != conf->byte_sync.len_of_pilot_sequence);
+
+  return wav2prg_ok;
+};
 
 static enum wav2prg_return_values get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  uint32_t bytes_sync;
-  do{
-    uint8_t byte;
-    enum wav2prg_sync_return_values res = context->get_first_sync(context, functions, conf, &byte);
-    uint8_t byte_to_consume = res == wav2prg_synced_and_one_byte_got;
-    if(res == wav2prg_notsynced)
-      return wav2prg_invalid;
-    for(bytes_sync = 0; bytes_sync < conf->len_of_pilot_sequence; bytes_sync++){
-      if(byte_to_consume)
-        byte_to_consume = 0;
-      else if(context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_invalid)
-        return wav2prg_invalid;
-      if (byte != conf->pilot_sequence[bytes_sync])
-        break;
-    }
-  }while(bytes_sync != conf->len_of_pilot_sequence);
-  return wav2prg_ok;
+  switch(conf->findpilot_type) {
+  case wav2prg_synconbit : return sync_to_bit_default (context, functions, conf);
+  case wav2prg_synconbyte: return sync_to_byte_default(context, functions, conf);
+  }
 }
 
 static enum wav2prg_checksum_state check_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
@@ -280,7 +286,17 @@ static struct wav2prg_plugin_conf* get_new_state(const struct wav2prg_plugin_fun
   conf->endianness = model_conf->endianness;
   conf->checksum_type = model_conf->checksum_type;
   conf->findpilot_type = model_conf->findpilot_type;
-  conf->pilot_byte = model_conf->pilot_byte;
+  switch(conf->findpilot_type){
+    case wav2prg_synconbyte:
+      conf->byte_sync.pilot_byte            =  model_conf->byte_sync.pilot_byte;
+      conf->byte_sync.len_of_pilot_sequence =  model_conf->byte_sync.len_of_pilot_sequence;
+      conf->byte_sync.pilot_sequence        = malloc(conf->byte_sync.len_of_pilot_sequence);
+      memcpy(conf->byte_sync.pilot_sequence,   model_conf->byte_sync.pilot_sequence, conf->byte_sync.len_of_pilot_sequence);
+      break;
+    case wav2prg_synconbit:
+      conf->bit_sync = model_conf->bit_sync;
+      break;
+  }
 
   conf->num_pulse_lengths = model_conf->num_pulse_lengths;
   conf->ideal_pulse_lengths = malloc(conf->num_pulse_lengths * sizeof(uint16_t));
@@ -288,9 +304,6 @@ static struct wav2prg_plugin_conf* get_new_state(const struct wav2prg_plugin_fun
   conf->thresholds = malloc((conf->num_pulse_lengths - 1) * sizeof(uint16_t));
   memcpy(conf->thresholds, model_conf->thresholds, (conf->num_pulse_lengths - 1) * sizeof(uint16_t));
 
-  conf->len_of_pilot_sequence = model_conf->len_of_pilot_sequence;
-  conf->pilot_sequence = malloc(conf->len_of_pilot_sequence);
-  memcpy(conf->pilot_sequence, model_conf->pilot_sequence, conf->len_of_pilot_sequence);
 
   if (size_of_private_state)
   {
@@ -306,7 +319,8 @@ static void delete_state(struct wav2prg_plugin_conf* conf)
 {
   free(conf->ideal_pulse_lengths);
   free(conf->thresholds);
-  free(conf->pilot_sequence);
+  if (conf->findpilot_type == wav2prg_synconbyte)
+    free(conf->byte_sync.pilot_sequence);
   free(conf->private_state);
   free(conf);
 }
@@ -315,11 +329,13 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
                                                                    struct wav2prg_context *context)
 {
   const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
-  
-  context->get_first_sync        =
-    plugin_functions->get_first_sync        ? plugin_functions->get_first_sync        : get_first_sync_default       ;
-  context->compute_checksum_step =
+
+  context->compute_checksum_step             =
     plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step : compute_checksum_step_default;
+  context->get_sync_byte                     =
+    plugin_functions->get_sync_byte         ? plugin_functions->get_sync_byte         : get_sync_byte_using_shift_register;
+  context->subclassed_functions.get_sync     =
+    plugin_functions->get_sync              ? plugin_functions->get_sync              : get_sync;
   context->subclassed_functions.get_bit_func =
     plugin_functions->get_bit_func          ? plugin_functions->get_bit_func          : get_bit_default;
   context->subclassed_functions.get_byte_func =
@@ -328,7 +344,7 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
     plugin_functions->get_block_func ? plugin_functions->get_block_func : get_block_default;
   context->subclassed_functions.get_loaded_checksum_func =
     plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default;
-    
+
   return plugin_functions;
 }
 
@@ -348,10 +364,10 @@ static uint8_t look_for_dependent_plugin(struct plugin_tree** current_plugin_in_
   struct wav2prg_plugin_conf* new_conf = NULL;
   struct wav2prg_comparison_block* new_comparison_block = malloc(sizeof(* new_comparison_block));
   uint8_t start_end_known = 0;
-  
+
   memcpy(new_comparison_block->name, block->name, sizeof block->name);
   memcpy(&new_comparison_block->block, block, sizeof *block);
-  
+
   for(dependency_being_checked = (*current_plugin_in_tree)->first_child;
       dependency_being_checked != NULL;
       dependency_being_checked = dependency_being_checked->first_sibling) {
@@ -390,7 +406,7 @@ static uint8_t look_for_dependent_plugin(struct plugin_tree** current_plugin_in_
   }
   else
     *comparison_block = new_comparison_block;
-    
+
   if(new_conf){
     delete_state(*old_conf);
     *old_conf = new_conf;
@@ -420,7 +436,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     NULL,
     NULL,
     {
-      get_sync,
+      NULL,
       get_pulse_intolerant,
       NULL,
       NULL,
@@ -456,7 +472,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     disable_checksum_default
   };
   struct wav2prg_comparison_block *old_comparison_block = NULL;
-  
+
   if(loader_names != NULL) {
     digest_list(loader_names, &dependency_tree);
     loader_name = dependency_tree->node;
@@ -474,13 +490,13 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       plugin_functions = get_plugin_functions(loader_name, &context);
     if (conf == NULL)
       conf = get_new_state(plugin_functions);
-    
+
     block.name[16] = 0;
     context.checksum = 0;
     context.subclassed_functions.get_pulse_func = functions.get_pulse_func = get_pulse_intolerant;
     pos = get_pos_func(audiotap);
     disable_checksum_default(&context);
-    res = get_sync(&context, &functions, conf);
+    res = context.subclassed_functions.get_sync(&context, &functions, conf);
     if(res != wav2prg_ok)
       continue;
 
@@ -523,7 +539,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     case wav2prg_checksum_state_correct:
       printf("correct\n");
       break;
-    case wav2prg_checksum_state_load_error:      
+    case wav2prg_checksum_state_load_error:
       printf("load error\n");
       break;
     default:
@@ -535,7 +551,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       uint8_t found_dependent_plugin = 0;
       uint8_t free_old_comparison_block = 0;
       struct wav2prg_comparison_block *new_comparison_block = NULL;
-    
+
       if(endres == wav2prg_checksum_state_correct
         && current_plugin_in_tree != NULL){
         found_dependent_plugin = look_for_dependent_plugin(&current_plugin_in_tree, &conf, &block, &new_comparison_block);
@@ -544,7 +560,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       if (!found_dependent_plugin
       && old_comparison_block != NULL)
         free_old_comparison_block = !plugin_functions->recognize_block_as_mine_with_start_end_func(conf, old_comparison_block->block.data, old_comparison_block->block.start, old_comparison_block->block.end, old_comparison_block->name, &old_comparison_block->start, &old_comparison_block->end);
-        
+
       if (free_old_comparison_block){
         current_plugin_in_tree = dependency_tree;
         delete_state(conf);
