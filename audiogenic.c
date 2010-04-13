@@ -73,7 +73,7 @@ static struct wav2prg_generate_private_state specialagent_generate_private_state
 };
 
 static uint16_t specialagent_thresholds[]={594,1151};
-static uint16_t specialagent_ideal_pulse_lengths[]={368, 816, 1448};
+static uint16_t specialagent_ideal_pulse_lengths[]={512, 1080, 1360};
 
 static const struct wav2prg_plugin_conf specialagent =
 {

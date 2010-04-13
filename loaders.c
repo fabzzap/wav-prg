@@ -44,6 +44,7 @@ void register_loaders(void) {
   turbotape_get_plugin(register_loader);
   kernal_get_plugin(register_loader);
   novaload_get_plugin(register_loader);
+  audiogenic_get_plugin(register_loader);
 #endif
 }
 

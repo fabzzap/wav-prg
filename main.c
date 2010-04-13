@@ -35,7 +35,7 @@ static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,65},{60,60}};
 int main(int argc, char** argv)
 {
   FILE* file;
-  const char* loader_names[] = {"Connection", NULL};
+  const char* loader_names[] = {"Special Agent/Strike Force Cobra", NULL};
 
   if(argc<2)
     return 1;
