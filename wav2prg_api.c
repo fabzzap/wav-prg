@@ -5,6 +5,11 @@
 #include <malloc.h>
 #include <string.h>
 
+struct block_syncs {
+  uint32_t start_pos;
+  uint32_t end_pos;
+};
+
 struct wav2prg_context {
   wav2prg_get_rawpulse_func get_rawpulse;
   wav2prg_test_eof_func test_eof_func;
@@ -20,6 +25,10 @@ struct wav2prg_context {
   uint16_t block_total_size;
   uint16_t block_current_size;
   uint8_t checksum_enabled;
+  struct {
+    uint32_t num_of_block_syncs;
+	struct block_syncs* block_syncs;
+  } syncs;
 };
 
 static enum wav2prg_return_values get_pulse_tolerant(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
@@ -257,6 +266,26 @@ static enum wav2prg_return_values get_sync(struct wav2prg_context* context, cons
   }
 }
 
+static enum wav2prg_return_values get_sync_insist(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+{
+  enum wav2prg_return_values res = wav2prg_ok;
+  
+  if (context->syncs.num_of_block_syncs > 0)
+    context->syncs.block_syncs[context->syncs.num_of_block_syncs - 1].end_pos = context->get_pos_func(context->audiotap);
+  while(!context->test_eof_func(context->audiotap)){
+    int32_t pos = context->get_pos_func(context->audiotap);
+	res = context->subclassed_functions.get_sync(context, functions, conf);
+	if (res == wav2prg_ok) {
+	  context->syncs.block_syncs = realloc(context->syncs.block_syncs, (context->syncs.num_of_block_syncs + 1) * sizeof (*context->syncs.block_syncs));
+	  context->syncs.block_syncs[context->syncs.num_of_block_syncs].start_pos = pos;
+	  context->syncs.block_syncs[context->syncs.num_of_block_syncs].end_pos   = context->get_pos_func(context->audiotap);
+	  context->syncs.num_of_block_syncs++;
+	  return wav2prg_ok;
+	}
+  }
+  return wav2prg_invalid;
+}
+
 static enum wav2prg_checksum_state check_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t loaded_checksum;
@@ -436,7 +465,8 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     NULL,
     NULL,
     {
-      NULL,
+	  NULL,
+      get_sync_insist,
       get_pulse_intolerant,
       NULL,
       NULL,
@@ -455,11 +485,16 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     NULL,
     0,
     0,
-    0
+    0,
+	{
+	  0,
+	  NULL
+	}
   };
   struct wav2prg_functions functions =
   {
     get_sync,
+    get_sync_insist,
     get_pulse_intolerant,
     get_bit_default,
     get_byte_default,
@@ -479,7 +514,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     current_plugin_in_tree = dependency_tree;
   }
 
-  while(!context.test_eof_func(context.audiotap)){
+  while(1){
     uint16_t skipped_at_beginning, real_block_size;
     enum wav2prg_return_values res;
     int32_t pos;
@@ -496,9 +531,12 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     context.subclassed_functions.get_pulse_func = functions.get_pulse_func = get_pulse_intolerant;
     pos = get_pos_func(audiotap);
     disable_checksum_default(&context);
-    res = context.subclassed_functions.get_sync(&context, &functions, conf);
+	free(context.syncs.block_syncs);
+	context.syncs.block_syncs = NULL;
+	context.syncs.num_of_block_syncs = 0;
+    res = context.subclassed_functions.get_sync_insist(&context, &functions, conf);
     if(res != wav2prg_ok)
-      continue;
+      break;
 
     if (tolerance_type == wav2prg_adaptively_tolerant)
       context.adaptive_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths);
@@ -507,7 +545,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       tolerance_type == wav2prg_adaptively_tolerant ? get_pulse_adaptively_tolerant :
       get_pulse_intolerant;
 
-    printf("found something starting at %d \n",pos);
+    printf("found something starting at %d \n",context.syncs.block_syncs[0]);
     pos = get_pos_func(audiotap);
     printf("and syncing at %d \n",pos);
     if (!old_comparison_block) {
@@ -534,7 +572,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     printf("checksum starts at %d \n",pos);
     endres = context.subclassed_functions.check_checksum_func(&context, &functions, conf);
     pos = get_pos_func(audiotap);
-    printf("name %s start %u end %u ends at %d ", block.name, block.start, block.end, pos);
+    printf("name %s start %u end %u real end %u ends at %d ", block.name, block.start, block.end, block.start + real_block_size, pos);
     switch(endres){
     case wav2prg_checksum_state_correct:
       printf("correct\n");

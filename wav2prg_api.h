@@ -80,6 +80,7 @@ typedef uint8_t                    (*wav2prg_recognize_block_as_mine_with_start_
 
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
+  wav2prg_get_sync get_sync_insist;
   wav2prg_get_pulse_func get_pulse_func;
   wav2prg_get_bit_func get_bit_func;
   wav2prg_get_byte_func get_byte_func;
