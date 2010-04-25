@@ -17,6 +17,8 @@ struct wav2prg_context {
   wav2prg_get_sync_byte get_sync_byte;
   wav2prg_compute_checksum_step compute_checksum_step;
   struct wav2prg_functions subclassed_functions;
+  enum wav2prg_tolerance_type userdefined_tolerance_type;
+  enum wav2prg_tolerance_type current_tolerance_type;
   struct wav2prg_tolerance* adaptive_tolerances;
   struct wav2prg_tolerance* strict_tolerances;
   void *audiotap;
@@ -27,7 +29,7 @@ struct wav2prg_context {
   uint8_t checksum_enabled;
   struct {
     uint32_t num_of_block_syncs;
-	struct block_syncs* block_syncs;
+    struct block_syncs* block_syncs;
   } syncs;
 };
 
@@ -102,6 +104,15 @@ static enum wav2prg_return_values get_pulse_intolerant(struct wav2prg_context* c
       return wav2prg_ok;
   }
   return wav2prg_invalid;
+}
+
+static enum wav2prg_return_values get_pulse(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
+{
+  switch(context->current_tolerance_type){
+  case wav2prg_tolerant           : return get_pulse_tolerant           (context, functions, conf, pulse);
+  case wav2prg_adaptively_tolerant: return get_pulse_adaptively_tolerant(context, functions, conf, pulse);
+  case wav2prg_intolerant         : return get_pulse_intolerant         (context, functions, conf, pulse);
+  }
 }
 
 static enum wav2prg_return_values get_bit_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit)
@@ -269,19 +280,22 @@ static enum wav2prg_return_values get_sync(struct wav2prg_context* context, cons
 static enum wav2prg_return_values get_sync_insist(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   enum wav2prg_return_values res = wav2prg_ok;
-  
+
+  context->current_tolerance_type = wav2prg_intolerant;
   if (context->syncs.num_of_block_syncs > 0)
     context->syncs.block_syncs[context->syncs.num_of_block_syncs - 1].end_pos = context->get_pos_func(context->audiotap);
   while(!context->test_eof_func(context->audiotap)){
     int32_t pos = context->get_pos_func(context->audiotap);
-	res = context->subclassed_functions.get_sync(context, functions, conf);
-	if (res == wav2prg_ok) {
-	  context->syncs.block_syncs = realloc(context->syncs.block_syncs, (context->syncs.num_of_block_syncs + 1) * sizeof (*context->syncs.block_syncs));
-	  context->syncs.block_syncs[context->syncs.num_of_block_syncs].start_pos = pos;
-	  context->syncs.block_syncs[context->syncs.num_of_block_syncs].end_pos   = context->get_pos_func(context->audiotap);
-	  context->syncs.num_of_block_syncs++;
-	  return wav2prg_ok;
-	}
+
+    res = context->subclassed_functions.get_sync(context, functions, conf);
+    if (res == wav2prg_ok) {
+      context->syncs.block_syncs = realloc(context->syncs.block_syncs, (context->syncs.num_of_block_syncs + 1) * sizeof (*context->syncs.block_syncs));
+      context->syncs.block_syncs[context->syncs.num_of_block_syncs].start_pos = pos;
+      context->syncs.block_syncs[context->syncs.num_of_block_syncs].end_pos   = context->get_pos_func(context->audiotap);
+      context->syncs.num_of_block_syncs++;
+      context->current_tolerance_type = context->userdefined_tolerance_type;
+      return wav2prg_ok;
+    }
   }
   return wav2prg_invalid;
 }
@@ -465,9 +479,9 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     NULL,
     NULL,
     {
-	  NULL,
+      NULL,
       get_sync_insist,
-      get_pulse_intolerant,
+      get_pulse,
       NULL,
       NULL,
       get_word_default,
@@ -478,6 +492,8 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       enable_checksum_default,
       disable_checksum_default
     },
+    tolerance_type,
+    tolerance_type,
     NULL,
     tolerances,
     audiotap,
@@ -486,16 +502,16 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     0,
     0,
     0,
-	{
-	  0,
-	  NULL
-	}
+    {
+      0,
+      NULL
+    }
   };
   struct wav2prg_functions functions =
   {
     get_sync,
     get_sync_insist,
-    get_pulse_intolerant,
+    get_pulse,
     get_bit_default,
     get_byte_default,
     get_word_default,
@@ -528,22 +544,17 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
 
     block.name[16] = 0;
     context.checksum = 0;
-    context.subclassed_functions.get_pulse_func = functions.get_pulse_func = get_pulse_intolerant;
     pos = get_pos_func(audiotap);
     disable_checksum_default(&context);
-	free(context.syncs.block_syncs);
-	context.syncs.block_syncs = NULL;
-	context.syncs.num_of_block_syncs = 0;
+    free(context.syncs.block_syncs);
+    context.syncs.block_syncs = NULL;
+    context.syncs.num_of_block_syncs = 0;
     res = context.subclassed_functions.get_sync_insist(&context, &functions, conf);
     if(res != wav2prg_ok)
       break;
 
     if (tolerance_type == wav2prg_adaptively_tolerant)
       context.adaptive_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths);
-
-    context.subclassed_functions.get_pulse_func = functions.get_pulse_func = tolerance_type == wav2prg_tolerant ? get_pulse_tolerant :
-      tolerance_type == wav2prg_adaptively_tolerant ? get_pulse_adaptively_tolerant :
-      get_pulse_intolerant;
 
     printf("found something starting at %d \n",context.syncs.block_syncs[0]);
     pos = get_pos_func(audiotap);

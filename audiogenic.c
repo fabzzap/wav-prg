@@ -112,18 +112,22 @@ static enum wav2prg_return_values audiogenic_specialagent_get_block_info(struct 
   return wav2prg_ok;
 }
 
+enum audiogenic_proceed {
+  lose_sync,
+  change_block_stay_synced,
+  go_on
+};
+
 static uint8_t proceed(uint8_t new_block, struct audiogenic_private_state *state)
 {
   uint8_t res;
 
-  if (state->state == audiogenic_not_synced)
-    return 1;
   if (new_block == 0 || new_block == 1)
-    return 0;
+    return lose_sync;
   if (new_block == 2 && state->two_is_an_empty_block)
-    return 0;
+    return lose_sync;
 
-  res = new_block == state->last_block_loaded + 1;
+  res = new_block == state->last_block_loaded + 1 ? go_on : change_block_stay_synced;
   state->last_block_loaded = new_block;
   return res;
 }
@@ -135,6 +139,7 @@ static enum wav2prg_return_values audiogenic_specialagent_get_block(struct wav2p
   uint16_t received_bytes;
   uint8_t received_blocks = 0;
   uint8_t new_block;
+  enum audiogenic_proceed proceed_res;
 
   *skipped_at_beginning = 0;
   state->in_block = audiogenic_in_block;
@@ -148,6 +153,7 @@ static enum wav2prg_return_values audiogenic_specialagent_get_block(struct wav2p
         ret = wav2prg_invalid;
       functions->disable_checksum_func(context);
       state->state = audiogenic_not_synced;
+      proceed_res = go_on;
       break;
     default:
       received_blocks++;
@@ -156,14 +162,17 @@ static enum wav2prg_return_values audiogenic_specialagent_get_block(struct wav2p
       if (ret == wav2prg_ok)
         ret = functions->get_byte_func(context, functions, conf, &new_block);
       state->state = audiogenic_synced;
+      proceed_res = proceed(new_block, state);
       break;
     }
   }while(ret == wav2prg_ok
         && (received_blocks << 8)  + received_bytes < *block_size
-        && proceed(new_block, state)
+        && proceed_res == go_on
         );
   *block_size = (received_blocks << 8) + received_bytes;
   state->in_block = audiogenic_not_in_block;
+  if (proceed_res == lose_sync)
+    state->state = audiogenic_not_synced;
   return ret;
 }
 
