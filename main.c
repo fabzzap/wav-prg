@@ -35,12 +35,16 @@ static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,65},{60,60}};
 int main(int argc, char** argv)
 {
   FILE* file;
-  const char* loader_names[] = {"Special Agent/Strike Force Cobra", NULL};
+  const char* loader_names[] = {"Audiogenic", NULL};
 
   if(argc<2)
     return 1;
   
   file = fopen(argv[1],"rb");
+  if(!file){
+    printf("File %s not found\n",argv[1]);
+    return 2;
+  }
   
   register_loaders();
   wav2prg_get_new_context(

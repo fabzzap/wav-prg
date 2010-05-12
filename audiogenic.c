@@ -61,7 +61,7 @@ static const struct wav2prg_plugin_conf audiogenic =
 {
   msbf,
   wav2prg_xor_checksum,
-  3,
+  2,
   audiogenic_thresholds,
   audiogenic_ideal_pulse_lengths,
   wav2prg_synconbyte,
@@ -73,7 +73,7 @@ static const struct wav2prg_plugin_conf audiogenic =
 };
 
 static uint16_t specialagent_thresholds[]={594,1151};
-static uint16_t specialagent_ideal_pulse_lengths[]={512, 1080, 1360};
+static uint16_t specialagent_ideal_pulse_lengths[]={368,816, 1448};
 
 static const struct wav2prg_plugin_conf specialagent =
 {
@@ -118,9 +118,9 @@ enum audiogenic_proceed {
   go_on
 };
 
-static uint8_t proceed(uint8_t new_block, struct audiogenic_private_state *state)
+static enum audiogenic_proceed proceed(uint8_t new_block, struct audiogenic_private_state *state)
 {
-  uint8_t res;
+  enum audiogenic_proceed res;
 
   if (new_block == 0 || new_block == 1)
     return lose_sync;
