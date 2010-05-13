@@ -69,7 +69,6 @@ typedef enum wav2prg_return_values (*wav2prg_get_sync_byte)(struct wav2prg_conte
 typedef enum wav2prg_return_values (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, char*, uint16_t*, uint16_t*);
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef enum wav2prg_return_values (*wav2prg_get_loaded_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
-typedef void                       (*wav2prg_update_checksum)(struct wav2prg_context*, uint8_t);
 typedef uint8_t                    (*wav2prg_compute_checksum_step)(struct wav2prg_plugin_conf*, uint8_t, uint8_t);
 typedef void                       (*wav2prg_enable_checksum)(struct wav2prg_context*);
 typedef void                       (*wav2prg_disable_checksum)(struct wav2prg_context*);
