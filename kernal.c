@@ -38,6 +38,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
   0,/*ignored, overriding get_first_sync*/
   9,
   kernal_1stcopy_pilot_sequence,
+  0,
   NULL,
   &headerchunk_generate_private_state
 };
@@ -53,6 +54,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_second_copy =
   0,/*ignored, overriding get_first_sync*/
   9,
   kernal_2ndcopy_pilot_sequence,
+  0,
   NULL,
   &headerchunk_generate_private_state
 };
@@ -68,6 +70,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_first_copy =
   0,/*ignored, overriding get_first_sync*/
   9,
   kernal_1stcopy_pilot_sequence,
+  0,
   &datachunk_dependency,
   &datachunk_generate_private_state
 };
@@ -83,6 +86,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
   0,/*ignored, overriding get_first_sync*/
   9,
   kernal_2ndcopy_pilot_sequence,
+  0,
   &datachunk_dependency,
   &datachunk_generate_private_state
 };

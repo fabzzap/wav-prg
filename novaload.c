@@ -15,6 +15,8 @@ const struct wav2prg_plugin_conf novaload_conf =
   0,                 /*ignored, overriding get_first_sync*/
   sizeof(novaload_pilot_sequence),
   novaload_pilot_sequence,
+  0,
+  NULL,
   NULL
 };
 

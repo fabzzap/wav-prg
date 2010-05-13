@@ -138,6 +138,7 @@ struct wav2prg_plugin_conf {
     } byte_sync;
     uint8_t bit_sync;
   };
+  uint32_t min_pilots;
   struct wav2prg_dependency* dependency;
   void* private_state;
 };

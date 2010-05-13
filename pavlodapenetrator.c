@@ -33,6 +33,7 @@ static const struct wav2prg_plugin_conf pavlodapenetrator =
   0x08,
   sizeof(pavlodapenetrator_pilot_sequence),
   pavlodapenetrator_pilot_sequence,
+  0,
   NULL,
   &pavlodapenetrator_generate_private_state
 };

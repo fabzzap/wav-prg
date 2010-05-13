@@ -39,6 +39,8 @@ const void kernal_get_plugin(wav2prg_register_loader register_loader_func);
 const void novaload_get_plugin(wav2prg_register_loader register_loader_func);
 const void audiogenic_get_plugin(wav2prg_register_loader register_loader_func);
 const void pavlodapenetrator_get_plugin(wav2prg_register_loader register_loader_func);
+const void connection_get_plugin(wav2prg_register_loader register_loader_func);
+const void pavlodaold_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -48,6 +50,8 @@ void register_loaders(void) {
   novaload_get_plugin(register_loader);
   audiogenic_get_plugin(register_loader);
   pavlodapenetrator_get_plugin(register_loader);
+  connection_get_plugin(register_loader);
+  pavlodaold_get_plugin(register_loader);
 #endif
 }
 

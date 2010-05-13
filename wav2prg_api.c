@@ -223,26 +223,36 @@ static enum wav2prg_return_values get_block_default(struct wav2prg_context* cont
 
 static enum wav2prg_return_values get_sync_byte_using_shift_register(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
+  uint32_t min_pilots;
+  
   *byte = 0;
   do{
-    if(evolve_byte(context, functions, conf, byte) == wav2prg_invalid)
-      return wav2prg_invalid;
-  }while(*byte != conf->byte_sync.pilot_byte);
-  do{
-    if(context->subclassed_functions.get_byte_func(context, functions, conf, byte) == wav2prg_invalid)
-      return wav2prg_invalid;
-  } while (*byte == conf->byte_sync.pilot_byte);
+    do{
+      if(evolve_byte(context, functions, conf, byte) == wav2prg_invalid)
+          return wav2prg_invalid;
+    }while(*byte != conf->byte_sync.pilot_byte);
+    min_pilots = 0;
+    do{
+      min_pilots++;
+      if(context->subclassed_functions.get_byte_func(context, functions, conf, byte) == wav2prg_invalid)
+        return wav2prg_invalid;
+    } while (*byte == conf->byte_sync.pilot_byte);
+  } while(min_pilots < conf->min_pilots);
   return wav2prg_ok;
 };
 
 static enum wav2prg_return_values sync_to_bit_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t bit;
+  uint32_t min_pilots = 0, old_min_pilots = 0;
+
   do{
     enum wav2prg_return_values res = context->subclassed_functions.get_bit_func(context, functions, conf, &bit);
+    old_min_pilots = min_pilots;
     if (res == wav2prg_invalid || (bit != 0 && bit != 1))
       return wav2prg_invalid;
-  }while(bit != conf->bit_sync);
+    min_pilots = bit == conf->bit_sync ? 0 : min_pilots + 1;
+  }while(min_pilots != 0 || old_min_pilots < conf->min_pilots);
   return wav2prg_ok;
 };
 
@@ -346,6 +356,8 @@ static struct wav2prg_plugin_conf* get_new_state(const struct wav2prg_plugin_fun
   memcpy(conf->ideal_pulse_lengths, model_conf->ideal_pulse_lengths, conf->num_pulse_lengths * sizeof(uint16_t));
   conf->thresholds = malloc((conf->num_pulse_lengths - 1) * sizeof(uint16_t));
   memcpy(conf->thresholds, model_conf->thresholds, (conf->num_pulse_lengths - 1) * sizeof(uint16_t));
+  conf->min_pilots=model_conf->min_pilots;
+  conf->dependency=model_conf->dependency;
 
 
   if (size_of_private_state)
