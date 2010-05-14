@@ -12,12 +12,11 @@ static const struct wav2prg_plugin_conf pavlodaold =
   pavlodaold_thresholds,
   pavlodaold_ideal_pulse_lengths,
   wav2prg_synconbit,
-  
-  
-  {.bit_sync=1},
-  
-  
-  
+  /*Only the first element of a union can be initialised.
+  So, initialise byte_sync.pilot_byte with 1, so actually
+  bit_sync is initialised. Fill the other fields of byte_sync
+  with 0, they are ignored anyway*/
+  {1,0,0},
   514,
   NULL,
   NULL
