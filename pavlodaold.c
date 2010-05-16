@@ -54,6 +54,14 @@ static enum wav2prg_return_values pavlodaold_get_bit(struct wav2prg_context* con
   return wav2prg_ok;
 }
 
+enum wav2prg_return_values pavlodaold_get_loaded_checksum(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte){
+/* In Pavloda Old, it is very common that the last 0 bit of the checksum is corrupted.
+   If any problems occur in loading the checksum, assume the last bit is a 0 and see if the checksum is correct */
+  if(functions->get_byte_func(context, functions, conf, byte) == wav2prg_invalid)
+    (*byte) <<= 1;
+  return wav2prg_ok;
+}
+
 static const struct wav2prg_plugin_functions pavlodaold_functions =
 {
   pavlodaold_get_bit,
@@ -64,7 +72,7 @@ static const struct wav2prg_plugin_functions pavlodaold_functions =
   NULL,
   pavlodaold_get_new_state,
   pavlodaold_compute_checksum_step,
-  NULL,
+  pavlodaold_get_loaded_checksum,
   NULL,
   NULL
 };
