@@ -127,14 +127,14 @@ static enum wav2prg_return_values get_bit_default(struct wav2prg_context* contex
   }
 }
 
-static void wav2prg_reset_checksum_to(struct wav2prg_context* context, uint8_t byte)
+static void reset_checksum_to(struct wav2prg_context* context, uint8_t byte)
 {
   context->checksum = byte;
 }
 
-static void wav2prg_reset_checksum(struct wav2prg_context* context)
+static void reset_checksum(struct wav2prg_context* context)
 {
-  wav2prg_reset_checksum_to(context, 0);
+  reset_checksum_to(context, 0);
 }
 
 static uint8_t compute_checksum_step_default(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte) {
@@ -147,7 +147,10 @@ static uint8_t compute_checksum_step_default(struct wav2prg_plugin_conf* conf, u
 
 static void enable_checksum_default(struct wav2prg_context* context)
 {
-  context->checksum_enabled = 1;
+  if(!context->checksum_enabled){
+    context->checksum_enabled = 1;
+    reset_checksum(context);
+  }
 }
 
 static void disable_checksum_default(struct wav2prg_context* context)
@@ -502,7 +505,9 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       check_checksum_default,
       NULL,
       enable_checksum_default,
-      disable_checksum_default
+      disable_checksum_default,
+      reset_checksum_to,
+      reset_checksum
     },
     tolerance_type,
     tolerance_type,
@@ -532,7 +537,9 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     check_checksum_default,
     get_loaded_checksum_default,
     enable_checksum_default,
-    disable_checksum_default
+    disable_checksum_default,
+    reset_checksum_to,
+    reset_checksum
   };
   struct wav2prg_comparison_block *old_comparison_block = NULL;
 
@@ -555,7 +562,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       conf = get_new_state(plugin_functions);
 
     block.name[16] = 0;
-    context.checksum = 0;
     pos = get_pos_func(audiotap);
     disable_checksum_default(&context);
     free(context.syncs.block_syncs);

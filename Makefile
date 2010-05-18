@@ -7,7 +7,8 @@ wav2prg: wav2prg_api.o \
          dependency_tree.o \
          audiogenic.o \
          pavlodapenetrator.o \
-         connection.o \
-         pavlodaold.o
+         pavlodaold.o \
+         pavloda.o \
+         connection.o
 	$(CC) -o $@ $^
 
