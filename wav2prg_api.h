@@ -155,10 +155,13 @@ struct plugin_tree {
 
 struct wav2prg_context;
 
+struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name);
+
 void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
                              wav2prg_test_eof_func test_eof_func,
                              wav2prg_get_pos_func get_pos_func,
                              enum wav2prg_tolerance_type tolerance_type,
+                             struct wav2prg_plugin_conf* conf,
                              const char* loader_name,
                              const char** loader_names,
                              struct wav2prg_tolerance* tolerances,

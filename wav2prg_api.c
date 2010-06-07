@@ -473,16 +473,21 @@ static uint8_t look_for_dependent_plugin(struct plugin_tree** current_plugin_in_
   return 0;
 }
 
+struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name){
+  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
+  return plugin_functions ? get_new_state(plugin_functions) : NULL;
+}
+
 void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
                              wav2prg_test_eof_func test_eof_func,
                              wav2prg_get_pos_func get_pos_func,
                              enum wav2prg_tolerance_type tolerance_type,
+                             struct wav2prg_plugin_conf* conf,
                              const char* loader_name,
                              const char** loader_names,
                              struct wav2prg_tolerance* tolerances,
                              void* audiotap)
 {
-  struct wav2prg_plugin_conf* conf = NULL;
   struct plugin_tree* dependency_tree = NULL;
   struct plugin_tree* current_plugin_in_tree = NULL;
   const struct wav2prg_plugin_functions* plugin_functions = NULL;
