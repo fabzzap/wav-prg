@@ -625,13 +625,16 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       struct wav2prg_comparison_block *new_comparison_block = NULL;
 
       if(endres == wav2prg_checksum_state_correct
-        && current_plugin_in_tree != NULL){
+        && current_plugin_in_tree != NULL)
+        /* check if the block just found suits a loader dependent on the one just used */
         found_dependent_plugin = look_for_dependent_plugin(&current_plugin_in_tree, &conf, &block, &new_comparison_block);
-      }
 
       if (!found_dependent_plugin
       && old_comparison_block != NULL)
-        free_old_comparison_block = !plugin_functions->recognize_block_as_mine_with_start_end_func(conf, old_comparison_block->block.data, old_comparison_block->block.start, old_comparison_block->block.end, old_comparison_block->name, &old_comparison_block->start, &old_comparison_block->end);
+        /* check if the loader just used can be used again */
+        free_old_comparison_block = conf->following_blocks_of_same_type == wav2prg_no_more_blocks       ? 1 :
+                                    conf->following_blocks_of_same_type == wav2prg_any_number_of_blocks ? 0 :
+                                    !plugin_functions->recognize_block_as_mine_with_start_end_func(conf, old_comparison_block->block.data, old_comparison_block->block.start, old_comparison_block->block.end, old_comparison_block->name, &old_comparison_block->start, &old_comparison_block->end);
 
       if (free_old_comparison_block){
         current_plugin_in_tree = dependency_tree;

@@ -37,6 +37,7 @@ static const struct wav2prg_plugin_conf pavloda =
   pavloda_pilot_sequence,
   1000,
   NULL,
+  wav2prg_any_number_of_blocks,
   &pavloda_generate_private_state
 };
 

@@ -35,8 +35,8 @@ static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,65},{60,60}};
 int main(int argc, char** argv)
 {
   FILE* file;
-  const char* loader_names[] = {"Connection", NULL};
-  const char* loader_name = "Pavloda";
+  const char* loader_names[] = {"Kernal data chunk 1st copy", NULL};
+  const char* loader_name = NULL;/*"Pavloda";*/
   struct wav2prg_plugin_conf* conf;
 
   if(argc<2)
@@ -49,14 +49,14 @@ int main(int argc, char** argv)
   }
   
   register_loaders();
-  conf = wav2prg_get_loader(loader_name);
+  conf = loader_name ? wav2prg_get_loader(loader_name) : NULL;
 
   wav2prg_get_new_context(
   getrawpulse, iseof, get_pos,
   wav2prg_adaptively_tolerant,
   conf,
   loader_name,
-  NULL /*loader_names*/,
+  /*NULL */loader_names,
   kernal_tolerances/*turbotape_tolerances*/, file);
   return 0;
 }

@@ -70,6 +70,7 @@ static const struct wav2prg_plugin_conf audiogenic =
   audiogenic_pilot_sequence,
   0,
   NULL,
+  wav2prg_any_number_of_blocks,
   &audiogenic_specialagent_generate_private_state
 };
 
@@ -89,6 +90,7 @@ static const struct wav2prg_plugin_conf specialagent =
   audiogenic_pilot_sequence,        /*ignored, default get_sync unused*/
   0,                                /*ignored, default get_sync unused*/
   NULL,
+  wav2prg_any_number_of_blocks,
   &audiogenic_specialagent_generate_private_state
 };
 

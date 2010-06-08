@@ -144,6 +144,11 @@ struct wav2prg_plugin_conf {
   };
   uint32_t min_pilots;
   struct wav2prg_dependency* dependency;
+  enum{
+    wav2prg_no_more_blocks,
+	wav2prg_any_number_of_blocks,
+	wav2prg_check_every_time
+  } following_blocks_of_same_type;
   void* private_state;
 };
 

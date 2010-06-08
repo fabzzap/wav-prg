@@ -8,14 +8,6 @@ static struct wav2prg_generate_private_state headerchunk_generate_private_state 
   NULL
 };
 
-static const struct datachunk_private_state {
-  uint8_t type;
-} datachunk_private_state_model = {0};
-static struct wav2prg_generate_private_state datachunk_generate_private_state = {
-  sizeof(struct datachunk_private_state),
-  &datachunk_private_state_model
-};
-
 static uint16_t kernal_thresholds[]={448, 576};
 static uint16_t kernal_ideal_pulse_lengths[]={384, 512, 688};
 static uint8_t kernal_1stcopy_pilot_sequence[]={137,136,135,134,133,132,131,130,129};
@@ -40,6 +32,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
   kernal_1stcopy_pilot_sequence,
   0,
   NULL,
+  wav2prg_no_more_blocks,
   &headerchunk_generate_private_state
 };
 
@@ -56,6 +49,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_second_copy =
   kernal_2ndcopy_pilot_sequence,
   0,
   NULL,
+  wav2prg_no_more_blocks,
   &headerchunk_generate_private_state
 };
 
@@ -72,7 +66,8 @@ static const struct wav2prg_plugin_conf kernal_datachunk_first_copy =
   kernal_1stcopy_pilot_sequence,
   0,
   &datachunk_dependency,
-  &datachunk_generate_private_state
+  wav2prg_no_more_blocks,
+  NULL
 };
 
 static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
@@ -88,7 +83,8 @@ static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
   kernal_2ndcopy_pilot_sequence,
   0,
   &datachunk_dependency,
-  &datachunk_generate_private_state
+  wav2prg_no_more_blocks,
+  NULL
 };
 
 static enum wav2prg_return_values kernal_get_bit_func(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit)
@@ -257,16 +253,10 @@ static const struct wav2prg_plugin_conf* kernal_datachunk_secondcopy_get_new_sta
 
 static uint8_t is_headerchunk(struct wav2prg_plugin_conf* conf, uint8_t* headerchunk_block, uint16_t headerchunk_start, uint16_t headerchunk_end, char* name, uint16_t* start, uint16_t* end)
 {
-  struct datachunk_private_state *state = (struct datachunk_private_state *)conf->private_state;
-
-  if(state->type != 0)
-    return 0;
-    
   if(headerchunk_start == 828
   && headerchunk_end >= 849
   && headerchunk_end <= 1020
   && (headerchunk_block[0] == 1 || headerchunk_block[0] == 3)){
-    state->type = headerchunk_block[0];
     *start = headerchunk_block[1] + (headerchunk_block[2] << 8);
     *end   = headerchunk_block[3] + (headerchunk_block[4] << 8);
 

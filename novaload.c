@@ -17,6 +17,7 @@ const struct wav2prg_plugin_conf novaload_conf =
   novaload_pilot_sequence,
   0,
   NULL,
+  wav2prg_no_more_blocks,
   NULL
 };
 

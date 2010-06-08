@@ -4,14 +4,6 @@ static uint16_t connection_thresholds[]={263};
 static uint16_t connection_ideal_pulse_lengths[]={224, 336};
 static uint8_t connection_pilot_sequence[]={16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
 
-static const struct connection_private_state {
-  uint8_t type;
-} connection_private_state_model = {0};
-static struct wav2prg_generate_private_state connection_generate_private_state = {
-  sizeof(struct connection_private_state),
-  &connection_private_state_model
-};
-
 static struct wav2prg_dependency connection_dependency = {
   wav2prg_kernal_data,
   NULL,
@@ -31,7 +23,8 @@ static const struct wav2prg_plugin_conf connection =
   connection_pilot_sequence,
   0,
   &connection_dependency,
-  &connection_generate_private_state
+  wav2prg_no_more_blocks,
+  NULL
 };
 
 static const struct wav2prg_plugin_conf* connection_get_state(void)
@@ -41,11 +34,6 @@ static const struct wav2prg_plugin_conf* connection_get_state(void)
 
 static uint8_t is_connection(struct wav2prg_plugin_conf* conf, uint8_t* datachunk_block, uint16_t datachunk_start, uint16_t datachunk_end, char* name, uint16_t* start, uint16_t* end)
 {
-  struct connection_private_state *state = (struct connection_private_state *)conf->private_state;
-
-  if(state->type != 0)
-    return 0;
-  
   if(datachunk_start != 698 || datachunk_end != 812)
     return 0;
   
@@ -61,22 +49,21 @@ static uint8_t is_connection(struct wav2prg_plugin_conf* conf, uint8_t* datachun
   else
     return 0;
 
-  state->type = 1;
   return 1;
 }
 
 static const struct wav2prg_plugin_functions connection_functions = {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    connection_get_state,
-    NULL,
-    NULL,
-    NULL,
-    is_connection
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  connection_get_state,
+  NULL,
+  NULL,
+  NULL,
+  is_connection
 };
 
 PLUGIN_ENTRY(connection)
