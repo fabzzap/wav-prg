@@ -37,7 +37,6 @@ static const struct wav2prg_plugin_conf pavloda =
   pavloda_pilot_sequence,
   1000,
   NULL,
-  wav2prg_any_number_of_blocks,
   &pavloda_generate_private_state
 };
 
@@ -45,7 +44,7 @@ static uint8_t pavloda_compute_checksum_step(struct wav2prg_plugin_conf* conf, u
   return old_checksum + byte + 1;
 }
 
-static enum wav2prg_return_values pavloda_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, char* name, uint16_t* start, uint16_t* end)
+static enum wav2prg_return_values pavloda_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
 {
   uint8_t subblocks;
   uint8_t load_offset;
@@ -56,15 +55,15 @@ static enum wav2prg_return_values pavloda_get_block_info(struct wav2prg_context*
     return wav2prg_invalid;
   if(functions->get_byte_func(context, functions, conf, &subblocks) == wav2prg_invalid || subblocks != 0)
     return wav2prg_invalid;
-  if(functions->get_word_func(context, functions, conf, start) == wav2prg_invalid)
+  if(functions->get_word_func(context, functions, conf, &info->start) == wav2prg_invalid)
     return wav2prg_invalid;
   if(functions->get_byte_func(context, functions, conf, &subblocks) == wav2prg_invalid)
     return wav2prg_invalid;
   if(functions->get_byte_func(context, functions, conf, &load_offset) == wav2prg_invalid)
     return wav2prg_invalid;
   state->bytes_still_to_load_from_primary_subblock = 256 - load_offset;
-  *end = *start + 256 + 256*subblocks;
-  (*start) += load_offset;
+  info->end = info->start + 256 + 256*subblocks;
+  info->start += load_offset;
   return wav2prg_ok;
 }
 

@@ -406,71 +406,68 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
   return plugin_functions;
 }
 
-struct wav2prg_comparison_block {
-  uint16_t start;
-  uint16_t end;
-  char name[17];
-  struct wav2prg_block block;
-};
+static enum wav2prg_recognize compare_block_on_one_plugin(const struct wav2prg_plugin_functions* plugin_functions,
+                                         struct wav2prg_plugin_conf* conf,
+                                         struct wav2prg_block* block,
+                                         struct wav2prg_block_info** detected_info) {
+  if (plugin_functions->recognize_block_as_mine_func)
+    return plugin_functions->recognize_block_as_mine_func(conf, block);
+  if (plugin_functions->recognize_block_as_mine_with_start_end_func){
+    *detected_info = malloc(sizeof(struct wav2prg_block_info));
+    memcpy((*detected_info)->name, block->info.name, sizeof(block->info.name));
+    return plugin_functions->recognize_block_as_mine_with_start_end_func(conf,
+                                                                         block,
+                                                                         *detected_info);
+  }
+  return wav2prg_not_mine;
+}
 
-static uint8_t look_for_dependent_plugin(struct plugin_tree** current_plugin_in_tree,
+static enum wav2prg_recognize look_for_dependent_plugin(struct plugin_tree** current_plugin_in_tree,
                                          struct wav2prg_plugin_conf** old_conf,
                                          struct wav2prg_block* block,
-                                         struct wav2prg_comparison_block** comparison_block)
+                                         struct wav2prg_block_info** detected_info)
 {
   struct plugin_tree* dependency_being_checked;
   struct wav2prg_plugin_conf* new_conf = NULL;
-  struct wav2prg_comparison_block* new_comparison_block = malloc(sizeof(* new_comparison_block));
-  uint8_t start_end_known = 0;
-
-  memcpy(new_comparison_block->name, block->name, sizeof block->name);
-  memcpy(&new_comparison_block->block, block, sizeof *block);
+  enum wav2prg_recognize result = wav2prg_not_mine, last_result;
 
   for(dependency_being_checked = (*current_plugin_in_tree)->first_child;
       dependency_being_checked != NULL;
       dependency_being_checked = dependency_being_checked->first_sibling) {
     const struct wav2prg_plugin_functions* plugin_to_test_functions = get_loader_by_name(dependency_being_checked->node);
-    struct wav2prg_plugin_conf* plugin_to_test_conf = get_new_state(plugin_to_test_functions);
 
-    if (plugin_to_test_functions
-     && plugin_to_test_functions->recognize_block_as_mine_func
-     && plugin_to_test_functions->recognize_block_as_mine_func(plugin_to_test_conf, block->data, block->start, block->end)) {
-      start_end_known = 0;
-      if (new_conf)
-        delete_state(new_conf);
-      new_conf = plugin_to_test_conf;
-      *current_plugin_in_tree = dependency_being_checked;
-      break;
+    if (plugin_to_test_functions){
+      struct wav2prg_plugin_conf* plugin_to_test_conf = get_new_state(plugin_to_test_functions);
+      struct wav2prg_block_info* last_detected_info = NULL;
+
+      last_result = compare_block_on_one_plugin(plugin_to_test_functions,
+                                                plugin_to_test_conf,
+                                                block,
+                                                &last_detected_info);
+      if (last_result != wav2prg_not_mine) {
+        result = last_result;
+        if (new_conf)
+          delete_state(new_conf);
+        free(*detected_info);
+        *detected_info = last_detected_info;
+        new_conf = plugin_to_test_conf;
+        *current_plugin_in_tree = dependency_being_checked;
+        if(!strcmp(dependency_being_checked->node, "Kernal data chunk 1st copy")
+        || !strcmp(dependency_being_checked->node, "Kernal data chunk 2nd copy"))
+          continue;
+        else
+          break;
+      }
+      free(last_detected_info);
+      delete_state(plugin_to_test_conf);
     }
-    if (plugin_to_test_functions
-     && plugin_to_test_functions->recognize_block_as_mine_with_start_end_func
-     && plugin_to_test_functions->recognize_block_as_mine_with_start_end_func(plugin_to_test_conf, block->data, block->start, block->end, new_comparison_block->name, &new_comparison_block->start, &new_comparison_block->end)) {
-      start_end_known = 1;
-      if (new_conf)
-        delete_state(new_conf);
-      new_conf = plugin_to_test_conf;
-      *current_plugin_in_tree = dependency_being_checked;
-      if(!strcmp(dependency_being_checked->node, "Kernal data chunk 1st copy")
-      || !strcmp(dependency_being_checked->node, "Kernal data chunk 2nd copy"))
-        continue;
-      else
-        break;
-    }
-    delete_state(plugin_to_test_conf);
   }
-  if(!start_end_known){
-    free(new_comparison_block);
-    *comparison_block = NULL;
-  }
-  else
-    *comparison_block = new_comparison_block;
 
   if(new_conf){
     delete_state(*old_conf);
     *old_conf = new_conf;
-    return 1;
   }
-  return 0;
+  return result;
 }
 
 struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name){
@@ -546,7 +543,8 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     reset_checksum_to,
     reset_checksum
   };
-  struct wav2prg_comparison_block *old_comparison_block = NULL;
+  struct wav2prg_block_info *previously_found_block_info = NULL;
+  struct wav2prg_block *comparison_block = NULL;
 
   if(loader_names != NULL) {
     digest_list(loader_names, &dependency_tree);
@@ -566,7 +564,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     if (conf == NULL)
       conf = get_new_state(plugin_functions);
 
-    block.name[16] = 0;
+    block.info.name[16] = 0;
     pos = get_pos_func(audiotap);
     disable_checksum_default(&context);
     free(context.syncs.block_syncs);
@@ -582,21 +580,19 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     printf("found something starting at %d \n",context.syncs.block_syncs[0]);
     pos = get_pos_func(audiotap);
     printf("and syncing at %d \n",pos);
-    if (!old_comparison_block) {
-      res = plugin_functions->get_block_info(&context, &functions, conf, block.name, &block.start, &block.end);
+    if (!previously_found_block_info) {
+      res = plugin_functions->get_block_info(&context, &functions, conf, &block.info);
       if(res != wav2prg_ok)
         continue;
     }
-    else {
-      block.start = old_comparison_block->start;
-      block.end = old_comparison_block->end;
-      memcpy(block.name, old_comparison_block->name, sizeof(block.name));
-    }
-    if(block.end < block.start && block.end != 0)
+    else
+      memcpy(&block.info, previously_found_block_info, sizeof block.info);
+
+    if(block.info.end < block.info.start && block.info.end != 0)
       continue;
     pos = get_pos_func(audiotap);
     printf("block info ends at %d\n",pos);
-    real_block_size = context.block_total_size = block.end - block.start;
+    real_block_size = context.block_total_size = block.info.end - block.info.start;
     context.block_current_size = 0;
     enable_checksum_default(&context);
     res = context.subclassed_functions.get_block_func(&context, &functions, conf, block.data, &real_block_size, &skipped_at_beginning);
@@ -606,7 +602,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     printf("checksum starts at %d \n",pos);
     endres = context.subclassed_functions.check_checksum_func(&context, &functions, conf);
     pos = get_pos_func(audiotap);
-    printf("name %s start %u end %u real end %u ends at %d ", block.name, block.start, block.end, block.start + real_block_size, pos);
+    printf("name %s start %u end %u real end %u ends at %d ", block.info.name, block.info.start, block.info.end, block.info.start + real_block_size, pos);
     switch(endres){
     case wav2prg_checksum_state_correct:
       printf("correct\n");
@@ -620,32 +616,47 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     }
 
     {
-      uint8_t found_dependent_plugin = 0;
-      uint8_t free_old_comparison_block = 0;
-      struct wav2prg_comparison_block *new_comparison_block = NULL;
+      enum wav2prg_recognize found_dependent_plugin = wav2prg_not_mine, keep_using_plugin = wav2prg_not_mine;
+
+      free(previously_found_block_info);
+      previously_found_block_info = NULL;
 
       if(endres == wav2prg_checksum_state_correct
         && current_plugin_in_tree != NULL)
         /* check if the block just found suits a loader dependent on the one just used */
-        found_dependent_plugin = look_for_dependent_plugin(&current_plugin_in_tree, &conf, &block, &new_comparison_block);
-
-      if (!found_dependent_plugin
-      && old_comparison_block != NULL)
+        found_dependent_plugin = look_for_dependent_plugin(&current_plugin_in_tree,
+                                                           &conf,
+                                                           &block,
+                                                           &previously_found_block_info);
+      if(found_dependent_plugin != wav2prg_not_mine) {
+        free(comparison_block);
+        if(found_dependent_plugin == wav2prg_mine) {
+          comparison_block = malloc(sizeof(struct wav2prg_block));
+          memcpy(comparison_block, &block, sizeof(struct wav2prg_block));
+        }
+        else
+          comparison_block = NULL;
+      }
+      else if (comparison_block != NULL) {
         /* check if the loader just used can be used again */
-        free_old_comparison_block = conf->following_blocks_of_same_type == wav2prg_no_more_blocks       ? 1 :
-                                    conf->following_blocks_of_same_type == wav2prg_any_number_of_blocks ? 0 :
-                                    !plugin_functions->recognize_block_as_mine_with_start_end_func(conf, old_comparison_block->block.data, old_comparison_block->block.start, old_comparison_block->block.end, old_comparison_block->name, &old_comparison_block->start, &old_comparison_block->end);
-
-      if (free_old_comparison_block){
-        current_plugin_in_tree = dependency_tree;
-        delete_state(conf);
-        conf = NULL;
+        keep_using_plugin = compare_block_on_one_plugin(plugin_functions,
+                                    conf,
+                                    &block,
+                                    &previously_found_block_info);
+        if(keep_using_plugin != wav2prg_mine) {
+          free(comparison_block);
+          comparison_block = NULL;
+        }
       }
 
-      if (found_dependent_plugin || free_old_comparison_block){
-        free(old_comparison_block);
-        old_comparison_block=new_comparison_block;
-
+      if (keep_using_plugin == wav2prg_not_mine){
+        if (found_dependent_plugin == wav2prg_not_mine) {
+          free(previously_found_block_info);
+          previously_found_block_info = NULL;
+          current_plugin_in_tree = dependency_tree;
+          delete_state(conf);
+          conf = NULL;
+        }
         loader_name = current_plugin_in_tree->node;
         plugin_functions = NULL;
       }

@@ -70,7 +70,6 @@ static const struct wav2prg_plugin_conf audiogenic =
   audiogenic_pilot_sequence,
   0,
   NULL,
-  wav2prg_any_number_of_blocks,
   &audiogenic_specialagent_generate_private_state
 };
 
@@ -90,7 +89,6 @@ static const struct wav2prg_plugin_conf specialagent =
   audiogenic_pilot_sequence,        /*ignored, default get_sync unused*/
   0,                                /*ignored, default get_sync unused*/
   NULL,
-  wav2prg_any_number_of_blocks,
   &audiogenic_specialagent_generate_private_state
 };
 
@@ -105,14 +103,14 @@ static enum wav2prg_return_values audiogenic_sync(struct wav2prg_context* contex
   }
 }
 
-static enum wav2prg_return_values audiogenic_specialagent_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, char* name, uint16_t* start, uint16_t* end)
+static enum wav2prg_return_values audiogenic_specialagent_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
 {
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
   if(state->state != audiogenic_synced && functions->get_byte_func(context, functions, conf, &state->last_block_loaded) == wav2prg_invalid)
     return wav2prg_invalid;
   state->state = audiogenic_synced;
-  *start = state->last_block_loaded << 8;
-  *end = 0;
+  info->start = state->last_block_loaded << 8;
+  info->end = 0;
   return wav2prg_ok;
 }
 

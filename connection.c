@@ -23,7 +23,6 @@ static const struct wav2prg_plugin_conf connection =
   connection_pilot_sequence,
   0,
   &connection_dependency,
-  wav2prg_no_more_blocks,
   NULL
 };
 
@@ -32,24 +31,24 @@ static const struct wav2prg_plugin_conf* connection_get_state(void)
   return &connection;
 }
 
-static uint8_t is_connection(struct wav2prg_plugin_conf* conf, uint8_t* datachunk_block, uint16_t datachunk_start, uint16_t datachunk_end, char* name, uint16_t* start, uint16_t* end)
+static enum wav2prg_recognize is_connection(struct wav2prg_plugin_conf* conf, struct wav2prg_block* datachunk_block, struct wav2prg_block_info* info)
 {
-  if(datachunk_start != 698 || datachunk_end != 812)
-    return 0;
+  if(datachunk_block->info.start != 698 || datachunk_block->info.end != 812)
+    return wav2prg_not_mine;
   
-  if (datachunk_block[702-698] == 173 && datachunk_block[717-698] == 173)
-    *start=datachunk_block[791-698]*256+datachunk_block[773-698];
-  else if (datachunk_block[702-698] == 165 && datachunk_block[717-698] == 165)
-    *start=2049;
+  if (datachunk_block->data[702-698] == 173 && datachunk_block->data[717-698] == 173)
+    info->start=datachunk_block->data[791-698]*256+datachunk_block->data[773-698];
+  else if (datachunk_block->data[702-698] == 165 && datachunk_block->data[717-698] == 165)
+    info->start=2049;
   else
-    return 0;
+    return wav2prg_not_mine;
     
-  if (datachunk_block[707-698] == 173 && datachunk_block[712-698] == 173)
-    *end=datachunk_block[780-698]*256+datachunk_block[787-698];
+  if (datachunk_block->data[707-698] == 173 && datachunk_block->data[712-698] == 173)
+    info->end=datachunk_block->data[780-698]*256+datachunk_block->data[787-698];
   else
-    return 0;
+    return wav2prg_not_mine;
 
-  return 1;
+  return wav2prg_mine_following_not;
 }
 
 static const struct wav2prg_plugin_functions connection_functions = {

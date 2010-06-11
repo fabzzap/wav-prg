@@ -37,10 +37,14 @@ enum wav2prg_findpilot_type {
   wav2prg_synconbyte
 };
 
-struct wav2prg_block {
+struct wav2prg_block_info {
   uint16_t start;
   uint16_t end;
   char name[17];
+};
+
+struct wav2prg_block {
+  struct wav2prg_block_info info;
   unsigned char data[65536];
 };
 
@@ -48,6 +52,12 @@ enum wav2prg_checksum_state {
   wav2prg_checksum_state_unverified,
   wav2prg_checksum_state_correct,
   wav2prg_checksum_state_load_error
+};
+
+enum wav2prg_recognize {
+  wav2prg_not_mine,
+  wav2prg_mine_following_not,
+  wav2prg_mine
 };
 
 struct wav2prg_context;
@@ -66,7 +76,7 @@ typedef enum wav2prg_return_values (*wav2prg_get_word_bigendian_func)(struct wav
 typedef enum wav2prg_return_values (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*, uint16_t*, uint16_t*);
 typedef enum wav2prg_return_values (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef enum wav2prg_return_values (*wav2prg_get_sync_byte)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
-typedef enum wav2prg_return_values (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, char*, uint16_t*, uint16_t*);
+typedef enum wav2prg_return_values (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_block_info*);
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef enum wav2prg_return_values (*wav2prg_get_loaded_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef void                       (*wav2prg_reset_checksum_to)(struct wav2prg_context*, uint8_t);
@@ -76,8 +86,8 @@ typedef void                       (*wav2prg_enable_checksum)(struct wav2prg_con
 typedef void                       (*wav2prg_disable_checksum)(struct wav2prg_context*);
 typedef const struct wav2prg_plugin_conf* (*wav2prg_get_new_plugin_state)(void);
 typedef void                       (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
-typedef uint8_t                    (*wav2prg_recognize_block_as_mine)(struct wav2prg_plugin_conf*, uint8_t*, uint16_t, uint16_t);
-typedef uint8_t                    (*wav2prg_recognize_block_as_mine_with_start_end)(struct wav2prg_plugin_conf*, uint8_t*, uint16_t, uint16_t, char*, uint16_t*, uint16_t*);
+typedef enum wav2prg_recognize     (*wav2prg_recognize_block_as_mine)(struct wav2prg_plugin_conf*, struct wav2prg_block*);
+typedef enum wav2prg_recognize     (*wav2prg_recognize_block_as_mine_with_start_end)(struct wav2prg_plugin_conf*, struct wav2prg_block*, struct wav2prg_block_info*);
 
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
@@ -144,11 +154,6 @@ struct wav2prg_plugin_conf {
   };
   uint32_t min_pilots;
   struct wav2prg_dependency* dependency;
-  enum{
-    wav2prg_no_more_blocks,
-	wav2prg_any_number_of_blocks,
-	wav2prg_check_every_time
-  } following_blocks_of_same_type;
   void* private_state;
 };
 
