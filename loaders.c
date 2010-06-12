@@ -42,6 +42,7 @@ const void pavlodapenetrator_get_plugin(wav2prg_register_loader register_loader_
 const void pavlodaold_get_plugin(wav2prg_register_loader register_loader_func);
 const void pavloda_get_plugin(wav2prg_register_loader register_loader_func);
 const void connection_get_plugin(wav2prg_register_loader register_loader_func);
+const void rackit_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -54,6 +55,7 @@ void register_loaders(void) {
   pavlodaold_get_plugin(register_loader);
   pavloda_get_plugin(register_loader);
   connection_get_plugin(register_loader);
+  rackit_get_plugin(register_loader);
 #endif
 }
 

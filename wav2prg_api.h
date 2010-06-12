@@ -88,6 +88,7 @@ typedef const struct wav2prg_plugin_conf* (*wav2prg_get_new_plugin_state)(void);
 typedef void                       (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
 typedef enum wav2prg_recognize     (*wav2prg_recognize_block_as_mine)(struct wav2prg_plugin_conf*, struct wav2prg_block*);
 typedef enum wav2prg_recognize     (*wav2prg_recognize_block_as_mine_with_start_end)(struct wav2prg_plugin_conf*, struct wav2prg_block*, struct wav2prg_block_info*);
+typedef void                       (*wav2prg_number_to_name)(uint8_t number, char* name);
 
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
@@ -104,6 +105,7 @@ struct wav2prg_functions {
   wav2prg_disable_checksum disable_checksum_func;
   wav2prg_reset_checksum_to reset_checksum_to_func;
   wav2prg_reset_checksum reset_checksum_func;
+  wav2prg_number_to_name number_to_name_func;
 };
 
 struct wav2prg_generate_private_state 

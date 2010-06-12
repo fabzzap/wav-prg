@@ -9,6 +9,7 @@ wav2prg: wav2prg_api.o \
          pavlodapenetrator.o \
          pavlodaold.o \
          pavloda.o \
-         connection.o
+         connection.o \
+         rackit.o
 	$(CC) -o $@ $^
 

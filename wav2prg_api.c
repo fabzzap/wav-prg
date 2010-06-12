@@ -333,6 +333,24 @@ static enum wav2prg_return_values get_loaded_checksum_default(struct wav2prg_con
   return context->subclassed_functions.get_byte_func(context, functions, conf, byte);
 }
 
+static void number_to_name(uint8_t number, char* name)
+{
+  uint8_t j=100, i=0, include_next_digit=0;
+  while(j){
+    unsigned char digit=number / j;
+    if (j==1)
+      include_next_digit = 1;
+    if (digit || include_next_digit){
+      name[i++]=digit+'0';
+      include_next_digit=1;
+    }
+    number%=j;
+    j/=10;
+  }
+  while(i<16)
+    name[i++]=' ';
+}
+
 static struct wav2prg_plugin_conf* get_new_state(const struct wav2prg_plugin_functions* plugin_functions)
 {
   struct wav2prg_plugin_conf* conf = calloc(1, sizeof(struct wav2prg_plugin_conf));
@@ -509,7 +527,8 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       enable_checksum_default,
       disable_checksum_default,
       reset_checksum_to,
-      reset_checksum
+      reset_checksum,
+      number_to_name
     },
     tolerance_type,
     tolerance_type,
@@ -541,7 +560,8 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     enable_checksum_default,
     disable_checksum_default,
     reset_checksum_to,
-    reset_checksum
+    reset_checksum,
+    number_to_name
   };
   struct wav2prg_block_info *previously_found_block_info = NULL;
   struct wav2prg_block *comparison_block = NULL;
