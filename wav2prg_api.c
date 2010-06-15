@@ -335,20 +335,37 @@ static enum wav2prg_return_values get_loaded_checksum_default(struct wav2prg_con
 
 static void number_to_name(uint8_t number, char* name)
 {
-  uint8_t j=100, i=0, include_next_digit=0;
+  uint8_t j=100, include_next_digit=0, digit_insertion_pos, max_allowed_pos_of_this_digit = 13;
+
+  for(digit_insertion_pos = 16; digit_insertion_pos > 0; digit_insertion_pos--)
+    if (name[digit_insertion_pos - 1] != ' ')
+      break;
+  if (digit_insertion_pos > 0)
+    digit_insertion_pos++;
+
   while(j){
     unsigned char digit=number / j;
-    if (j==1)
-      include_next_digit = 1;
-    if (digit || include_next_digit){
-      name[i++]=digit+'0';
+
+    if (!include_next_digit)
+    {
+      if (j == 1 || digit > 0)
+      {
+        if (max_allowed_pos_of_this_digit < digit_insertion_pos)
+        {
+          digit_insertion_pos = max_allowed_pos_of_this_digit;
+          name[digit_insertion_pos - 1] = ' ';
+        }
+        include_next_digit = 1;
+      }
+    }
+    if (include_next_digit){
+      name[digit_insertion_pos++]=digit+'0';
       include_next_digit=1;
     }
     number%=j;
     j/=10;
+    max_allowed_pos_of_this_digit++;
   }
-  while(i<16)
-    name[i++]=' ';
 }
 
 static struct wav2prg_plugin_conf* get_new_state(const struct wav2prg_plugin_functions* plugin_functions)
@@ -584,7 +601,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     if (conf == NULL)
       conf = get_new_state(plugin_functions);
 
-    block.info.name[16] = 0;
+    strcpy(block.info.name, "                ");
     pos = get_pos_func(audiotap);
     disable_checksum_default(&context);
     free(context.syncs.block_syncs);
@@ -660,9 +677,9 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       else if (comparison_block != NULL) {
         /* check if the loader just used can be used again */
         keep_using_plugin = compare_block_on_one_plugin(plugin_functions,
-                                    conf,
-                                    &block,
-                                    &previously_found_block_info);
+                                                        conf,
+                                                        comparison_block,
+                                                        &previously_found_block_info);
         if(keep_using_plugin != wav2prg_mine) {
           free(comparison_block);
           comparison_block = NULL;
