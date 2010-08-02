@@ -3,6 +3,8 @@
 #include <string.h>
 #include <malloc.h>
 
+#include "loaders.h"
+
 struct loader {
   const struct wav2prg_plugin_functions* functions;
   const char* name;
@@ -11,15 +13,20 @@ struct loader {
 
 static struct loader *loader_list = NULL;
 
-static void register_loader(const struct wav2prg_plugin_functions* functions, const char* name) {
+static unsigned char register_loader(const struct wav2prg_plugin_functions* functions, const char* name) {
   struct loader *new_loader = malloc(sizeof(struct loader));
   struct loader **last_loader;
+
+  if (get_loader_by_name(name))
+    return 0;/*duplicate name*/
 
   for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
   new_loader->functions=functions;
   new_loader->name=name;
   new_loader->next=NULL;
   *last_loader=new_loader;
+  
+  return 1;
 }
 
 static void unregister_first_loader(void) {

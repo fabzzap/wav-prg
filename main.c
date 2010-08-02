@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "wav2prg_api.h"
+#include "loaders.h"
 
 static enum wav2prg_return_values getrawpulse(void* audiotap, uint32_t* pulse)
 {
