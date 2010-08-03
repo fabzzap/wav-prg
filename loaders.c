@@ -16,9 +16,27 @@ static struct loader *loader_list = NULL;
 static unsigned char register_loader(const struct wav2prg_plugin_functions* functions, const char* name) {
   struct loader *new_loader = malloc(sizeof(struct loader));
   struct loader **last_loader;
+  const struct wav2prg_plugin_conf *model_conf;
 
   if (get_loader_by_name(name))
     return 0;/*duplicate name*/
+
+  if(functions->recognize_block_as_mine_with_start_end_func &&
+    (functions->recognize_block_as_mine_func || functions->get_block_info)
+    )
+    return 0;
+
+  if(!functions->recognize_block_as_mine_with_start_end_func &&
+     !functions->get_block_info
+    )
+    return 0;
+
+  model_conf = functions->get_new_plugin_state();
+  if(
+      (functions->recognize_block_as_mine_with_start_end_func
+    || functions->recognize_block_as_mine_func)
+    && !model_conf->dependency)
+    return 0;
 
   for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
   new_loader->functions=functions;
