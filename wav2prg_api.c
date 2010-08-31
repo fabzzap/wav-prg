@@ -694,8 +694,10 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
           delete_state(conf);
           conf = NULL;
         }
-        loader_name = current_plugin_in_tree->node;
-        plugin_functions = NULL;
+        if(current_plugin_in_tree) {
+          loader_name = current_plugin_in_tree->node;
+          plugin_functions = NULL;
+        }
       }
     }
   }

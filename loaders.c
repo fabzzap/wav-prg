@@ -21,13 +21,15 @@ static unsigned char register_loader(const struct wav2prg_plugin_functions* func
   if (get_loader_by_name(name))
     return 0;/*duplicate name*/
 
-  if(functions->recognize_block_as_mine_with_start_end_func &&
-    (functions->recognize_block_as_mine_func || functions->get_block_info)
+  if(functions->recognize_block_as_mine_with_start_end_func
+     && functions->get_block_info
     )
     return 0;
 
-  if(!functions->recognize_block_as_mine_with_start_end_func &&
-     !functions->get_block_info
+  if(
+     (!functions->recognize_block_as_mine_with_start_end_func 
+    || functions->recognize_block_as_mine_func)
+   && !functions->get_block_info
     )
     return 0;
 
@@ -81,6 +83,7 @@ void register_loaders(void) {
   pavloda_get_plugin(register_loader);
   connection_get_plugin(register_loader);
   rackit_get_plugin(register_loader);
+  turbocycle_get_plugin(register_loader);
 #endif
 }
 
@@ -93,4 +96,31 @@ const struct wav2prg_plugin_functions* get_loader_by_name(const char* name) {
       return loader->functions;
   }
   return NULL;
+}
+
+char** get_loaders(unsigned char single_loader_analysis) {
+  struct loader_for_single_loader_analysis {
+    const char* name;
+    struct loader_for_single_loader_analysis* next;
+  } *valid_loaders = NULL, **loader_to_add = &valid_loaders, *this_loader;
+  struct loader *loader;
+  int found_loaders = 0, this_loader_index = 0;
+  char** valid_loader_names;
+  
+  for(loader = loader_list; loader != NULL; loader = loader->next)
+  {
+    if(are_all_dependencies_ok(loader->name)
+    && (!single_loader_analysis || loader->functions->get_block_info)) {
+      *loader_to_add = malloc(sizeof(struct loader_for_single_loader_analysis));
+      (*loader_to_add)->name = loader->name;
+      (*loader_to_add)->next = NULL;
+      loader_to_add = &(*loader_to_add)->next;
+      found_loaders++;
+    }
+  }
+  valid_loader_names = malloc(sizeof(char*) * (found_loaders + 1));
+  for(this_loader = valid_loaders; this_loader != NULL; this_loader = this_loader->next)
+    valid_loader_names[this_loader_index++] = strdup(this_loader->name);
+  valid_loader_names[found_loaders] = NULL;
+  return valid_loader_names;
 }

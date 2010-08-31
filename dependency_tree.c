@@ -76,6 +76,8 @@ unsigned char are_all_dependencies_ok(const char* loader) {
     const struct wav2prg_plugin_functions* this_plugin = get_loader_by_name(loader);
     if (!this_plugin)
       return 0;
+    if (this_plugin->get_block_info)
+      return 1;
     loader = get_plugin_this_is_dependent_on(this_plugin);
   }
   return 1;
