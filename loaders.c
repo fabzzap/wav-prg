@@ -4,6 +4,7 @@
 #include <malloc.h>
 
 #include "loaders.h"
+#include "dependency_tree.h"
 
 struct loader {
   const struct wav2prg_plugin_functions* functions;
@@ -83,7 +84,6 @@ void register_loaders(void) {
   pavloda_get_plugin(register_loader);
   connection_get_plugin(register_loader);
   rackit_get_plugin(register_loader);
-  turbocycle_get_plugin(register_loader);
 #endif
 }
 
@@ -102,7 +102,7 @@ char** get_loaders(unsigned char single_loader_analysis) {
   struct loader_for_single_loader_analysis {
     const char* name;
     struct loader_for_single_loader_analysis* next;
-  } *valid_loaders = NULL, **loader_to_add = &valid_loaders, *this_loader;
+  } *valid_loaders = NULL, **loader_to_add = &valid_loaders, *this_loader, *next_loader;
   struct loader *loader;
   int found_loaders = 0, this_loader_index = 0;
   char** valid_loader_names;
@@ -119,8 +119,11 @@ char** get_loaders(unsigned char single_loader_analysis) {
     }
   }
   valid_loader_names = malloc(sizeof(char*) * (found_loaders + 1));
-  for(this_loader = valid_loaders; this_loader != NULL; this_loader = this_loader->next)
+  for(this_loader = valid_loaders; this_loader != NULL; this_loader = next_loader) {
     valid_loader_names[this_loader_index++] = strdup(this_loader->name);
+    next_loader = this_loader->next;
+    free(this_loader);
+  }
   valid_loader_names[found_loaders] = NULL;
   return valid_loader_names;
 }
