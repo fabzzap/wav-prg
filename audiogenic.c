@@ -46,7 +46,8 @@ static enum wav2prg_return_values specialagent_sync(struct wav2prg_context* cont
 static const struct audiogenic_private_state audiogenic_specialagent_private_state_model = {
   audiogenic_not_synced,
   0,
-  1
+  1,
+  audiogenic_not_in_block
 };
 static struct wav2prg_generate_private_state audiogenic_specialagent_generate_private_state = {
   sizeof(audiogenic_specialagent_private_state_model),
@@ -70,6 +71,7 @@ static const struct wav2prg_plugin_conf audiogenic =
   audiogenic_pilot_sequence,
   0,
   NULL,
+  first_to_last,
   &audiogenic_specialagent_generate_private_state
 };
 
@@ -89,6 +91,7 @@ static const struct wav2prg_plugin_conf specialagent =
   audiogenic_pilot_sequence,        /*ignored, default get_sync unused*/
   0,                                /*ignored, default get_sync unused*/
   NULL,
+  first_to_last,
   &audiogenic_specialagent_generate_private_state
 };
 
@@ -134,23 +137,21 @@ static enum audiogenic_proceed proceed(uint8_t new_block, struct audiogenic_priv
   return res;
 }
 
-static enum wav2prg_return_values audiogenic_specialagent_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* block, uint16_t* block_size, uint16_t* skipped_at_beginning)
+static enum wav2prg_return_values audiogenic_specialagent_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size)
 {
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
   enum wav2prg_return_values ret;
-  uint16_t received_bytes;
   uint8_t received_blocks = 0;
+  uint8_t num_of_blocks = block_size / 256; /* it is always a multiple */
   uint8_t new_block;
   enum audiogenic_proceed proceed_res;
 
-  *skipped_at_beginning = 0;
   state->in_block = audiogenic_in_block;
   do{
     switch(state->state){
     case audiogenic_synced:
-      received_bytes = 256;
       functions->enable_checksum_func(context);
-      ret = functions->get_block_func(context, functions, conf, block + (received_blocks << 8), &received_bytes, skipped_at_beginning);
+      ret = functions->get_block_func(context, functions, conf, block, 256);
       if (ret == wav2prg_ok && functions->check_checksum_func(context, functions, conf) != wav2prg_checksum_state_correct)
         ret = wav2prg_invalid;
       functions->disable_checksum_func(context);
@@ -159,7 +160,6 @@ static enum wav2prg_return_values audiogenic_specialagent_get_block(struct wav2p
       break;
     default:
       received_blocks++;
-      received_bytes = 0;
       ret = functions->get_sync_insist(context, functions, conf);
       if (ret == wav2prg_ok)
         ret = functions->get_byte_func(context, functions, conf, &new_block);
@@ -168,10 +168,9 @@ static enum wav2prg_return_values audiogenic_specialagent_get_block(struct wav2p
       break;
     }
   }while(ret == wav2prg_ok
-        && (received_blocks << 8)  + received_bytes < *block_size
+        && received_blocks < num_of_blocks
         && proceed_res == go_on
         );
-  *block_size = (received_blocks << 8) + received_bytes;
   state->in_block = audiogenic_not_in_block;
   if (proceed_res == lose_sync)
     state->state = audiogenic_not_synced;

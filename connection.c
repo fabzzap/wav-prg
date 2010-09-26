@@ -23,6 +23,7 @@ static const struct wav2prg_plugin_conf connection =
   connection_pilot_sequence,
   0,
   &connection_dependency,
+  first_to_last,
   NULL
 };
 

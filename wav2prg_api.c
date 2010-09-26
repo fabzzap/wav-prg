@@ -10,6 +10,15 @@ struct block_syncs {
   uint32_t end_pos;
 };
 
+struct wav2prg_raw_block {
+  uint16_t skipped_at_beginning;
+  uint16_t total_length;
+  uint16_t length_so_far;
+  uint8_t* data;
+  uint8_t* current_byte;
+  enum wav2prg_block_filling filling;
+};
+
 struct wav2prg_context {
   wav2prg_get_rawpulse_func get_rawpulse;
   wav2prg_test_eof_func test_eof_func;
@@ -24,8 +33,7 @@ struct wav2prg_context {
   void *audiotap;
   uint8_t checksum;
   struct wav2prg_comparison_block *comparison_block;
-  uint16_t block_total_size;
-  uint16_t block_current_size;
+  struct wav2prg_raw_block raw_block;
   uint8_t checksum_enabled;
   struct {
     uint32_t num_of_block_syncs;
@@ -210,16 +218,51 @@ static enum wav2prg_return_values get_word_bigendian_default(struct wav2prg_cont
   return wav2prg_ok;
 }
 
-static enum wav2prg_return_values get_block_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* block, uint16_t* block_size, uint16_t* skipped_at_beginning)
-{
-  uint16_t bytes_received;
+static void initialize_raw_block(struct wav2prg_raw_block* block, uint16_t total_length, uint8_t* data, struct wav2prg_plugin_conf* conf) {
+  block->skipped_at_beginning = conf->filling == first_to_last ? 0 : total_length;
+  block->total_length = total_length;
+  block->length_so_far = 0;
+  block->data = block->current_byte = data;
+  block->filling = conf->filling;
+  if (conf->filling == last_to_first)
+    block->current_byte += total_length;
+}
 
-  *skipped_at_beginning = 0;
-  for(bytes_received = 0; bytes_received != *block_size; bytes_received++){
-    if (context->subclassed_functions.get_byte_func(context, functions, conf, block + bytes_received) == wav2prg_invalid) {
-      *block_size = bytes_received;
+static void add_byte_to_block(struct wav2prg_raw_block* block, uint8_t byte) {
+  *block->current_byte = byte;
+  block->length_so_far++;
+  switch(block->filling){
+  case first_to_last:
+    block->current_byte++;
+    break;
+  case last_to_first:
+    block->current_byte--;
+    block->skipped_at_beginning--;
+    break;
+  }
+}
+
+static void remove_byte_from_block(struct wav2prg_raw_block* block) {
+  block->length_so_far--;
+  switch(block->filling){
+  case first_to_last:
+    block->current_byte--;
+    break;
+  case last_to_first:
+    block->current_byte++;
+    block->skipped_at_beginning++;
+    break;
+  }
+}
+
+static enum wav2prg_return_values get_block_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t numbytes)
+{
+  uint16_t bytes;
+  for(bytes = 0; bytes < numbytes; bytes++){
+    uint8_t byte;
+    if (context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_invalid)
       return wav2prg_invalid;
-    }
+    add_byte_to_block(block, byte);
   }
   return wav2prg_ok;
 }
@@ -545,7 +588,9 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       disable_checksum_default,
       reset_checksum_to,
       reset_checksum,
-      number_to_name
+      number_to_name,
+      add_byte_to_block,
+      remove_byte_from_block
     },
     tolerance_type,
     tolerance_type,
@@ -554,8 +599,13 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     audiotap,
     0,
     NULL,
-    0,
-    0,
+    {
+      0,
+      0,
+      0,
+      NULL,
+      NULL
+    },
     0,
     {
       0,
@@ -578,7 +628,9 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     disable_checksum_default,
     reset_checksum_to,
     reset_checksum,
-    number_to_name
+    number_to_name,
+    add_byte_to_block,
+    remove_byte_from_block
   };
   struct wav2prg_block_info *previously_found_block_info = NULL;
   struct wav2prg_block *comparison_block = NULL;
@@ -629,10 +681,9 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
       continue;
     pos = get_pos_func(audiotap);
     printf("block info ends at %d\n",pos);
-    real_block_size = context.block_total_size = block.info.end - block.info.start;
-    context.block_current_size = 0;
+    initialize_raw_block(&context.raw_block, block.info.end - block.info.start, block.data, conf);
     enable_checksum_default(&context);
-    res = context.subclassed_functions.get_block_func(&context, &functions, conf, block.data, &real_block_size, &skipped_at_beginning);
+    res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block.info.end - block.info.start);
     if(res != wav2prg_ok)
       continue;
     pos = get_pos_func(audiotap);

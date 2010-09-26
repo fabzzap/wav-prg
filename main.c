@@ -31,14 +31,15 @@ static int32_t get_pos(void* audiotap)
 }
 
 static struct wav2prg_tolerance turbotape_tolerances[]={{40,40},{40,40}};
-static struct wav2prg_tolerance kernal_tolerances[]={{60,60},{60,65},{60,60}};
+static struct wav2prg_tolerance kernal_tolerances[]={{65,65},{60,65},{60,60}};
 
 int main(int argc, char** argv)
 {
   FILE* file;
   const char* loader_names[] = {"Rack-It", NULL};
-  const char* loader_name = NULL;/*"Pavloda";*/
+  const char* loader_name = "Novaload Normal";
   struct wav2prg_plugin_conf* conf;
+  char** all_loaders;
 
   if(argc<2)
     return 1;
@@ -50,6 +51,7 @@ int main(int argc, char** argv)
   }
   
   register_loaders();
+  all_loaders = get_loaders(1);
   conf = loader_name ? wav2prg_get_loader(loader_name) : NULL;
 
   wav2prg_get_new_context(
@@ -57,7 +59,7 @@ int main(int argc, char** argv)
   wav2prg_adaptively_tolerant,
   conf,
   loader_name,
-  /*NULL */loader_names,
+  NULL /*loader_names*/,
   kernal_tolerances/*turbotape_tolerances*/, file);
   return 0;
 }

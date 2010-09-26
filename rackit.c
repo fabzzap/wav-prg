@@ -47,6 +47,7 @@ static const struct wav2prg_plugin_conf rackit =
   rackit_pilot_sequence,
   0,
   &rackit_dependency,
+  first_to_last,
   &rackit_generate_private_state
 };
 
@@ -101,14 +102,14 @@ static const struct wav2prg_plugin_conf* rackit_get_new_state(void) {
   return &rackit;
 }
 
-static enum wav2prg_return_values rackit_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* block, uint16_t* block_size, uint16_t* skipped_at_beginning){
+static enum wav2prg_return_values rackit_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size){
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
   enum wav2prg_return_values result;
-  
+
   state->in_data = 1;
-  result = functions->get_block_func(context, functions, conf, block, block_size, skipped_at_beginning);
+  result = functions->get_block_func(context, functions, conf, block, block_size);
   state->in_data = 0;
-  
+
   return result;
 }
 
@@ -117,7 +118,6 @@ static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, struct
   const uint8_t xor_bytes[]={0x98,0xe8,0x60,0x08,0x98,0xec,0xb4,0x04,0x08,0x24,0xe8,0xc0,
                              0x28,0x24,0x80,0xc0,0xbc,0xe0,0xa4,0xc0,0xe0,0xa4,0x40,0x80};
   uint8_t xor_byte;
-  enum wav2prg_recognize is_right = wav2prg_not_mine;
   uint16_t i;
   const uint16_t start_first_part = 234, end_first_part = 403, start_second_part = 423;
 
@@ -128,7 +128,7 @@ static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, struct
   }
 
   if (block->info.start != 0x316 || block->info.end < 0x570)
-    return 0;
+    return wav2prg_not_mine;
 
   for(i = start_first_part; i < end_first_part; i++){
     if (block->data[i   ] == 0xad

@@ -37,6 +37,7 @@ static const struct wav2prg_plugin_conf pavloda =
   pavloda_pilot_sequence,
   1000,
   NULL,
+  first_to_last,
   &pavloda_generate_private_state
 };
 
@@ -64,6 +65,7 @@ static enum wav2prg_return_values pavloda_get_block_info(struct wav2prg_context*
   state->bytes_still_to_load_from_primary_subblock = 256 - load_offset;
   info->end = info->start + 256 + 256*subblocks;
   info->start += load_offset;
+  functions->number_to_name_func(state->block_num, info->name);
   return wav2prg_ok;
 }
 
@@ -147,17 +149,15 @@ static enum wav2prg_return_values pavloda_get_sync_byte(struct wav2prg_context* 
   return wav2prg_ok;
 };
 
-static enum wav2prg_return_values pavloda_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* block, uint16_t* block_size, uint16_t* skipped_at_beginning){
+static enum wav2prg_return_values pavloda_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size){
   uint16_t bytes_now;
   uint16_t bytes_received = 0;
   uint8_t expected_subblock_num = 0, subblocks;
   enum wav2prg_return_values res;
   struct pavloda_private_state* state = (struct pavloda_private_state*)conf->private_state;
 
-  *skipped_at_beginning = 0;
-
   conf->min_pilots=30;
-  while(bytes_received != *block_size) {
+  while(bytes_received != block_size) {
     if(functions->check_checksum_func(context, functions, conf) != wav2prg_checksum_state_correct){
       res = wav2prg_invalid;
       break;
@@ -185,13 +185,12 @@ static enum wav2prg_return_values pavloda_get_block(struct wav2prg_context* cont
       if(subblocks != expected_subblock_num)
         continue;
     }
-    res = functions->get_block_func(context, functions, conf, block, &bytes_now, skipped_at_beginning);
+    res = functions->get_block_func(context, functions, conf, block, bytes_now);
     bytes_received += bytes_now;
     if (res != wav2prg_ok)
       break;
     expected_subblock_num++;
   }
-  *block_size=bytes_received;
   return res;
 }
 

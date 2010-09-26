@@ -19,6 +19,7 @@ static const struct wav2prg_plugin_conf pavlodaold =
   {1,0,0},
   514,
   NULL,
+  first_to_last,
   NULL
 };
 

@@ -17,6 +17,7 @@ const struct wav2prg_plugin_conf novaload_conf =
   novaload_pilot_sequence,
   0,
   NULL,
+  first_to_last,
   NULL
 };
 
@@ -68,22 +69,17 @@ enum wav2prg_return_values novaload_get_block_info(struct wav2prg_context* conte
   return wav2prg_ok;
 }
 
-static enum wav2prg_return_values novaload_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* block, uint16_t* block_size, uint16_t* skipped_at_beginning)
+static enum wav2prg_return_values novaload_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size)
 {
   uint16_t bytes_received;
   uint16_t bytes_now;
 
-  *skipped_at_beginning = 0;
-  for(bytes_received = 0; bytes_received != *block_size; bytes_received+=bytes_now) {
-    bytes_now = *block_size - bytes_received > 256 ? 256 : *block_size - bytes_received;
-    if (functions->check_checksum_func(context, functions, conf) != wav2prg_checksum_state_correct){
-      *block_size=bytes_received;
+  for(bytes_received = 0; bytes_received != block_size; bytes_received += bytes_now) {
+    bytes_now = block_size - bytes_received > 256 ? 256 : block_size - bytes_received;
+    if (functions->check_checksum_func(context, functions, conf) != wav2prg_checksum_state_correct)
       return wav2prg_invalid;
-    }
-    if (functions->get_block_func(context, functions, conf, block+bytes_received, &bytes_now, skipped_at_beginning) != wav2prg_ok){
-      *block_size=bytes_received;
+    if (functions->get_block_func(context, functions, conf, block, bytes_now) != wav2prg_ok)
       return wav2prg_invalid;
-    }
   }
   return wav2prg_ok;
 }
