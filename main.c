@@ -2,6 +2,7 @@
 
 #include "wav2prg_api.h"
 #include "loaders.h"
+#include "display_interface.h"
 
 static enum wav2prg_return_values getrawpulse(void* audiotap, uint32_t* pulse)
 {
@@ -30,6 +31,69 @@ static int32_t get_pos(void* audiotap)
   return (int32_t)ftell((FILE*)audiotap);
 }
 
+static void try_sync(struct display_interface_internal* internal, const char* loader_name)
+{
+  printf("trying to get a sync using loader %s\n", loader_name);
+}
+
+static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info)
+{
+  printf("got a pilot tone from %u to %u", start_of_pilot_pos, sync_pos);
+  if (info){
+    printf(" and a block at %u\n", info_pos);
+    printf("name %s start %u end %u\n", info->name, info->start, info->end);
+  }
+  else
+    printf(" but no block followed\n", info_pos);
+}
+
+static void progress(struct display_interface_internal *internal, uint32_t pos)
+{
+}
+
+static void display_checksum(struct display_interface_internal* internal, enum wav2prg_checksum_state state, uint32_t checksum_start, uint32_t checksum_end, uint8_t expected, uint8_t computed)
+{
+  printf("Checked checksum from %u to %u\n", checksum_start, checksum_end);
+  printf("computed checksum %u (%02x) ", computed, computed);
+  printf("loaded checksum %u (%02x) ", expected, expected);
+    switch(state){
+    case wav2prg_checksum_state_correct:
+      printf("correct\n");
+      break;
+    case wav2prg_checksum_state_load_error:
+      printf("load error\n");
+      break;
+   default:
+      printf("Huh?\n");
+      break;
+   }
+}
+
+static void end(struct display_interface_internal *internal, enum wav2prg_checksum_state state, char loader_has_checksum, uint32_t end_pos, uint16_t bytes)
+{
+  printf("Program ends at %u, %u bytes long, ", end_pos, bytes);
+  if(loader_has_checksum){
+    switch(state){
+    case wav2prg_checksum_state_correct:
+      printf("correct\n");
+      break;
+    case wav2prg_checksum_state_load_error:
+      printf("load error\n");
+      break;
+    default:
+      printf("Huh? Something went wrong while verifying the checksum\n");
+    }
+  }
+}
+
+static struct display_interface text_based_display = {
+  try_sync,
+  sync,
+  progress,
+  display_checksum,
+  end
+};
+
 static struct wav2prg_tolerance turbotape_tolerances[]={{40,40},{40,40}};
 static struct wav2prg_tolerance kernal_tolerances[]={{65,65},{60,65},{60,60}};
 
@@ -37,7 +101,7 @@ int main(int argc, char** argv)
 {
   FILE* file;
   const char* loader_names[] = {"Rack-It", NULL};
-  const char* loader_name = "Novaload Normal";
+  const char* loader_name = "Turbo Tape 64";
   struct wav2prg_plugin_conf* conf;
   char** all_loaders;
 
@@ -60,6 +124,7 @@ int main(int argc, char** argv)
   conf,
   loader_name,
   NULL /*loader_names*/,
-  kernal_tolerances/*turbotape_tolerances*/, file);
+  kernal_tolerances/*turbotape_tolerances*/, file,
+  &text_based_display, NULL);
   return 0;
 }

@@ -178,6 +178,8 @@ struct plugin_tree {
 };
 
 struct wav2prg_context;
+struct display_interface;
+struct display_interface_internal;
 
 struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name);
 
@@ -189,7 +191,9 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
                              const char* loader_name,
                              const char** loader_names,
                              struct wav2prg_tolerance* tolerances,
-                             void* audiotap);
+                             void* audiotap,
+                             struct display_interface *display_interface,
+                             struct display_interface_internal *display_interface_internal);
 #if 0 //defined _WIN32
 #elif defined DSDS
 #else
