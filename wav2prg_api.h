@@ -190,7 +190,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
                              struct wav2prg_plugin_conf* conf,
                              const char* loader_name,
                              const char** loader_names,
-                             struct wav2prg_tolerance* tolerances,
                              void* audiotap,
                              struct display_interface *display_interface,
                              struct display_interface_internal *display_interface_internal);

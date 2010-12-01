@@ -94,14 +94,11 @@ static struct display_interface text_based_display = {
   end
 };
 
-static struct wav2prg_tolerance turbotape_tolerances[]={{40,40},{40,40}};
-static struct wav2prg_tolerance kernal_tolerances[]={{65,65},{60,65},{60,60}};
-
 int main(int argc, char** argv)
 {
   FILE* file;
-  const char* loader_names[] = {"Rack-It", NULL};
-  const char* loader_name = "Turbo Tape 64";
+  const char* loader_names[] = {"Connection", NULL};
+  const char* loader_name = NULL/*"Turbo Tape 64"*/;
   struct wav2prg_plugin_conf* conf;
   char** all_loaders;
 
@@ -123,8 +120,8 @@ int main(int argc, char** argv)
   wav2prg_adaptively_tolerant,
   conf,
   loader_name,
-  NULL /*loader_names*/,
-  kernal_tolerances/*turbotape_tolerances*/, file,
+  loader_names,
+  file,
   &text_based_display, NULL);
   return 0;
 }

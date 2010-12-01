@@ -469,10 +469,16 @@ static void delete_state(struct wav2prg_plugin_conf* conf)
   free(conf);
 }
 
+static struct wav2prg_tolerance* get_strict_tolerances(const char* loader_name){
+  return NULL;
+}
+
 static const struct wav2prg_plugin_functions* get_plugin_functions(const char* loader_name,
-                                                                   struct wav2prg_context *context)
+                                                                   struct wav2prg_context *context,
+                                                                   struct wav2prg_plugin_conf **conf)
 {
   const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
+  struct wav2prg_tolerance* strict_tolerances = get_strict_tolerances(loader_name);
 
   context->compute_checksum_step             =
     plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step : compute_checksum_step_default;
@@ -489,6 +495,24 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
   context->subclassed_functions.get_loaded_checksum_func =
     plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default;
 
+  if (*conf == NULL)
+    *conf = get_new_state(plugin_functions);
+  
+  free(context->strict_tolerances);
+  if(strict_tolerances != NULL)
+    context->strict_tolerances = strict_tolerances;
+  else{
+    int i;
+    context->strict_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * (*conf)->num_pulse_lengths);
+    for(i = 0; i < (*conf)->num_pulse_lengths - 1; i++){
+      context->strict_tolerances[i].more_than_ideal =
+        context->strict_tolerances[i + 1].less_than_ideal =
+        (uint16_t)(((*conf)->ideal_pulse_lengths[i + 1] - (*conf)->ideal_pulse_lengths[i]) * 0.42);
+    }
+    context->strict_tolerances[0].less_than_ideal = context->strict_tolerances[0].more_than_ideal;
+    context->strict_tolerances[(*conf)->num_pulse_lengths - 1].more_than_ideal =
+      context->strict_tolerances[(*conf)->num_pulse_lengths - 1].less_than_ideal;
+  }
   return plugin_functions;
 }
 
@@ -568,7 +592,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
                              struct wav2prg_plugin_conf* conf,
                              const char* loader_name,
                              const char** loader_names,
-                             struct wav2prg_tolerance* tolerances,
                              void* audiotap,
                              struct display_interface *display_interface,
                              struct display_interface_internal *display_interface_internal)
@@ -605,7 +628,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     tolerance_type,
     tolerance_type,
     NULL,
-    tolerances,
+    NULL,
     audiotap,
     0,
     NULL,
@@ -661,9 +684,7 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     struct wav2prg_block block;
 
     if (plugin_functions == NULL)
-      plugin_functions = get_plugin_functions(loader_name, &context);
-    if (conf == NULL)
-      conf = get_new_state(plugin_functions);
+      plugin_functions = get_plugin_functions(loader_name, &context, &conf);
 
     strcpy(block.info.name, "                ");
     start_of_pilot_pos = get_pos_func(audiotap);
