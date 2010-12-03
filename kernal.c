@@ -155,7 +155,6 @@ enum wav2prg_return_values kernal_get_byte(struct wav2prg_context* context, cons
 
 enum wav2prg_return_values kernal_headerchunk_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
 {
-  uint16_t skipped_at_beginning;
   uint8_t i;
   struct headerchunk_private_state *headerchunk_necessary_bytes = (struct headerchunk_private_state *)conf->private_state;
   const uint16_t num_of_necessary_bytes = sizeof(headerchunk_necessary_bytes->headerchunk_necessary_bytes);

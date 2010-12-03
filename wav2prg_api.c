@@ -693,7 +693,6 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
   }
 
   while(1){
-    uint16_t skipped_at_beginning;
     enum wav2prg_return_values res;
     uint32_t start_of_pilot_pos, sync_pos, info_pos;
     struct block_list_element *block;
