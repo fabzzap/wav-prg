@@ -26,6 +26,7 @@ struct block_list_element {
   enum wav2prg_checksum_state state;
   uint32_t num_of_syncs;
   struct block_syncs* syncs;
+  uint32_t end_of_info;
   uint32_t start_of_checksum;
   struct block_list_element* next;
 };
@@ -694,13 +695,11 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
 
   while(1){
     enum wav2prg_return_values res;
-    uint32_t start_of_pilot_pos, sync_pos, info_pos;
     struct block_list_element *block;
 
     if (plugin_functions == NULL)
       plugin_functions = get_plugin_functions(loader_name, &context, &conf);
 
-    start_of_pilot_pos = get_pos_func(audiotap);
     disable_checksum_default(&context);
     context.display_interface->try_sync(context.display_interface_internal, loader_name);
 
@@ -708,63 +707,87 @@ void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
     if(res != wav2prg_ok)
       break;
 
-    block = *context.current_block;
-    block->loader_name = strdup(loader_name);
-    if (tolerance_type == wav2prg_adaptively_tolerant)
-      context.adaptive_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths);
+    /* Found start of a block */
+    do{
+      block = *context.current_block;
+      block->loader_name = strdup(loader_name);
+      if (tolerance_type == wav2prg_adaptively_tolerant)
+        context.adaptive_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths);
 
-    sync_pos = get_pos_func(audiotap);
-    if (!previously_found_block_info) {
-      res = plugin_functions->get_block_info(&context, &functions, conf, &block->block.info);
-      if(res != wav2prg_ok){
-        context.display_interface->sync(context.display_interface_internal, start_of_pilot_pos, sync_pos, 0, NULL);
-        block->block_status = block_sync_no_info;
-        context.current_block = &(*context.current_block)->next;
-        continue;
+      block->block_status = block_sync_no_info;
+
+      if (!previously_found_block_info) {
+        res = plugin_functions->get_block_info(&context, &functions, conf, &block->block.info);
+        if(res != wav2prg_ok){
+          context.display_interface->sync(
+            context.display_interface_internal,
+            block->syncs[0].start_sync,
+            block->syncs[0].end_sync,
+            0,
+            NULL);
+          break; /* error in get_block_info */
+        }
       }
-    }
-    else
-      memcpy(&block->block.info, previously_found_block_info, sizeof block->block.info);
+      else
+        memcpy(&block->block.info, previously_found_block_info, sizeof block->block.info);
 
-    if(block->block.info.end < block->block.info.start && block->block.info.end != 0){
-      context.display_interface->sync(context.display_interface_internal, start_of_pilot_pos, sync_pos, 0, NULL);
       block->block_status = block_sync_invalid_info;
-      context.current_block = &(*context.current_block)->next;
-      continue;
-    }
-    info_pos = get_pos_func(audiotap);
-    context.display_interface->sync(context.display_interface_internal, start_of_pilot_pos, sync_pos, info_pos, &block->block.info);
-    initialize_raw_block(&context.raw_block, block->block.info.end - block->block.info.start, block->block.data, conf);
-    enable_checksum_default(&context);
-    res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block->block.info.end - block->block.info.start);
-    block->real_length = context.raw_block.length_so_far;
-    if(res != wav2prg_ok){
-      block->block_status = block_error_before_end;
-      context.current_block = &(*context.current_block)->next;
-      continue;
-    }
-    block->start_of_checksum = get_pos_func(audiotap);
-    block->state = context.subclassed_functions.check_checksum_func(&context, &functions, conf);
-    block->block_status = 
-      (block->state == wav2prg_checksum_state_unverified
-      && conf->checksum_type != wav2prg_no_checksum) ?
-      block_checksum_expected_but_missing : block_complete;
+      if(block->block.info.end < block->block.info.start && block->block.info.end != 0){
+        context.display_interface->sync(
+          context.display_interface_internal,
+            block->syncs[0].start_sync,
+            block->syncs[0].end_sync,
+            0,
+            NULL);
+        break; /* get_block_info succeeded but returned an invalid block */
+      }
 
-    block->syncs[block->num_of_syncs - 1].end = get_pos_func(audiotap);
-    context.display_interface->end(context.display_interface_internal,
+      /* collect data for the block */
+      block->block_status = block_error_before_end;
+      block->end_of_info = get_pos_func(audiotap);
+      context.display_interface->sync(
+        context.display_interface_internal,
+        block->syncs[0].start_sync,
+        block->syncs[0].end_sync,
+        block->end_of_info,
+        &block->block.info);
+      initialize_raw_block(&context.raw_block, block->block.info.end - block->block.info.start, block->block.data, conf);
+      enable_checksum_default(&context);
+      res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block->block.info.end - block->block.info.start);
+      block->real_length = context.raw_block.length_so_far;
+      block->syncs[block->num_of_syncs - 1].end = get_pos_func(audiotap);
+
+      if(res == wav2prg_ok){
+        /* final checksum */
+        block->start_of_checksum = get_pos_func(audiotap);
+        block->state = context.subclassed_functions.check_checksum_func(&context, &functions, conf);
+        block->block_status =
+          (block->state == wav2prg_checksum_state_unverified
+          && conf->checksum_type != wav2prg_no_checksum) ?
+          block_checksum_expected_but_missing : block_complete;
+
+      }
+      context.display_interface->end(context.display_interface_internal,
+                                   res == wav2prg_ok,
                                    block->state,
                                    conf->checksum_type != wav2prg_no_checksum,
                                    block->syncs[block->num_of_syncs - 1].end,
                                    context.raw_block.length_so_far);
+    }while(0);
+    /* got the block */
     context.current_block = &(*context.current_block)->next;
 
+    /* find out if a new loader should be loaded (found_dependent_plugin),
+       or if the same loader can be kept (keep_using_plugin),
+       or if the loader at the root of the dependency tree has to be used */
     {
       enum wav2prg_recognize found_dependent_plugin = wav2prg_not_mine, keep_using_plugin = wav2prg_not_mine;
 
       free(previously_found_block_info);
       previously_found_block_info = NULL;
 
-      if(block->state == wav2prg_checksum_state_correct
+      if(block->block_status != wav2prg_checksum_state_load_error
+        && block->block_status == block_complete
         && current_plugin_in_tree != NULL)
         /* check if the block just found suits a loader dependent on the one just used */
         found_dependent_plugin = look_for_dependent_plugin(&current_plugin_in_tree,

@@ -69,10 +69,12 @@ static void display_checksum(struct display_interface_internal* internal, enum w
    }
 }
 
-static void end(struct display_interface_internal *internal, enum wav2prg_checksum_state state, char loader_has_checksum, uint32_t end_pos, uint16_t bytes)
+static void end(struct display_interface_internal *internal, unsigned char valid, enum wav2prg_checksum_state state, char loader_has_checksum, uint32_t end_pos, uint16_t bytes)
 {
   printf("Program ends at %u, %u bytes long, ", end_pos, bytes);
-  if(loader_has_checksum){
+  if(!valid)
+    printf("broken\n");
+  else if(loader_has_checksum){
     switch(state){
     case wav2prg_checksum_state_correct:
       printf("correct\n");
