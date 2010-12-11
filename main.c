@@ -5,9 +5,9 @@
 #include "display_interface.h"
 #include "wav2prg_api.h"
 
-static enum wav2prg_bool getrawpulse(void* audiotap, uint32_t* pulse)
+static enum wav2prg_bool getrawpulse(struct wav2prg_input_object* audiotap, uint32_t* pulse)
 {
-  FILE* file = (FILE*)audiotap;
+  FILE* file = (FILE*)audiotap->object;
   uint8_t byte, threebytes[3];
   if(fread(&byte, 1, 1, file) < 1)
   return wav2prg_false;
@@ -23,14 +23,33 @@ static enum wav2prg_bool getrawpulse(void* audiotap, uint32_t* pulse)
   return wav2prg_true;
 }
 
-static enum wav2prg_bool iseof(void* audiotap)
+static enum wav2prg_bool iseof(struct wav2prg_input_object* audiotap)
 {
-  return (uint8_t)feof((FILE*)audiotap);
+  return (uint8_t)feof((FILE*)audiotap->object);
 }
-static int32_t get_pos(void* audiotap)
+
+static int32_t get_pos(struct wav2prg_input_object* audiotap)
 {
-  return (int32_t)ftell((FILE*)audiotap);
+  return (int32_t)ftell((FILE*)audiotap->object);
 }
+
+static void set_pos(struct wav2prg_input_object* audiotap, int32_t pos)
+{
+  fseek((FILE*)audiotap->object, (long)pos, SEEK_SET);
+}
+
+static void closefile(struct wav2prg_input_object* audiotap)
+{
+  fclose((FILE*)audiotap->object);
+}
+
+static struct wav2prg_input_functions input_functions = {
+  get_pos,
+  set_pos,
+  getrawpulse,
+  iseof,
+  closefile
+};
 
 static void try_sync(struct display_interface_internal* internal, const char* loader_name)
 {
@@ -99,32 +118,31 @@ static struct display_interface text_based_display = {
 
 int main(int argc, char** argv)
 {
-  FILE* file;
   const char* loader_names[] = {"Connection", NULL};
-  const char* loader_name = NULL/*"Turbo Tape 64"*/;
-  struct wav2prg_plugin_conf* conf;
+  struct wav2prg_single_loader single_loader = {"Turbo Tape 64", NULL};
   char** all_loaders;
+  struct wav2prg_input_object input_object;
 
   if(argc<2)
     return 1;
   
-  file = fopen(argv[1],"rb");
-  if(!file){
+  input_object.object = fopen(argv[1],"rb");
+  if(!input_object.object){
     printf("File %s not found\n",argv[1]);
     return 2;
   }
   
   register_loaders();
   all_loaders = get_loaders(1);
-  conf = loader_name ? wav2prg_get_loader(loader_name) : NULL;
+  single_loader.conf = wav2prg_get_loader(single_loader.loader_name);
 
   struct block_list_element* blocks = wav2prg_analyse(
-  getrawpulse, iseof, get_pos,
   wav2prg_adaptively_tolerant,
-  conf,
-  loader_name,
+  &single_loader,
   loader_names,
-  file,
+  &input_object,
+  &input_functions,
   &text_based_display, NULL);
   return 0;
 }
+

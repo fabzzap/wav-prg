@@ -6,6 +6,13 @@ struct block_syncs {
   uint32_t end;
 };
 
+struct wav2prg_tolerance {
+  uint16_t less_than_ideal;
+  uint16_t more_than_ideal;
+};
+
+struct wav2prg_plugin_conf;
+
 struct block_list_element {
   struct wav2prg_block block;
   enum {
@@ -17,7 +24,9 @@ struct block_list_element {
   } block_status;
   uint16_t real_length;
   const char* loader_name;
+  struct wav2prg_plugin_conf *conf;
   enum wav2prg_checksum_state state;
+  struct wav2prg_tolerance *adaptive_tolerances;
   uint32_t num_of_syncs;
   struct block_syncs* syncs;
   uint32_t end_of_info;

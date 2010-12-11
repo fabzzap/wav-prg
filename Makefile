@@ -2,6 +2,7 @@ wav2prg: wav2prg_core.o \
          main.o \
          loaders.o \
          dependency_tree.o \
+         get_pulse.o \
          turbotape.o \
          kernal.o \
          novaload.o \
