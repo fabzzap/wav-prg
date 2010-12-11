@@ -1,28 +1,28 @@
 #include "wav2prg_api.h"
 
-static enum wav2prg_return_values turbotape_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool turbotape_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
 {
   uint8_t byte;
   int i;
-  if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_invalid)
-    return wav2prg_invalid;
+  if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    return wav2prg_false;
   if (byte != 1 && byte != 2 && byte != 0x61)
-    return wav2prg_invalid;
-  if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_invalid)
-    return wav2prg_invalid;
-  if (functions->get_word_func(context, functions, conf, &info->end) == wav2prg_invalid)
-    return wav2prg_invalid;
-  if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_invalid)
-    return wav2prg_invalid;
+    return wav2prg_false;
+  if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
+    return wav2prg_false;
+  if (functions->get_word_func(context, functions, conf, &info->end) == wav2prg_false)
+    return wav2prg_false;
+  if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    return wav2prg_false;
   for(i=0;i<16;i++){
     if (functions->get_byte_func(context, functions, conf, info->name + i) != 0)
-      return wav2prg_invalid;
+      return wav2prg_false;
   }
-  if (functions->get_sync(context, functions, conf) == wav2prg_invalid)
-    return wav2prg_invalid;
-  if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_invalid)
-    return wav2prg_invalid;
-  return wav2prg_ok;
+  if (functions->get_sync(context, functions, conf) == wav2prg_false)
+    return wav2prg_false;
+  if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    return wav2prg_false;
+  return wav2prg_true;
 }
 
 static uint16_t turbotape_thresholds[]={263};

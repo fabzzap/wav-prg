@@ -1,28 +1,29 @@
 #include <stdio.h>
 
-#include "wav2prg_api.h"
+#include "wav2prg_core.h"
 #include "loaders.h"
 #include "display_interface.h"
+#include "wav2prg_api.h"
 
-static enum wav2prg_return_values getrawpulse(void* audiotap, uint32_t* pulse)
+static enum wav2prg_bool getrawpulse(void* audiotap, uint32_t* pulse)
 {
   FILE* file = (FILE*)audiotap;
   uint8_t byte, threebytes[3];
   if(fread(&byte, 1, 1, file) < 1)
-  return wav2prg_invalid;
+  return wav2prg_false;
   if(byte > 0){
     *pulse = byte * 8;
-    return wav2prg_ok;
+    return wav2prg_true;
   }
   if(fread(threebytes, 3, 1, file) < 1)
-  return wav2prg_invalid;
+  return wav2prg_false;
   *pulse =  threebytes[0]        +
            (threebytes[1] << 8 ) +
            (threebytes[2] << 16) ;
-  return wav2prg_ok;
+  return wav2prg_true;
 }
 
-static uint8_t iseof(void* audiotap)
+static enum wav2prg_bool iseof(void* audiotap)
 {
   return (uint8_t)feof((FILE*)audiotap);
 }
@@ -117,7 +118,7 @@ int main(int argc, char** argv)
   all_loaders = get_loaders(1);
   conf = loader_name ? wav2prg_get_loader(loader_name) : NULL;
 
-  wav2prg_get_new_context(
+  struct block_list_element* blocks = wav2prg_analyse(
   getrawpulse, iseof, get_pos,
   wav2prg_adaptively_tolerant,
   conf,

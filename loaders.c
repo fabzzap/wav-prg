@@ -127,3 +127,4 @@ char** get_loaders(unsigned char single_loader_analysis) {
   valid_loader_names[found_loaders] = NULL;
   return valid_loader_names;
 }
+

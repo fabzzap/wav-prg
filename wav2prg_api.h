@@ -1,9 +1,5 @@
-#ifdef _MSC_VER
-#include "stdint.h"
-#else
-#include <stdint.h>
-#endif
-#include <stddef.h>
+#include "wav2prg_types.h"
+#include "wav2prg_blocks.h"
 
 enum wav2prg_plugin_endianness {
   lsbf,
@@ -16,36 +12,9 @@ enum wav2prg_checksum {
   wav2prg_add_checksum
 };
 
-struct wav2prg_tolerance {
-  uint16_t less_than_ideal;
-  uint16_t more_than_ideal;
-};
-
-enum wav2prg_tolerance_type {
-  wav2prg_tolerant,
-  wav2prg_adaptively_tolerant,
-  wav2prg_intolerant
-};
-
-enum wav2prg_return_values {
-  wav2prg_ok,
-  wav2prg_invalid
-};
-
 enum wav2prg_findpilot_type {
   wav2prg_synconbit,
   wav2prg_synconbyte
-};
-
-struct wav2prg_block_info {
-  uint16_t start;
-  uint16_t end;
-  char name[17];
-};
-
-struct wav2prg_block {
-  struct wav2prg_block_info info;
-  unsigned char data[65536];
 };
 
 enum wav2prg_block_filling {
@@ -72,20 +41,17 @@ struct wav2prg_functions;
 struct wav2prg_plugin_conf;
 struct wav2prg_plugin_functions;
 
-typedef enum wav2prg_return_values (*wav2prg_get_rawpulse_func)(void* audiotap, uint32_t* rawpulse);
-typedef uint8_t                    (*wav2prg_test_eof_func)(void* audiotap);
-typedef int32_t                    (*wav2prg_get_pos_func)(void* audiotap);
-typedef enum wav2prg_return_values (*wav2prg_get_pulse_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
-typedef enum wav2prg_return_values (*wav2prg_get_bit_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
-typedef enum wav2prg_return_values (*wav2prg_get_byte_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
-typedef enum wav2prg_return_values (*wav2prg_get_word_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
-typedef enum wav2prg_return_values (*wav2prg_get_word_bigendian_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
-typedef enum wav2prg_return_values (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_raw_block*, uint16_t);
-typedef enum wav2prg_return_values (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
-typedef enum wav2prg_return_values (*wav2prg_get_sync_byte)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
-typedef enum wav2prg_return_values (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_block_info*);
+typedef enum wav2prg_bool (*wav2prg_get_pulse_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
+typedef enum wav2prg_bool (*wav2prg_get_bit_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
+typedef enum wav2prg_bool (*wav2prg_get_byte_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
+typedef enum wav2prg_bool (*wav2prg_get_word_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
+typedef enum wav2prg_bool (*wav2prg_get_word_bigendian_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
+typedef enum wav2prg_bool (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_raw_block*, uint16_t);
+typedef enum wav2prg_bool (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
+typedef enum wav2prg_bool (*wav2prg_get_sync_byte)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
+typedef enum wav2prg_bool (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_block_info*);
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
-typedef enum wav2prg_return_values (*wav2prg_get_loaded_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
+typedef enum wav2prg_bool (*wav2prg_get_loaded_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef void                       (*wav2prg_reset_checksum_to)(struct wav2prg_context*, uint8_t);
 typedef void                       (*wav2prg_reset_checksum)(struct wav2prg_context*);
 typedef uint8_t                    (*wav2prg_compute_checksum_step)(struct wav2prg_plugin_conf*, uint8_t, uint8_t);
@@ -171,28 +137,7 @@ struct wav2prg_plugin_conf {
   void* private_state;
 };
 
-struct plugin_tree {
-  const char* node;
-  struct plugin_tree* first_child;
-  struct plugin_tree* first_sibling;
-};
-
 struct wav2prg_context;
-struct display_interface;
-struct display_interface_internal;
-
-struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name);
-
-void wav2prg_get_new_context(wav2prg_get_rawpulse_func rawpulse_func,
-                             wav2prg_test_eof_func test_eof_func,
-                             wav2prg_get_pos_func get_pos_func,
-                             enum wav2prg_tolerance_type tolerance_type,
-                             struct wav2prg_plugin_conf* conf,
-                             const char* loader_name,
-                             const char** loader_names,
-                             void* audiotap,
-                             struct display_interface *display_interface,
-                             struct display_interface_internal *display_interface_internal);
 #if 0 //defined _WIN32
 #elif defined DSDS
 #else

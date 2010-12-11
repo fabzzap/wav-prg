@@ -43,27 +43,27 @@ static uint8_t pavlodapenetrator_compute_checksum_step(struct wav2prg_plugin_con
   return old_checksum + byte + 1;
 }
 
-static enum wav2prg_return_values pavlodapenetrator_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool pavlodapenetrator_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
 {
-  if(functions->get_word_func(context, functions, conf, &info->start) == wav2prg_invalid)
-    return wav2prg_invalid;
-  if(functions->get_word_func(context, functions, conf, &info->end  ) == wav2prg_invalid)
-    return wav2prg_invalid;
-  return wav2prg_ok;
+  if(functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
+    return wav2prg_false;
+  if(functions->get_word_func(context, functions, conf, &info->end  ) == wav2prg_false)
+    return wav2prg_false;
+  return wav2prg_true;
 }
 
 static const struct wav2prg_plugin_conf* pavlodapenetrator_get_new_state(void) {
   return &pavlodapenetrator;
 }
 
-static enum wav2prg_return_values pavlodapenetrator_get_bit(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit) {
+static enum wav2prg_bool pavlodapenetrator_get_bit(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit) {
   uint8_t pulse;
   struct pavlodapenetrator_private_state* state = (struct pavlodapenetrator_private_state*)conf->private_state;
   
   switch(state->bit_status){
   case status_1:
-    if(functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_invalid)
-      return wav2prg_invalid;
+    if(functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+      return wav2prg_false;
     switch(pulse){
     case 0:
       *bit = 1;
@@ -79,8 +79,8 @@ static enum wav2prg_return_values pavlodapenetrator_get_bit(struct wav2prg_conte
     }
     break;
   case status_2:
-    if(functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_invalid)
-      return wav2prg_invalid;
+    if(functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+      return wav2prg_false;
     switch(pulse){
     case 0:
       *bit = 0;
@@ -100,11 +100,11 @@ static enum wav2prg_return_values pavlodapenetrator_get_bit(struct wav2prg_conte
     state->bit_status=status_1;
     break;
   }  
-  return wav2prg_ok;
+  return wav2prg_true;
 }
 
 /* Almost a copy-paste of get_sync_byte_using_shift_register */
-static enum wav2prg_return_values pavlodapenetrator_get_sync_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+static enum wav2prg_bool pavlodapenetrator_get_sync_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
   struct pavlodapenetrator_private_state* state = (struct pavlodapenetrator_private_state*)conf->private_state;
   uint32_t num_of_pilot_bytes_found;
@@ -113,9 +113,9 @@ static enum wav2prg_return_values pavlodapenetrator_get_sync_byte(struct wav2prg
   do{
     do{
       uint8_t bit;
-      enum wav2prg_return_values res = pavlodapenetrator_get_bit(context, functions, conf, &bit);
-      if (res == wav2prg_invalid)
-        return wav2prg_invalid;
+      enum wav2prg_bool res = pavlodapenetrator_get_bit(context, functions, conf, &bit);
+      if (res == wav2prg_false)
+        return wav2prg_false;
       *byte = (*byte << 1) | bit;
       if (*byte == 0x3f)
         state->bit_status = status_2;
@@ -123,11 +123,11 @@ static enum wav2prg_return_values pavlodapenetrator_get_sync_byte(struct wav2prg
     num_of_pilot_bytes_found = 0;
     do{
       num_of_pilot_bytes_found++;
-      if(functions->get_byte_func(context, functions, conf, byte) == wav2prg_invalid)
-        return wav2prg_invalid;
+      if(functions->get_byte_func(context, functions, conf, byte) == wav2prg_false)
+        return wav2prg_false;
     } while (*byte == conf->byte_sync.pilot_byte);
   } while (num_of_pilot_bytes_found < 256);
-  return wav2prg_ok;
+  return wav2prg_true;
 };
 
 static const struct wav2prg_plugin_functions pavlodapenetrator_functions =

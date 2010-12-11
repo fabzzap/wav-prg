@@ -21,19 +21,19 @@ const struct wav2prg_plugin_conf novaload_conf =
   NULL
 };
 
-enum wav2prg_return_values novaload_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+enum wav2prg_bool novaload_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
   uint8_t shift_reg = 0xFF;
   uint8_t bit;
   do{
-    if(functions->get_bit_func(context,functions, conf, &bit) == wav2prg_invalid)
-      return wav2prg_invalid;
+    if(functions->get_bit_func(context,functions, conf, &bit) == wav2prg_false)
+      return wav2prg_false;
     shift_reg = (shift_reg >> 1) | (bit << 7);
   }while(!bit || (shift_reg & 1));
   return functions->get_byte_func(context, functions, conf, byte);
 }
 
-enum wav2prg_return_values novaload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
 {
   uint8_t i;
   uint8_t namelen;
@@ -42,34 +42,34 @@ enum wav2prg_return_values novaload_get_block_info(struct wav2prg_context* conte
 
   functions->enable_checksum_func(context);
 
-  if (functions->get_byte_func(context, functions, conf, &namelen) == wav2prg_invalid)
-    return wav2prg_invalid;
+  if (functions->get_byte_func(context, functions, conf, &namelen) == wav2prg_false)
+    return wav2prg_false;
   /* Despite what Tapclean docs say, nothing forbids a Novaload program to have a name
      0x55 chars long. However, it is highly unlikely that the program name is very long.
      So, add a limit, to prevent false detections */
   if (namelen > 16)
-    return wav2prg_invalid;
+    return wav2prg_false;
   for(i = 0; i < namelen; i++)
-    if (functions->get_byte_func(context, functions, conf, info->name + i) == wav2prg_invalid)
-      return wav2prg_invalid;
+    if (functions->get_byte_func(context, functions, conf, info->name + i) == wav2prg_false)
+      return wav2prg_false;
 
-  if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_invalid)
-    return wav2prg_invalid;
+  if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
+    return wav2prg_false;
   /* According to Markus Brenner and Tomaz Kac, this should be the end address
      But the actual C64 implementation does not use these two bytes, so nor do we */
-  if (functions->get_word_func(context, functions, conf, &unused) == wav2prg_invalid)
-    return wav2prg_invalid;
-  if (functions->get_word_func(context, functions, conf, &blocklen) == wav2prg_invalid)
-    return wav2prg_invalid;
+  if (functions->get_word_func(context, functions, conf, &unused) == wav2prg_false)
+    return wav2prg_false;
+  if (functions->get_word_func(context, functions, conf, &blocklen) == wav2prg_false)
+    return wav2prg_false;
 
   if (blocklen < 256 || info->start + blocklen > 65536)
-    return wav2prg_invalid;
+    return wav2prg_false;
   info->end = info->start + blocklen;
   info->start+=256;
-  return wav2prg_ok;
+  return wav2prg_true;
 }
 
-static enum wav2prg_return_values novaload_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size)
+static enum wav2prg_bool novaload_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size)
 {
   uint16_t bytes_received;
   uint16_t bytes_now;
@@ -77,11 +77,11 @@ static enum wav2prg_return_values novaload_get_block(struct wav2prg_context* con
   for(bytes_received = 0; bytes_received != block_size; bytes_received += bytes_now) {
     bytes_now = block_size - bytes_received > 256 ? 256 : block_size - bytes_received;
     if (functions->check_checksum_func(context, functions, conf) != wav2prg_checksum_state_correct)
-      return wav2prg_invalid;
-    if (functions->get_block_func(context, functions, conf, block, bytes_now) != wav2prg_ok)
-      return wav2prg_invalid;
+      return wav2prg_false;
+    if (functions->get_block_func(context, functions, conf, block, bytes_now) != wav2prg_true)
+      return wav2prg_false;
   }
-  return wav2prg_ok;
+  return wav2prg_true;
 }
 
 static const struct wav2prg_plugin_conf* novaload_get_new_state(void) {

@@ -1,4 +1,5 @@
 struct display_interface_internal;
+struct wav2prg_block_info;
 enum wav2prg_checksum_state;
 
 struct display_interface {

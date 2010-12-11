@@ -1,4 +1,4 @@
-wav2prg: wav2prg_api.o \
+wav2prg: wav2prg_core.o \
          main.o \
          loaders.o \
          dependency_tree.o \

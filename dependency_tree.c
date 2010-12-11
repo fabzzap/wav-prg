@@ -1,4 +1,5 @@
 #include "wav2prg_api.h"
+#include "dependency_tree.h"
 #include "loaders.h"
 
 #include <malloc.h>
