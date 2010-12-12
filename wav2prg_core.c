@@ -36,19 +36,25 @@ struct wav2prg_context {
   struct display_interface_internal *display_interface_internal;
 };
 
-static enum wav2prg_bool get_pulse(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
+static enum wav2prg_bool get_pulse(struct wav2prg_context* context, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
 {
+  uint32_t raw_pulse;
+  enum wav2prg_bool ret = context->input->get_pulse(context->input_object, &raw_pulse);
+
+  if (ret == wav2prg_false)
+    return wav2prg_false;
+
   switch(context->current_tolerance_type){
-  case wav2prg_tolerant           : return get_pulse_tolerant           (context->input_object, context->input, conf, pulse);
-  case wav2prg_adaptively_tolerant: return get_pulse_adaptively_tolerant(context->input_object, context->input, (*context->current_block)->adaptive_tolerances, conf, pulse);
-  case wav2prg_intolerant         : return get_pulse_intolerant         (context->input_object, context->input, context->strict_tolerances, conf, pulse);
+  case wav2prg_tolerant           : return get_pulse_tolerant           (raw_pulse, conf, pulse);
+  case wav2prg_adaptively_tolerant: return get_pulse_adaptively_tolerant(raw_pulse, (*context->current_block)->adaptive_tolerances, conf, pulse);
+  case wav2prg_intolerant         : return get_pulse_intolerant         (raw_pulse, context->strict_tolerances, conf, pulse);
   }
 }
 
 static enum wav2prg_bool get_bit_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit)
 {
   uint8_t pulse;
-  if (context->subclassed_functions.get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+  if (context->subclassed_functions.get_pulse_func(context, conf, &pulse) == wav2prg_false)
     return wav2prg_false;
   switch(pulse) {
   case 0 : *bit = 0; return wav2prg_true;
@@ -406,7 +412,6 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
                                                                    struct wav2prg_plugin_conf **conf)
 {
   const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
-  struct wav2prg_tolerance* strict_tolerances = get_strict_tolerances(loader_name);
 
   context->compute_checksum_step             =
     plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step : compute_checksum_step_default;
@@ -427,9 +432,8 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
     *conf = get_new_state(plugin_functions);
   
   free(context->strict_tolerances);
-  if(strict_tolerances != NULL)
-    context->strict_tolerances = strict_tolerances;
-  else{
+  context->strict_tolerances = get_strict_tolerances(loader_name);
+  if(context->strict_tolerances == NULL) {
     int i;
     context->strict_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * (*conf)->num_pulse_lengths);
     for(i = 0; i < (*conf)->num_pulse_lengths - 1; i++){
@@ -439,7 +443,7 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
     }
     context->strict_tolerances[0].less_than_ideal = context->strict_tolerances[0].more_than_ideal;
     context->strict_tolerances[(*conf)->num_pulse_lengths - 1].more_than_ideal =
-      context->strict_tolerances[(*conf)->num_pulse_lengths - 1].less_than_ideal;
+    context->strict_tolerances[(*conf)->num_pulse_lengths - 1].less_than_ideal;
   }
   return plugin_functions;
 }
@@ -511,6 +515,27 @@ static enum wav2prg_recognize look_for_dependent_plugin(struct plugin_tree** cur
 struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name){
   const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
   return plugin_functions ? get_new_state(plugin_functions) : NULL;
+}
+
+/* if the final adaptive tolerances were stricter than the strict tolerances,
+   make the former less strict */
+static void adapt_tolerances(const struct wav2prg_tolerance* strict, struct wav2prg_tolerance* adaptive, const uint16_t *ideal_lengths, uint32_t num){
+  uint32_t i;
+
+  for(i = 0; i < num; i++){
+    if (adaptive[i].less_than_ideal < strict[i].less_than_ideal)
+      adaptive[i].less_than_ideal = strict[i].less_than_ideal;
+    if (adaptive[i].more_than_ideal < strict[i].more_than_ideal)
+      adaptive[i].more_than_ideal = strict[i].more_than_ideal;
+  }
+  /* check if no overlaps */
+  for(i = 0; i < num - 1; i++){
+    int32_t overlap = ideal_lengths[i + 1] - ideal_lengths[i] - adaptive[i + 1].less_than_ideal - adaptive[i].more_than_ideal;
+    if (overlap < -1){
+      adaptive[i + 1].less_than_ideal +=  overlap      / 2;
+      adaptive[i    ].more_than_ideal += (overlap + 1) / 2;
+    }
+  }
 }
 
 struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance_type,
@@ -683,7 +708,13 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                    block->syncs[block->num_of_syncs - 1].end,
                                    context.raw_block.length_so_far);
     }while(0);
+
     /* got the block */
+    adapt_tolerances(context.strict_tolerances
+                   , block->adaptive_tolerances
+                   , conf->ideal_pulse_lengths
+                   , conf->num_pulse_lengths
+                    );
     context.current_block = &(*context.current_block)->next;
 
     /* find out if a new loader should be loaded (found_dependent_plugin),

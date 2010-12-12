@@ -4,6 +4,7 @@
 #include "loaders.h"
 #include "display_interface.h"
 #include "wav2prg_api.h"
+#include "write_cleaned_tap.h"
 
 static enum wav2prg_bool getrawpulse(struct wav2prg_input_object* audiotap, uint32_t* pulse)
 {
@@ -143,6 +144,7 @@ int main(int argc, char** argv)
   &input_object,
   &input_functions,
   &text_based_display, NULL);
+  write_cleaned_tap(blocks, &input_object, &input_functions);
   return 0;
 }
 

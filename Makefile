@@ -3,6 +3,8 @@ wav2prg: wav2prg_core.o \
          loaders.o \
          dependency_tree.o \
          get_pulse.o \
+         write_cleaned_tap.o \
+         tapfile_write.o \
          turbotape.o \
          kernal.o \
          novaload.o \

@@ -30,14 +30,14 @@ static enum wav2prg_bool specialagent_sync(struct wav2prg_context* context, cons
         uint8_t pulse;
 
         old_valid_pulses = valid_pulses;
-        if (functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+        if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
           return wav2prg_false;
         valid_pulses = pulse == 2 ? valid_pulses+1 : 0;
       }while(valid_pulses!=0 || old_valid_pulses<5);
 
-      if (functions->get_pulse_func(context, functions, conf, &pulse2) == wav2prg_false)
+      if (functions->get_pulse_func(context, conf, &pulse2) == wav2prg_false)
         return wav2prg_false;
-      if (functions->get_pulse_func(context, functions, conf, &pulse3) == wav2prg_false)
+      if (functions->get_pulse_func(context, conf, &pulse3) == wav2prg_false)
         return wav2prg_false;
     }while((pulse2!=0 && pulse2!=1)||(pulse3!=0 && pulse3!=1));
   return wav2prg_true;

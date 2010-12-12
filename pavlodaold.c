@@ -43,10 +43,10 @@ static const struct wav2prg_plugin_conf* pavlodaold_get_new_state(void) {
 static enum wav2prg_bool pavlodaold_get_bit(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit) {
   uint8_t pulse;
   
-  if(functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+  if(functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
     return wav2prg_false;
   if (pulse == 0){
-    functions->get_pulse_func(context, functions, conf, &pulse);/*and ignore the result, the very last pulse can be corrupted*/
+    functions->get_pulse_func(context, conf, &pulse);/*and ignore the result, the very last pulse can be corrupted*/
     *bit = 1;
   }
   else

@@ -1,4 +1,5 @@
 #include "wav2prg_blocks.h"
+#include "checksum_state.h"
 
 struct block_syncs {
   uint32_t start_sync;

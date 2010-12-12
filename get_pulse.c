@@ -1,14 +1,8 @@
-#include "wav2prg_input.h"
 #include "wav2prg_api.h"
 #include "wav2prg_block_list.h"
 
-enum wav2prg_bool get_pulse_tolerant(struct wav2prg_input_object *input_object,
-  struct wav2prg_input_functions *input, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
+enum wav2prg_bool get_pulse_tolerant(uint32_t raw_pulse, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
 {
-  uint32_t raw_pulse;
-  enum wav2prg_bool ret = input->get_pulse(input_object, &raw_pulse);
-  if (ret == wav2prg_false)
-    return wav2prg_false;
   for (*pulse = 0; *pulse < conf->num_pulse_lengths - 1; *pulse++) {
     if (raw_pulse < conf->thresholds[*pulse])
       return wav2prg_true;
@@ -16,14 +10,8 @@ enum wav2prg_bool get_pulse_tolerant(struct wav2prg_input_object *input_object,
   return wav2prg_true;
 }
 
-enum wav2prg_bool get_pulse_adaptively_tolerant(struct wav2prg_input_object *input_object,
-  struct wav2prg_input_functions *input, struct wav2prg_tolerance *adaptive_tolerances, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
+enum wav2prg_bool get_pulse_adaptively_tolerant(uint32_t raw_pulse, struct wav2prg_tolerance *adaptive_tolerances, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
 {
-  uint32_t raw_pulse;
-  enum wav2prg_bool ret = input->get_pulse(input_object, &raw_pulse);
-
-  if (ret == wav2prg_false)
-    return wav2prg_false;
   *pulse = 0;
   if(raw_pulse < conf->ideal_pulse_lengths[*pulse] - adaptive_tolerances[*pulse].less_than_ideal)
   {
@@ -63,14 +51,8 @@ enum wav2prg_bool get_pulse_adaptively_tolerant(struct wav2prg_input_object *inp
   return wav2prg_false;
 }
 
-enum wav2prg_bool get_pulse_intolerant(struct wav2prg_input_object *input_object,
-  struct wav2prg_input_functions *input, struct wav2prg_tolerance *strict_tolerances, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
+enum wav2prg_bool get_pulse_intolerant(uint32_t raw_pulse, struct wav2prg_tolerance *strict_tolerances, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
 {
-  uint32_t raw_pulse;
-  enum wav2prg_bool ret = input->get_pulse(input_object, &raw_pulse);
-  if (ret == wav2prg_false)
-    return wav2prg_false;
-
   for(*pulse = 0; *pulse < conf->num_pulse_lengths; (*pulse)++){
     if (raw_pulse > conf->ideal_pulse_lengths[*pulse] - strict_tolerances[*pulse].less_than_ideal
       && raw_pulse < conf->ideal_pulse_lengths[*pulse] + strict_tolerances[*pulse].more_than_ideal)

@@ -90,9 +90,9 @@ static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
 static enum wav2prg_bool kernal_get_bit_func(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit)
 {
   uint8_t pulse1, pulse2;
-  if (functions->get_pulse_func(context, functions, conf, &pulse1) == wav2prg_false)
+  if (functions->get_pulse_func(context, conf, &pulse1) == wav2prg_false)
     return wav2prg_false;
-  if (functions->get_pulse_func(context, functions, conf, &pulse2) == wav2prg_false)
+  if (functions->get_pulse_func(context, conf, &pulse2) == wav2prg_false)
     return wav2prg_false;
   if (pulse1 == 0 && pulse2 == 1) {
     *bit = 0;
@@ -117,14 +117,14 @@ static enum
   uint8_t test;
 
   while(1){
-    if (functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
       return could_not_sync;
     if(pulse==2)
       break;
     if(pulse!=0 || !allow_short_pulses_at_first)
       return could_not_sync;
   }
-  if (functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+  if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
     return could_not_sync;
   switch(pulse){
   case 1:

@@ -79,7 +79,7 @@ static enum wav2prg_bool pavloda_get_bit(struct wav2prg_context* context, const 
   
   switch(state->bit_status){
   case status_1:
-    if(functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+    if(functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
       return wav2prg_false;
     switch(pulse){
     case 0:
@@ -96,7 +96,7 @@ static enum wav2prg_bool pavloda_get_bit(struct wav2prg_context* context, const 
     }
     break;
   case status_2:
-    if(functions->get_pulse_func(context, functions, conf, &pulse) == wav2prg_false)
+    if(functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
       return wav2prg_false;
     switch(pulse){
     case 0:

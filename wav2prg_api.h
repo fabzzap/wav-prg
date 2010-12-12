@@ -1,5 +1,6 @@
 #include "wav2prg_types.h"
 #include "wav2prg_blocks.h"
+#include "checksum_state.h"
 
 enum wav2prg_plugin_endianness {
   lsbf,
@@ -24,12 +25,6 @@ enum wav2prg_block_filling {
 
 struct wav2prg_raw_block;
 
-enum wav2prg_checksum_state {
-  wav2prg_checksum_state_unverified,
-  wav2prg_checksum_state_correct,
-  wav2prg_checksum_state_load_error
-};
-
 enum wav2prg_recognize {
   wav2prg_not_mine,
   wav2prg_mine_following_not,
@@ -41,7 +36,7 @@ struct wav2prg_functions;
 struct wav2prg_plugin_conf;
 struct wav2prg_plugin_functions;
 
-typedef enum wav2prg_bool (*wav2prg_get_pulse_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
+typedef enum wav2prg_bool (*wav2prg_get_pulse_func)(struct wav2prg_context*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_bit_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_byte_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_word_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
