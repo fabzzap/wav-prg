@@ -19,7 +19,7 @@
 #include <string.h>
 #include "tapfile_write.h"
 
-enum wav2prg_bool tapfile_write_set_pulse(struct tap_handle *handle, u_int32_t ncycles){
+enum wav2prg_bool tapfile_write_set_pulse(struct tap_handle *handle, uint32_t ncycles){
   unsigned char byte, threebytes[3];
 
   if (ncycles < 256 * 8) {

@@ -123,6 +123,7 @@ int main(int argc, char** argv)
   struct wav2prg_single_loader single_loader = {"Turbo Tape 64", NULL};
   char** all_loaders;
   struct wav2prg_input_object input_object;
+  struct block_list_element *blocks;
 
   if(argc<2)
     return 1;
@@ -137,7 +138,7 @@ int main(int argc, char** argv)
   all_loaders = get_loaders(1);
   single_loader.conf = wav2prg_get_loader(single_loader.loader_name);
 
-  struct block_list_element* blocks = wav2prg_analyse(
+  blocks = wav2prg_analyse(
   wav2prg_adaptively_tolerant,
   &single_loader,
   loader_names,
