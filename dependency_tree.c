@@ -1,6 +1,7 @@
 #include "wav2prg_api.h"
 #include "dependency_tree.h"
 #include "loaders.h"
+#include "display_interface.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -43,7 +44,7 @@ void delete_tree(struct plugin_tree** tree) {
   }
 }
 
-void digest_list(const char** list, struct plugin_tree** tree) {
+void digest_list(const char **list, struct plugin_tree **tree, struct display_interface *error_report, struct display_interface_internal *error_report_internal) {
   for(;*list; list++) {
     const char* this_plugin_name = *list;
     struct plugin_tree*  minitree = NULL;
@@ -53,8 +54,10 @@ void digest_list(const char** list, struct plugin_tree** tree) {
       const struct wav2prg_plugin_functions* next_in_chain = get_loader_by_name(this_plugin_name);
 
       if(next_in_chain == NULL) {
+        error_report->fail_dep(error_report_internal, this_plugin_name, minitree);
         delete_tree(&minitree);
-        return;
+        minitree = NULL;
+        break;
       }
 
       new_minitree = malloc(sizeof(struct plugin_tree));
@@ -65,10 +68,12 @@ void digest_list(const char** list, struct plugin_tree** tree) {
       minitree = new_minitree;
       this_plugin_name = get_plugin_this_is_dependent_on(next_in_chain);
     }
-    while(*where_to_add != NULL)
-      where_to_add = &((*where_to_add)->first_sibling);
+    if (minitree){
+      while(*where_to_add != NULL)
+        where_to_add = &((*where_to_add)->first_sibling);
 
-    *where_to_add = minitree;
+      *where_to_add = minitree;
+    }
   }
 }
 

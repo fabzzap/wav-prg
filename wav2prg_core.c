@@ -617,7 +617,9 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
   struct wav2prg_plugin_conf* conf = NULL;
 
   if(loader_names != NULL) {
-    digest_list(loader_names, &dependency_tree);
+    digest_list(loader_names, &dependency_tree, display_interface, display_interface_internal);
+    if (!dependency_tree)
+      return NULL;
     loader_name = dependency_tree->node;
     current_plugin_in_tree = dependency_tree;
   }

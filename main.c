@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "wav2prg_core.h"
 #include "loaders.h"
 #include "display_interface.h"
 #include "wav2prg_api.h"
 #include "write_cleaned_tap.h"
+#include "yet_another_getopt.h"
+#include "dependency_tree.h"
 
 static enum wav2prg_bool getrawpulse(struct wav2prg_input_object* audiotap, uint32_t* pulse)
 {
@@ -68,6 +71,17 @@ static void sync(struct display_interface_internal *internal, uint32_t start_of_
     printf(" but no block followed\n", info_pos);
 }
 
+static void fail_dep(struct display_interface_internal *internal, const char *loader, struct plugin_tree* tree)
+{
+  printf("Failed to load %s", loader);
+
+  while(tree){
+    printf(", dependency of %s", tree->node);
+    tree = tree->first_child;
+  }
+  printf(".\n");
+}
+
 static void progress(struct display_interface_internal *internal, uint32_t pos)
 {
 }
@@ -110,6 +124,7 @@ static void end(struct display_interface_internal *internal, unsigned char valid
 }
 
 static struct display_interface text_based_display = {
+  fail_dep,
   try_sync,
   sync,
   progress,
@@ -117,15 +132,77 @@ static struct display_interface text_based_display = {
   end
 };
 
+struct selected_loaders {
+  char** loader_names;
+  struct wav2prg_single_loader single_loader;
+};
+
+static enum wav2prg_bool check_single_loader(const char* loader_name, void* sel)
+{
+  struct selected_loaders *selected = (struct selected_loaders*)sel;
+  if (*selected->loader_names){
+    printf("Cannot choose a single loader after choosing multiple loaders\n");
+    return wav2prg_false;
+  }
+  if (selected->single_loader.loader_name){
+    printf("Cannot choose more than one single loader\n");
+    return wav2prg_false;
+  }
+  selected->single_loader.loader_name = strdup(loader_name);
+  return wav2prg_true;
+}
+
+static enum wav2prg_bool check_multi_loader(const char* loader_name, void* sel)
+{
+  struct selected_loaders *selected = (struct selected_loaders*)sel;
+  char **old_loader;
+  int num_loaders;
+  
+  if (selected->single_loader.loader_name){
+    printf("Cannot choose multiple loaders after choosing single loaders\n");
+    return wav2prg_false;
+  }
+  for(old_loader = selected->loader_names, num_loaders = 0; *old_loader; old_loader++, num_loaders++);
+  selected->loader_names = realloc(selected->loader_names, sizeof(char*) * (num_loaders + 2));
+  selected->loader_names[num_loaders    ] = strdup(loader_name);
+  selected->loader_names[num_loaders + 1] = NULL;
+  return wav2prg_true;
+}
+
 int main(int argc, char** argv)
 {
-  const char* loader_names[] = {"Connection", NULL};
-  struct wav2prg_single_loader single_loader = {"Turbo Tape 64", NULL};
-  char** all_loaders;
+  struct selected_loaders selected_loader = {
+    calloc(1, sizeof(char*)),
+    {NULL, NULL}
+  };
   struct wav2prg_input_object input_object;
   struct block_list_element *blocks;
+  const char *o1names[]={"s", "single", "single-loader", NULL};
+  const char *o2names[]={"m", "multi", "multi-loader", NULL};
+  struct get_option options[] ={
+    {
+      o1names,
+      "Name of loader for single-loader analysis",
+      check_single_loader,
+      &selected_loader,
+      wav2prg_false,
+      option_must_have_argument
+    },
+    {
+      o2names,
+      "Name of loader for multi-loader analysis",
+      check_multi_loader,
+      &selected_loader,
+      wav2prg_true,
+      option_must_have_argument
+    },
+    {NULL}
+  };
 
-  if(argc<2)
+  if(!yet_another_getopt(options, &argc, argv))
+    return 1;
+
+  if(argc != 2)
     return 1;
   
   input_object.object = fopen(argv[1],"rb");
@@ -133,19 +210,24 @@ int main(int argc, char** argv)
     printf("File %s not found\n",argv[1]);
     return 2;
   }
-  
+
   register_loaders();
-  all_loaders = get_loaders(1);
-  single_loader.conf = wav2prg_get_loader(single_loader.loader_name);
+  if(selected_loader.single_loader.loader_name){
+    selected_loader.single_loader.conf = wav2prg_get_loader(selected_loader.single_loader.loader_name);
+    if (selected_loader.single_loader.conf == NULL){
+      printf("Loader %s not found\n", selected_loader.single_loader.loader_name);
+      return 2;
+    }
+  }
 
   blocks = wav2prg_analyse(
-  wav2prg_adaptively_tolerant,
-  &single_loader,
-  loader_names,
-  &input_object,
-  &input_functions,
-  &text_based_display, NULL);
+    wav2prg_adaptively_tolerant,
+    &selected_loader.single_loader,
+    *selected_loader.loader_names ? selected_loader.loader_names : NULL,
+    &input_object,
+    &input_functions,
+    &text_based_display, NULL
+                          );
   write_cleaned_tap(blocks, &input_object, &input_functions);
   return 0;
 }
-
