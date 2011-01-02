@@ -1,6 +1,8 @@
 #include "yet_another_getopt.h"
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 struct option_names {
   char* option_name;
