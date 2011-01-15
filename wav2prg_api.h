@@ -53,7 +53,7 @@ typedef uint8_t                    (*wav2prg_compute_checksum_step)(struct wav2p
 typedef void                       (*wav2prg_enable_checksum)(struct wav2prg_context*);
 typedef void                       (*wav2prg_disable_checksum)(struct wav2prg_context*);
 typedef const struct wav2prg_plugin_conf* (*wav2prg_get_new_plugin_state)(void);
-typedef unsigned char              (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
+typedef enum wav2prg_bool          (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
 typedef enum wav2prg_recognize     (*wav2prg_recognize_block_as_mine)(struct wav2prg_plugin_conf*, struct wav2prg_block*);
 typedef enum wav2prg_recognize     (*wav2prg_recognize_block_as_mine_with_start_end)(struct wav2prg_plugin_conf*, struct wav2prg_block*, struct wav2prg_block_info*);
 typedef void                       (*wav2prg_number_to_name)(uint8_t number, char* name);
@@ -80,7 +80,7 @@ struct wav2prg_functions {
   wav2prg_remove_byte_from_block remove_byte_from_block_func;
 };
 
-struct wav2prg_generate_private_state 
+struct wav2prg_generate_private_state
 {
   uint32_t size;
   const void* model;

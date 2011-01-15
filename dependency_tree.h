@@ -1,3 +1,5 @@
+#include "wav2prg_types.h"
+
 struct display_interface;
 struct display_interface_internal;
 
@@ -8,4 +10,4 @@ struct plugin_tree {
 };
 
 void digest_list(const char** list, struct plugin_tree** tree, struct display_interface* error_report, struct display_interface_internal *error_report_internal);
-unsigned char are_all_dependencies_ok(const char* loader);
+enum wav2prg_bool are_all_dependencies_ok(const char* loader);

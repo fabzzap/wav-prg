@@ -20,7 +20,7 @@ typedef enum wav2prg_bool (*wav2prg_get_rawpulse_func)(void* audiotap, uint32_t*
 typedef enum wav2prg_bool (*wav2prg_test_eof_func)(void* audiotap);
 typedef int32_t           (*wav2prg_get_pos_func)(void* audiotap);
 
-struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name);
+struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name, enum wav2prg_bool must_be_apt_to_single_loader_analysis);
 
 struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance_type,
                              struct wav2prg_single_loader* single_loader,

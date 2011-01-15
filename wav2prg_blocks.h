@@ -1,6 +1,8 @@
 #ifndef WAV2PRG_BLOCKS_H
 #define WAV2PRG_BLOCKS_H
 
+#include "wav2prg_types.h"
+
 struct wav2prg_block_info {
   uint16_t start;
   uint16_t end;

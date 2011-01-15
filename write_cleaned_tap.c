@@ -4,13 +4,13 @@
 #include "tapfile_write.h"
 #include "get_pulse.h"
 
-void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_object *object, struct wav2prg_input_functions *functions){
+void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_object *object, struct wav2prg_input_functions *functions, const char* filename){
   struct block_list_element* current_block = blocks;
   uint32_t sync = 0;
   struct tap_handle* handle;
 
   functions->set_pos(object, 0);
-  tapfile_init_write("clean.tap", &handle, 1, 0);
+  tapfile_init_write(filename, &handle, 1, 0);
 
   while(!functions->is_eof(object)){
     int32_t pos = functions->get_pos(object);
@@ -33,8 +33,8 @@ void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_o
        && pos >= current_block->syncs[sync].start_sync){
       uint8_t pulse;
       if (!get_pulse_intolerant(raw_pulse,
-                                current_block->adaptive_tolerances, 
-                                current_block->conf, 
+                                current_block->adaptive_tolerances,
+                                current_block->conf,
                                 &pulse)
          )
         break;

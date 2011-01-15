@@ -66,7 +66,7 @@ void tapfile_write_close(struct tap_handle *handle){
   free(handle);
 };
 
-enum wav2prg_bool tapfile_init_write(char *name, struct tap_handle **file, unsigned char version, unsigned char machine){
+enum wav2prg_bool tapfile_init_write(const char *name, struct tap_handle **file, unsigned char version, unsigned char machine){
   char c64_tap_header[] = "C64-TAPE-RAW\0\0\0\0\0\0\0\0";
   char c16_tap_header[] = "C16-TAPE-RAW\0\2\0\0\0\0\0\0";
   char *tap_header = (machine == 0 ? c64_tap_header : c16_tap_header);
