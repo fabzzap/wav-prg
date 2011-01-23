@@ -123,6 +123,8 @@ static void end(struct display_interface_internal *internal, unsigned char valid
       printf("Huh? Something went wrong while verifying the checksum\n");
     }
   }
+  else
+    printf("loader does not have checksum, no errors detected\n");
 }
 
 static struct display_interface text_based_display = {
