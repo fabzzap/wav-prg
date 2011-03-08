@@ -15,7 +15,7 @@ static enum wav2prg_bool turbotape_get_block_info(struct wav2prg_context* contex
   if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
     return wav2prg_false;
   for(i=0;i<16;i++){
-    if (functions->get_byte_func(context, functions, conf, (uint8_t*)info->name + i) != 0)
+    if (functions->get_byte_func(context, functions, conf, (uint8_t*)info->name + i)  == wav2prg_false)
       return wav2prg_false;
   }
   if (functions->get_sync(context, functions, conf) == wav2prg_false)
