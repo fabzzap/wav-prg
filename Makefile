@@ -15,6 +15,9 @@ wav2prg: wav2prg_core.o \
          pavlodaold.o \
          pavloda.o \
          connection.o \
+         detective.o \
+         turbo220.o \
+         freeload.o \
          rackit.o
 
 	$(CC) -o $@ $^
