@@ -7,6 +7,7 @@
 #include "display_interface.h"
 #include "wav2prg_api.h"
 #include "write_cleaned_tap.h"
+#include "write_prg.h"
 #include "yet_another_getopt.h"
 #include "dependency_tree.h"
 
@@ -69,7 +70,7 @@ static void sync(struct display_interface_internal *internal, uint32_t start_of_
     printf("name %s start %u end %u\n", info->name, info->start, info->end);
   }
   else
-    printf(" but no block followed\n", info_pos);
+    printf(" but no block followed\n");
 }
 
 static void fail_dep(struct display_interface_internal *internal, const char *loader, struct plugin_tree* tree)
@@ -122,6 +123,8 @@ static void end(struct display_interface_internal *internal, unsigned char valid
       printf("Huh? Something went wrong while verifying the checksum\n");
     }
   }
+  else
+    printf("loader does not have checksum, no errors detected\n");
 }
 
 static struct display_interface text_based_display = {
@@ -149,6 +152,11 @@ static enum wav2prg_bool check_single_loader(const char* loader_name, void* sel)
     printf("Cannot choose more than one single loader\n");
     return wav2prg_false;
   }
+  selected->single_loader.conf = wav2prg_get_loader(loader_name, wav2prg_true);
+  if (selected->single_loader.conf == NULL){
+    printf("No loader %s usable as single loader found\n", loader_name);
+    return wav2prg_false;
+  }
   selected->single_loader.loader_name = strdup(loader_name);
   return wav2prg_true;
 }
@@ -158,7 +166,7 @@ static enum wav2prg_bool check_multi_loader(const char* loader_name, void* sel)
   struct selected_loaders *selected = (struct selected_loaders*)sel;
   char **old_loader;
   int num_loaders;
-  
+
   if (selected->single_loader.loader_name){
     printf("Cannot choose multiple loaders after choosing single loaders\n");
     return wav2prg_false;
@@ -170,6 +178,38 @@ static enum wav2prg_bool check_multi_loader(const char* loader_name, void* sel)
   return wav2prg_true;
 }
 
+enum dump_types{
+  dump_to_tap,
+  dump_to_prg,
+  dump_to_p00,
+  dump_to_t64,
+  dump_to_raw_tmg,
+  dump_to_iff_tmg
+};
+
+struct dump_element {
+  enum dump_types dump_type;
+  const char* name;
+};
+
+struct dump_argument {
+  enum dump_types dump_type;
+  struct dump_element **dumps;
+};
+
+static enum wav2prg_bool add_to_dump_list(const char* filename, void* dumps)
+{
+  struct dump_argument *current_dumps = (struct dump_argument *)dumps;
+  int i = 0;
+  while((*current_dumps->dumps)[i].name != NULL)
+    i++;
+  *current_dumps->dumps = realloc(*current_dumps->dumps, (i + 2)*sizeof(struct dump_element));
+  (*current_dumps->dumps)[i].name = strdup(filename);
+  (*current_dumps->dumps)[i].dump_type = current_dumps->dump_type;
+  (*current_dumps->dumps)[i + 1].name = NULL;
+  return wav2prg_true;
+}
+
 int main(int argc, char** argv)
 {
   struct selected_loaders selected_loader = {
@@ -178,8 +218,13 @@ int main(int argc, char** argv)
   };
   struct wav2prg_input_object input_object;
   struct block_list_element *blocks;
+  struct dump_element *dump = calloc(1, sizeof(struct dump_element)), *current_dump;
   const char *o1names[]={"s", "single", "single-loader", NULL};
   const char *o2names[]={"m", "multi", "multi-loader", NULL};
+  const char *option_tap_names[]={"t", "tap", NULL};
+  const char *option_prg_names[]={"p", "prg", NULL};
+  struct dump_argument tap_dump = {dump_to_tap, &dump};
+  struct dump_argument prg_dump = {dump_to_prg, &dump};
   struct get_option options[] ={
     {
       o1names,
@@ -197,28 +242,37 @@ int main(int argc, char** argv)
       wav2prg_true,
       option_must_have_argument
     },
+    {
+      option_tap_names,
+      "Dump to a TAP file",
+      add_to_dump_list,
+      &tap_dump,
+      wav2prg_true,
+      option_must_have_argument
+    },
+    {
+      option_prg_names,
+      "Dump to PRG files",
+      add_to_dump_list,
+      &prg_dump,
+      wav2prg_true,
+      option_must_have_argument
+    },
     {NULL}
   };
 
-  if(!yet_another_getopt(options, &argc, argv))
+  register_loaders();
+
+  if(!yet_another_getopt(options, (uint32_t*)&argc, argv))
     return 1;
 
   if(argc != 2)
     return 1;
-  
+
   input_object.object = fopen(argv[1],"rb");
   if(!input_object.object){
     printf("File %s not found\n",argv[1]);
     return 2;
-  }
-
-  register_loaders();
-  if(selected_loader.single_loader.loader_name){
-    selected_loader.single_loader.conf = wav2prg_get_loader(selected_loader.single_loader.loader_name);
-    if (selected_loader.single_loader.conf == NULL){
-      printf("Loader %s not found\n", selected_loader.single_loader.loader_name);
-      return 2;
-    }
   }
 
   blocks = wav2prg_analyse(
@@ -229,6 +283,18 @@ int main(int argc, char** argv)
     &input_functions,
     &text_based_display, NULL
                           );
-  write_cleaned_tap(blocks, &input_object, &input_functions);
+  for(current_dump = dump; current_dump->name != NULL; current_dump++)
+  {
+    switch(current_dump->dump_type){
+    case dump_to_tap:
+      write_cleaned_tap(blocks, &input_object, &input_functions, current_dump->name);
+      break;
+    case dump_to_prg:
+      write_prg(blocks, current_dump->name);
+      break;
+    default:
+      break;
+    }
+  }
   return 0;
 }

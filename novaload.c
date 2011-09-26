@@ -50,7 +50,7 @@ enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const
   if (namelen > 16)
     return wav2prg_false;
   for(i = 0; i < namelen; i++)
-    if (functions->get_byte_func(context, functions, conf, info->name + i) == wav2prg_false)
+    if (functions->get_byte_func(context, functions, conf, (uint8_t*)info->name + i) == wav2prg_false)
       return wav2prg_false;
 
   if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)

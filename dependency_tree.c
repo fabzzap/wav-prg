@@ -51,7 +51,7 @@ void digest_list(const char **list, struct plugin_tree **tree, struct display_in
     struct plugin_tree** where_to_add;
     while((where_to_add = is_this_plugin_already_in_tree(this_plugin_name, tree)) == NULL) {
       struct plugin_tree *new_minitree = NULL;
-      const struct wav2prg_plugin_functions* next_in_chain = get_loader_by_name(this_plugin_name);
+      const struct wav2prg_plugin_functions* next_in_chain = get_loader_by_name(this_plugin_name, wav2prg_false);
 
       if(next_in_chain == NULL) {
         error_report->fail_dep(error_report_internal, this_plugin_name, minitree);
@@ -77,16 +77,16 @@ void digest_list(const char **list, struct plugin_tree **tree, struct display_in
   }
 }
 
-unsigned char are_all_dependencies_ok(const char* loader) {
+enum wav2prg_bool are_all_dependencies_ok(const char* loader) {
   while(loader) {
-    const struct wav2prg_plugin_functions* this_plugin = get_loader_by_name(loader);
+    const struct wav2prg_plugin_functions* this_plugin = get_loader_by_name(loader, wav2prg_false);
     if (!this_plugin)
-      return 0;
+      return wav2prg_false;
     if (this_plugin->get_block_info)
-      return 1;
+      return wav2prg_true;
     loader = get_plugin_this_is_dependent_on(this_plugin);
   }
-  return 0;
+  return wav2prg_false;
 }
 
 /*int main() {

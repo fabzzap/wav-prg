@@ -411,7 +411,7 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
                                                                    struct wav2prg_context *context,
                                                                    struct wav2prg_plugin_conf **conf)
 {
-  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
+  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name, wav2prg_false);
 
   context->compute_checksum_step             =
     plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step : compute_checksum_step_default;
@@ -476,7 +476,7 @@ static enum wav2prg_recognize look_for_dependent_plugin(struct plugin_tree** cur
   for(dependency_being_checked = (*current_plugin_in_tree)->first_child;
       dependency_being_checked != NULL;
       dependency_being_checked = dependency_being_checked->first_sibling) {
-    const struct wav2prg_plugin_functions* plugin_to_test_functions = get_loader_by_name(dependency_being_checked->node);
+    const struct wav2prg_plugin_functions* plugin_to_test_functions = get_loader_by_name(dependency_being_checked->node, wav2prg_false);
 
     if (plugin_to_test_functions){
       struct wav2prg_plugin_conf* plugin_to_test_conf = get_new_state(plugin_to_test_functions);
@@ -512,8 +512,8 @@ static enum wav2prg_recognize look_for_dependent_plugin(struct plugin_tree** cur
   return result;
 }
 
-struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name){
-  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
+struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name, enum wav2prg_bool must_be_apt_to_single_loader_analysis){
+  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name, must_be_apt_to_single_loader_analysis);
   return plugin_functions ? get_new_state(plugin_functions) : NULL;
 }
 

@@ -4,6 +4,7 @@ wav2prg: wav2prg_core.o \
          dependency_tree.o \
          get_pulse.o \
          write_cleaned_tap.o \
+         write_prg.o \
          tapfile_write.o \
          yet_another_getopt.o \
          turbotape.o \
@@ -14,7 +15,11 @@ wav2prg: wav2prg_core.o \
          pavlodaold.o \
          pavloda.o \
          connection.o \
+         detective.o \
+         turbo220.o \
+         freeload.o \
          rackit.o
+
 	$(CC) -o $@ $^
 
 t.o: wavprg.rc

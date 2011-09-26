@@ -14,48 +14,48 @@ struct loader {
 
 static struct loader *loader_list = NULL;
 
-static unsigned char register_loader(const struct wav2prg_plugin_functions* functions, const char* name) {
+static enum wav2prg_bool register_loader(const struct wav2prg_plugin_functions* functions, const char* name) {
   struct loader *new_loader = malloc(sizeof(struct loader));
   struct loader **last_loader;
   const struct wav2prg_plugin_conf *model_conf;
 
-  if (get_loader_by_name(name))
-    return 0;/*duplicate name*/
+  if (get_loader_by_name(name, wav2prg_false))
+    return wav2prg_false;/*duplicate name*/
 
   if(functions->recognize_block_as_mine_with_start_end_func
      && functions->get_block_info
     )
-    return 0;
+    return wav2prg_false;
 
   if(
-     (!functions->recognize_block_as_mine_with_start_end_func 
+     (!functions->recognize_block_as_mine_with_start_end_func
     || functions->recognize_block_as_mine_func)
    && !functions->get_block_info
     )
-    return 0;
+    return wav2prg_false;
 
   model_conf = functions->get_new_plugin_state();
   if(
       (functions->recognize_block_as_mine_with_start_end_func
     || functions->recognize_block_as_mine_func)
     && !model_conf->dependency)
-    return 0;
+    return wav2prg_false;
 
   for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
   new_loader->functions=functions;
   new_loader->name=name;
   new_loader->next=NULL;
   *last_loader=new_loader;
-  
-  return 1;
+
+  return wav2prg_true;
 }
 
 static void unregister_first_loader(void) {
   struct loader *new_first_loader;
-  
+
   if(loader_list == NULL)
     return;
-  
+
   new_first_loader = loader_list->next;
   free(loader_list);
   loader_list = new_first_loader;
@@ -71,6 +71,9 @@ const void pavlodaold_get_plugin(wav2prg_register_loader register_loader_func);
 const void pavloda_get_plugin(wav2prg_register_loader register_loader_func);
 const void connection_get_plugin(wav2prg_register_loader register_loader_func);
 const void rackit_get_plugin(wav2prg_register_loader register_loader_func);
+const void detective_get_plugin(wav2prg_register_loader register_loader_func);
+const void turbo220_get_plugin(wav2prg_register_loader register_loader_func);
+const void freeload_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -84,21 +87,26 @@ void register_loaders(void) {
   pavloda_get_plugin(register_loader);
   connection_get_plugin(register_loader);
   rackit_get_plugin(register_loader);
+  detective_get_plugin(register_loader);
+  turbo220_get_plugin(register_loader);
+  freeload_get_plugin(register_loader);
 #endif
 }
 
-const struct wav2prg_plugin_functions* get_loader_by_name(const char* name) {
+const struct wav2prg_plugin_functions* get_loader_by_name(const char* name, enum wav2prg_bool must_be_apt_to_single_loader_analysis) {
   struct loader *loader;
 
   for(loader = loader_list; loader != NULL; loader = loader->next)
   {
-    if(!strcmp(loader->name, name))
+    if(!strcmp(loader->name, name)
+     && (!must_be_apt_to_single_loader_analysis || loader->functions->get_block_info)
+      )
       return loader->functions;
   }
   return NULL;
 }
 
-char** get_loaders(unsigned char single_loader_analysis) {
+char** get_loaders(enum wav2prg_bool single_loader_analysis) {
   struct loader_for_single_loader_analysis {
     const char* name;
     struct loader_for_single_loader_analysis* next;
@@ -106,7 +114,7 @@ char** get_loaders(unsigned char single_loader_analysis) {
   struct loader *loader;
   int found_loaders = 0, this_loader_index = 0;
   char** valid_loader_names;
-  
+
   for(loader = loader_list; loader != NULL; loader = loader->next)
   {
     if(are_all_dependencies_ok(loader->name)
