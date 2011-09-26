@@ -31,6 +31,7 @@ struct wav2prg_context {
   uint8_t checksum_enabled;
   struct block_list_element *blocks;
   struct block_list_element **current_block;
+  struct wav2prg_recognize_struct recognize;
   struct display_interface *display_interface;
   struct display_interface_internal *display_interface_internal;
 };
@@ -371,8 +372,7 @@ static struct wav2prg_plugin_conf* copy_conf(const struct wav2prg_plugin_conf *m
   conf->thresholds = malloc((conf->num_pulse_lengths - 1) * sizeof(uint16_t));
   memcpy(conf->thresholds, model_conf->thresholds, (conf->num_pulse_lengths - 1) * sizeof(uint16_t));
   conf->min_pilots=model_conf->min_pilots;
-  conf->dependency=model_conf->dependency;
-
+ 
   return conf;
 }
 
@@ -410,7 +410,7 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
                                                                    struct wav2prg_context *context,
                                                                    struct wav2prg_plugin_conf **conf)
 {
-  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name, wav2prg_false);
+  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
 
   context->compute_checksum_step             =
     plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step : compute_checksum_step_default;
@@ -447,7 +447,7 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
   return plugin_functions;
 }
 
-static enum wav2prg_recognize compare_block_on_one_plugin(const struct wav2prg_plugin_functions* plugin_functions,
+/*static enum wav2prg_recognize compare_block_on_one_plugin(const struct wav2prg_plugin_functions* plugin_functions,
                                          struct wav2prg_plugin_conf* conf,
                                          struct wav2prg_block* block,
                                          struct wav2prg_block_info** detected_info) {
@@ -461,59 +461,44 @@ static enum wav2prg_recognize compare_block_on_one_plugin(const struct wav2prg_p
                                                                          *detected_info);
   }
   return wav2prg_unrecognized;
+}*/
+
+struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name){
+  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
+  return plugin_functions ? get_new_state(plugin_functions) : NULL;
 }
 
-static enum wav2prg_recognize look_for_dependent_plugin(struct plugin_tree** current_plugin_in_tree,
-                                         struct wav2prg_plugin_conf** old_conf,
+static enum wav2prg_recognize look_for_dependent_plugin(const char* current_loader,
+                                         const char** new_loader,
+                                         struct wav2prg_plugin_conf* old_conf,
+                                         struct wav2prg_plugin_conf** new_conf,
                                          struct wav2prg_block* block,
-                                         struct wav2prg_block_info** detected_info)
+                                         struct wav2prg_recognize_struct* recognize)
 {
-  struct plugin_tree* dependency_being_checked;
-  struct wav2prg_plugin_conf* new_conf = NULL;
-  enum wav2prg_recognize result = wav2prg_unrecognized, last_result;
-
-  for(dependency_being_checked = (*current_plugin_in_tree)->first_child;
-      dependency_being_checked != NULL;
-      dependency_being_checked = dependency_being_checked->first_sibling) {
-    const struct wav2prg_plugin_functions* plugin_to_test_functions = get_loader_by_name(dependency_being_checked->node, wav2prg_false);
-
-    if (plugin_to_test_functions){
-      struct wav2prg_plugin_conf* plugin_to_test_conf = get_new_state(plugin_to_test_functions);
-      struct wav2prg_block_info* last_detected_info = NULL;
-
-      last_result = compare_block_on_one_plugin(plugin_to_test_functions,
-                                                plugin_to_test_conf,
-                                                block,
-                                                &last_detected_info);
-      if (last_result != wav2prg_unrecognized) {
-        result = last_result;
-        if (new_conf)
-          delete_state(new_conf);
-        free(*detected_info);
-        *detected_info = last_detected_info;
-        new_conf = plugin_to_test_conf;
-        *current_plugin_in_tree = dependency_being_checked;
-        if(!strcmp(dependency_being_checked->node, "Kernal data chunk 1st copy")
-        || !strcmp(dependency_being_checked->node, "Kernal data chunk 2nd copy"))
-          continue;
-        else
-          break;
+  *new_conf = NULL;
+  for(/*all observed*/;;){
+    if (!strcmp(current_loader, ""/*this observed*/)){
+      for(/*observers*/;;){
+        enum wav2prg_recognize result;
+        *new_conf =
+          strcmp(""/*this observed*/, ""/*this observer*/)
+          ? wav2prg_get_loader(""/*this observer*/)
+          : old_conf;
+        recognize->no_gaps_allowed = wav2prg_false;
+        recognize->found_block_info = wav2prg_false;
+        /*result = observer_function(recognize);*/
+        if (result != wav2prg_unrecognized){
+          *new_loader = ""/*this observer*/;
+          return result;
+        }
+        if(*new_conf != old_conf)
+          delete_state(*new_conf);
+        *new_conf = NULL;
       }
-      free(last_detected_info);
-      delete_state(plugin_to_test_conf);
     }
   }
 
-  if(new_conf){
-    delete_state(*old_conf);
-    *old_conf = new_conf;
-  }
-  return result;
-}
-
-struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name, enum wav2prg_bool must_be_apt_to_single_loader_analysis){
-  const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name, must_be_apt_to_single_loader_analysis);
-  return plugin_functions ? get_new_state(plugin_functions) : NULL;
+  return wav2prg_unrecognized;
 }
 
 /* if the final adaptive tolerances were stricter than the strict tolerances,
@@ -538,8 +523,7 @@ static void adapt_tolerances(const struct wav2prg_tolerance* strict, struct wav2
 }
 
 struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance_type,
-                             struct wav2prg_single_loader* single_loader,
-                             const char** loader_names,
+                             const char* start_loader,
                              struct wav2prg_input_object *input_object,
                              struct wav2prg_input_functions *input,
                              struct display_interface *display_interface,
@@ -587,6 +571,10 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     0,
     NULL,
     &context.blocks,
+    {
+      wav2prg_false,
+      wav2prg_false
+    },
     display_interface,
     display_interface_internal
   };
@@ -610,22 +598,9 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     add_byte_to_block,
     remove_byte_from_block
   };
-  struct wav2prg_block_info *previously_found_block_info = NULL;
   struct wav2prg_block *comparison_block = NULL;
-  const char *loader_name;
+  const char *loader_name = start_loader;
   struct wav2prg_plugin_conf* conf = NULL;
-
-  if(loader_names != NULL) {
-    digest_list(loader_names, &dependency_tree, display_interface, display_interface_internal);
-    if (!dependency_tree)
-      return NULL;
-    loader_name = dependency_tree->node;
-    current_plugin_in_tree = dependency_tree;
-  }
-  else if (single_loader != NULL) {
-    loader_name = single_loader->loader_name;
-    conf = single_loader->conf;
-  }
 
   while(1){
     enum wav2prg_bool res;
@@ -637,12 +612,18 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     disable_checksum_default(&context);
     context.display_interface->try_sync(context.display_interface_internal, loader_name);
 
-    res = get_sync_insist(&context, &functions, conf);
-    if(res != wav2prg_true)
+    res = context.recognize.no_gaps_allowed ?
+      get_sync(&context, &functions, conf) :
+      get_sync_insist(&context, &functions, conf);
+    if(res != wav2prg_true && context.recognize.no_gaps_allowed)
       break;
 
     /* Found start of a block */
     do{
+      if(res != wav2prg_true){
+        context.recognize.no_gaps_allowed = wav2prg_false;
+        break;
+      }
       block = *context.current_block;
       block->loader_name = strdup(loader_name);
       block->conf = copy_conf(conf);
@@ -651,7 +632,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
 
       block->block_status = block_sync_no_info;
 
-      if (!previously_found_block_info) {
+      if (!context.recognize.found_block_info) {
         res = plugin_functions->get_block_info(&context, &functions, conf, &block->block.info);
         if(res != wav2prg_true){
           context.display_interface->sync(
@@ -664,7 +645,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         }
       }
       else
-        memcpy(&block->block.info, previously_found_block_info, sizeof block->block.info);
+        memcpy(&block->block.info, &context.recognize.info, sizeof block->block.info);
 
       block->block_status = block_sync_invalid_info;
       if(block->block.info.end < block->block.info.start && block->block.info.end != 0){
@@ -722,19 +703,21 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
        or if the same loader can be kept (keep_using_plugin),
        or if the loader at the root of the dependency tree has to be used */
     {
-      enum wav2prg_recognize found_dependent_plugin = wav2prg_unrecognized, keep_using_plugin = wav2prg_unrecognized;
+      const char *new_loader;
+      struct wav2prg_plugin_conf** new_conf;
+      enum wav2prg_recognize found_dependent_plugin = wav2prg_unrecognized;
 
-      free(previously_found_block_info);
-      previously_found_block_info = NULL;
 
       if(block->block_status != wav2prg_checksum_state_load_error
         && block->block_status == block_complete
         && current_plugin_in_tree != NULL)
         /* check if the block just found suits a loader dependent on the one just used */
-        found_dependent_plugin = look_for_dependent_plugin(&current_plugin_in_tree,
-                                                           &conf,
-                                                           &block->block,
-                                                           &previously_found_block_info);
+        found_dependent_plugin = look_for_dependent_plugin(loader_name,
+                                         &new_loader,
+                                         conf,
+                                         new_conf,
+                                         &block->block,
+                                         &context.recognize);
       if(found_dependent_plugin != wav2prg_unrecognized) {
         /* the block just found suits a loader dependent on the one just used */
         free(comparison_block);
@@ -745,8 +728,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         else
           comparison_block = NULL;
       }
-      else if (comparison_block != NULL) {
-        /* check if the loader just used can be used again */
+      /*else if (comparison_block != NULL) {
+         check if the loader just used can be used again
         keep_using_plugin = compare_block_on_one_plugin(plugin_functions,
                                                         conf,
                                                         comparison_block,
@@ -757,11 +740,9 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         }
       }
 
-      if (keep_using_plugin == wav2prg_unrecognized){
+      if (keep_using_plugin == wav2prg_unrecognized) */{
         if (found_dependent_plugin == wav2prg_unrecognized) {
           /* neither the loader just used or any of its dependencies can be used */
-          free(previously_found_block_info);
-          previously_found_block_info = NULL;
           current_plugin_in_tree = dependency_tree;
           if (current_plugin_in_tree){
             /* if checking many loaders, a new conf is needed, delete this one */
@@ -769,10 +750,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
             conf = NULL;
             /* if checking a single loader, the same conf will always be used */
           }
-        }
-        if(current_plugin_in_tree) {
-          loader_name = current_plugin_in_tree->node;
-          plugin_functions = NULL;
         }
       }
     }

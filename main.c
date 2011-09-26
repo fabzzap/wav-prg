@@ -123,48 +123,6 @@ static struct display_interface text_based_display = {
   end
 };
 
-struct selected_loaders {
-  char** loader_names;
-  struct wav2prg_single_loader single_loader;
-};
-
-static enum wav2prg_bool check_single_loader(const char* loader_name, void* sel)
-{
-  struct selected_loaders *selected = (struct selected_loaders*)sel;
-  if (*selected->loader_names){
-    printf("Cannot choose a single loader after choosing multiple loaders\n");
-    return wav2prg_false;
-  }
-  if (selected->single_loader.loader_name){
-    printf("Cannot choose more than one single loader\n");
-    return wav2prg_false;
-  }
-  selected->single_loader.conf = wav2prg_get_loader(loader_name, wav2prg_true);
-  if (selected->single_loader.conf == NULL){
-    printf("No loader %s usable as single loader found\n", loader_name);
-    return wav2prg_false;
-  }
-  selected->single_loader.loader_name = strdup(loader_name);
-  return wav2prg_true;
-}
-
-static enum wav2prg_bool check_multi_loader(const char* loader_name, void* sel)
-{
-  struct selected_loaders *selected = (struct selected_loaders*)sel;
-  char **old_loader;
-  int num_loaders;
-
-  if (selected->single_loader.loader_name){
-    printf("Cannot choose multiple loaders after choosing single loaders\n");
-    return wav2prg_false;
-  }
-  for(old_loader = selected->loader_names, num_loaders = 0; *old_loader; old_loader++, num_loaders++);
-  selected->loader_names = realloc(selected->loader_names, sizeof(char*) * (num_loaders + 2));
-  selected->loader_names[num_loaders    ] = strdup(loader_name);
-  selected->loader_names[num_loaders + 1] = NULL;
-  return wav2prg_true;
-}
-
 enum dump_types{
   dump_to_tap,
   dump_to_prg,
@@ -199,10 +157,6 @@ static enum wav2prg_bool add_to_dump_list(const char* filename, void* dumps)
 
 int main(int argc, char** argv)
 {
-  struct selected_loaders selected_loader = {
-    calloc(1, sizeof(char*)),
-    {NULL, NULL}
-  };
   struct wav2prg_input_object input_object;
   struct block_list_element *blocks;
   struct dump_element *dump = calloc(1, sizeof(struct dump_element)), *current_dump;
@@ -213,7 +167,7 @@ int main(int argc, char** argv)
   struct dump_argument tap_dump = {dump_to_tap, &dump};
   struct dump_argument prg_dump = {dump_to_prg, &dump};
   struct get_option options[] ={
-    {
+    /*{
       o1names,
       "Name of loader for single-loader analysis",
       check_single_loader,
@@ -228,7 +182,7 @@ int main(int argc, char** argv)
       &selected_loader,
       wav2prg_true,
       option_must_have_argument
-    },
+    },*/
     {
       option_tap_names,
       "Dump to a TAP file",
@@ -264,8 +218,7 @@ int main(int argc, char** argv)
 
   blocks = wav2prg_analyse(
     wav2prg_adaptively_tolerant,
-    &selected_loader.single_loader,
-    *selected_loader.loader_names ? selected_loader.loader_names : NULL,
+    "Kernal header chunk 1st copy",
     &input_object,
     &input_functions,
     &text_based_display, NULL

@@ -17,7 +17,7 @@ static enum wav2prg_bool register_loader(const struct wav2prg_plugin_functions* 
   struct loader *new_loader = malloc(sizeof(struct loader));
   struct loader **last_loader;
 
-  if (get_loader_by_name(name, wav2prg_false))
+  if (get_loader_by_name(name))
     return wav2prg_false;/*duplicate name*/
 
   for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
@@ -41,18 +41,18 @@ static void unregister_first_loader(void) {
 }
 
 #if 1
-const void turbotape_get_plugin(wav2prg_register_loader register_loader_func);
-const void kernal_get_plugin(wav2prg_register_loader register_loader_func);
-const void novaload_get_plugin(wav2prg_register_loader register_loader_func);
-const void audiogenic_get_plugin(wav2prg_register_loader register_loader_func);
-const void pavlodapenetrator_get_plugin(wav2prg_register_loader register_loader_func);
-const void pavlodaold_get_plugin(wav2prg_register_loader register_loader_func);
-const void pavloda_get_plugin(wav2prg_register_loader register_loader_func);
-const void connection_get_plugin(wav2prg_register_loader register_loader_func);
-const void rackit_get_plugin(wav2prg_register_loader register_loader_func);
-const void detective_get_plugin(wav2prg_register_loader register_loader_func);
-const void turbo220_get_plugin(wav2prg_register_loader register_loader_func);
-const void freeload_get_plugin(wav2prg_register_loader register_loader_func);
+void turbotape_get_plugin(wav2prg_register_loader register_loader_func);
+void kernal_get_plugin(wav2prg_register_loader register_loader_func);
+void novaload_get_plugin(wav2prg_register_loader register_loader_func);
+void audiogenic_get_plugin(wav2prg_register_loader register_loader_func);
+void pavlodapenetrator_get_plugin(wav2prg_register_loader register_loader_func);
+void pavlodaold_get_plugin(wav2prg_register_loader register_loader_func);
+void pavloda_get_plugin(wav2prg_register_loader register_loader_func);
+void connection_get_plugin(wav2prg_register_loader register_loader_func);
+void rackit_get_plugin(wav2prg_register_loader register_loader_func);
+void detective_get_plugin(wav2prg_register_loader register_loader_func);
+void turbo220_get_plugin(wav2prg_register_loader register_loader_func);
+void freeload_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -72,14 +72,12 @@ void register_loaders(void) {
 #endif
 }
 
-const struct wav2prg_plugin_functions* get_loader_by_name(const char* name, enum wav2prg_bool must_be_apt_to_single_loader_analysis) {
+const struct wav2prg_plugin_functions* get_loader_by_name(const char* name) {
   struct loader *loader;
 
   for(loader = loader_list; loader != NULL; loader = loader->next)
   {
-    if(!strcmp(loader->name, name)
-     && (!must_be_apt_to_single_loader_analysis || loader->functions->get_block_info)
-      )
+    if(!strcmp(loader->name, name))
       return loader->functions;
   }
   return NULL;
