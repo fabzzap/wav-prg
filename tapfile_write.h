@@ -23,4 +23,3 @@ struct tap_handle {
 enum wav2prg_bool tapfile_init_write(char *name, struct tap_handle **file, unsigned char version, unsigned char machine);
 enum wav2prg_bool tapfile_write_set_pulse(struct tap_handle *handle, uint32_t ncycles);
 void tapfile_write_close(struct tap_handle *handle);
-

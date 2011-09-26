@@ -29,12 +29,15 @@ static enum wav2prg_bool find_single_character_match(const struct option_names *
 }
 
 static enum wav2prg_bool find_multiple_character_match(const struct option_names *names, const char *option, uint32_t *option_index, char **last_matched_option, uint32_t *consumed_chars){
+  char *equal_pos;
+
   free(*last_matched_option);
   *last_matched_option = strdup(option);
-  char *equal_pos = strchr(*last_matched_option, '=');
 
+  equal_pos = strchr(*last_matched_option, '=');
   if (equal_pos)
     *equal_pos = 0;
+
   *consumed_chars = strlen(*last_matched_option) - 1;    
 
   return search_option(names, *last_matched_option, option_index);
