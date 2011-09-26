@@ -2,7 +2,6 @@
 
 static enum wav2prg_bool freeload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
 {
-  uint16_t entry_point;
   if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
     return wav2prg_false;
   if (functions->get_word_func(context, functions, conf, &info->end) == wav2prg_false)
