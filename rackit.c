@@ -5,19 +5,13 @@ struct rackit_private_state {
   uint8_t xor_value;
   uint8_t checksum;
   uint8_t in_data;
-  enum {
-    not_checked_yet,
-    checked,
-    last_found
-  }need_to_check;
 };
 
 static const struct rackit_private_state rackit_private_state_model = {
   1,
   0x77,
   0,
-  0,
-  not_checked_yet
+  0
 };
 static struct wav2prg_generate_private_state rackit_generate_private_state = {
   sizeof(rackit_private_state_model),
@@ -27,12 +21,6 @@ static struct wav2prg_generate_private_state rackit_generate_private_state = {
 static uint16_t rackit_thresholds[]={352};
 static uint16_t rackit_ideal_pulse_lengths[]={232, 488};
 static uint8_t rackit_pilot_sequence[]={0x3D};
-
-static struct wav2prg_dependency rackit_dependency = {
-  wav2prg_kernal_data,
-  NULL,
-  1
-};
 
 static const struct wav2prg_plugin_conf rackit =
 {
@@ -46,7 +34,6 @@ static const struct wav2prg_plugin_conf rackit =
   sizeof(rackit_pilot_sequence),
   rackit_pilot_sequence,
   0,
-  &rackit_dependency,
   first_to_last,
   &rackit_generate_private_state
 };
@@ -93,8 +80,6 @@ static enum wav2prg_bool rackit_get_block_info(struct wav2prg_context* context, 
   if(functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
     return wav2prg_false;
   functions->number_to_name_func(byte, info->name);
-  if (info->start == 0xfffc && info->end == 0xfffe)
-    state->need_to_check = last_found;
   return wav2prg_true;
 }
 
@@ -113,7 +98,7 @@ static enum wav2prg_bool rackit_get_block(struct wav2prg_context* context, const
   return result;
 }
 
-static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, struct wav2prg_block* block){
+static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_recognize_struct* recognize_struct){
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
   const uint8_t xor_bytes[]={0x98,0xe8,0x60,0x08,0x98,0xec,0xb4,0x04,0x08,0x24,0xe8,0xc0,
                              0x28,0x24,0x80,0xc0,0xbc,0xe0,0xa4,0xc0,0xe0,0xa4,0x40,0x80};
@@ -121,14 +106,8 @@ static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, struct
   uint16_t i;
   const uint16_t start_first_part = 234, end_first_part = 403, start_second_part = 423;
 
-  switch(state->need_to_check){
-  case checked   : return wav2prg_mine;
-  case last_found: return wav2prg_not_mine;
-  default        : break;
-  }
-
   if (block->info.start != 0x316 || block->info.end < 0x570)
-    return wav2prg_not_mine;
+    return wav2prg_unrecognized;
 
   for(i = start_first_part; i < end_first_part; i++){
     if (block->data[i   ] == 0xad
@@ -159,7 +138,7 @@ static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, struct
     }
   }
   if (i == end_first_part)
-    return wav2prg_not_mine;
+    return wav2prg_unrecognized;
 
   for(i = start_second_part;
       i < block->info.end - block->info.start - 23;
@@ -208,11 +187,30 @@ static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, struct
 
       conf->byte_sync.pilot_byte        = block->data[i+ 1] ^ xor_byte;
       conf->byte_sync.pilot_sequence[0] = block->data[i+23] ^ xor_byte;
-      state->need_to_check = checked;
-      return wav2prg_mine;
+      recognize_struct->found_block_info = wav2prg_false;
+      recognize_struct->no_gaps_allowed  = wav2prg_false;
+      return wav2prg_recognize_single;
     }
   }
-  return wav2prg_not_mine;
+  return wav2prg_unrecognized;
+}
+
+static enum wav2prg_recognize keep_doing_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_recognize_struct* recognize_struct){
+  if (block->info.start == 0xfffc && block->info.end == 0xfffe)
+    return wav2prg_unrecognized;
+  recognize_struct->found_block_info = wav2prg_false;
+  recognize_struct->no_gaps_allowed  = wav2prg_false;
+  return wav2prg_recognize_single;
+}
+
+static const struct wav2prg_observed_loaders rackit_observed_loaders[] = {
+  {"kdc",is_rackit},
+  {"Rack-It",keep_doing_rackit},
+  {NULL,NULL}
+};
+
+static const struct wav2prg_observed_loaders* rackit_get_observed_loaders(void){
+  return rackit_observed_loaders;
 }
 
 static const struct wav2prg_plugin_functions rackit_functions =
@@ -226,8 +224,7 @@ static const struct wav2prg_plugin_functions rackit_functions =
   rackit_get_new_state,
   NULL,
   rackit_get_loaded_checksum,
-  is_rackit,
-  NULL
+  rackit_get_observed_loaders
 };
 
 PLUGIN_ENTRY(rackit)

@@ -70,7 +70,6 @@ static const struct wav2prg_plugin_conf audiogenic =
   sizeof(audiogenic_pilot_sequence),
   audiogenic_pilot_sequence,
   0,
-  NULL,
   first_to_last,
   &audiogenic_specialagent_generate_private_state
 };
@@ -90,7 +89,6 @@ static const struct wav2prg_plugin_conf specialagent =
   sizeof(audiogenic_pilot_sequence),/*ignored, default get_sync unused*/
   audiogenic_pilot_sequence,        /*ignored, default get_sync unused*/
   0,                                /*ignored, default get_sync unused*/
-  NULL,
   first_to_last,
   &audiogenic_specialagent_generate_private_state
 };
@@ -206,7 +204,6 @@ static const struct wav2prg_plugin_functions audiogenic_functions =
   audiogenic_get_new_state,
   NULL,
   audiogenic_specialagent_get_loaded_checksum,
-  NULL,
   NULL
 };
 
@@ -221,7 +218,6 @@ static const struct wav2prg_plugin_functions specialagent_functions =
   specialagent_get_new_state,
   NULL,
   audiogenic_specialagent_get_loaded_checksum,
-  NULL,
   NULL
 };
 

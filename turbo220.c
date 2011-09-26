@@ -28,7 +28,6 @@ static const struct wav2prg_plugin_conf turbotape =
   sizeof(turbo220_pilot_sequence),
   turbo220_pilot_sequence,
   0,
-  NULL,
   first_to_last,
   NULL
 };
@@ -46,7 +45,6 @@ static const struct wav2prg_plugin_functions turbo220_functions = {
     turbo220_get_block_info,
     NULL,
     turbo220_get_state,
-    NULL,
     NULL,
     NULL,
     NULL

@@ -25,7 +25,6 @@ static const struct wav2prg_plugin_conf freeload =
   sizeof(freeload_pilot_sequence),
   freeload_pilot_sequence,
   0,
-  NULL,
   first_to_last,
   NULL
 };
@@ -43,7 +42,6 @@ static const struct wav2prg_plugin_functions freeload_functions = {
     freeload_get_block_info,
     NULL,
     freeload_get_state,
-    NULL,
     NULL,
     NULL,
     NULL

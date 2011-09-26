@@ -1,7 +1,6 @@
 #include "wav2prg_api.h"
 #include "wav2prg_core.h"
 #include "loaders.h"
-#include "dependency_tree.h"
 #include "display_interface.h"
 #include "wav2prg_block_list.h"
 #include "get_pulse.h"
@@ -461,7 +460,7 @@ static enum wav2prg_recognize compare_block_on_one_plugin(const struct wav2prg_p
                                                                          block,
                                                                          *detected_info);
   }
-  return wav2prg_not_mine;
+  return wav2prg_unrecognized;
 }
 
 static enum wav2prg_recognize look_for_dependent_plugin(struct plugin_tree** current_plugin_in_tree,
@@ -471,7 +470,7 @@ static enum wav2prg_recognize look_for_dependent_plugin(struct plugin_tree** cur
 {
   struct plugin_tree* dependency_being_checked;
   struct wav2prg_plugin_conf* new_conf = NULL;
-  enum wav2prg_recognize result = wav2prg_not_mine, last_result;
+  enum wav2prg_recognize result = wav2prg_unrecognized, last_result;
 
   for(dependency_being_checked = (*current_plugin_in_tree)->first_child;
       dependency_being_checked != NULL;
@@ -486,7 +485,7 @@ static enum wav2prg_recognize look_for_dependent_plugin(struct plugin_tree** cur
                                                 plugin_to_test_conf,
                                                 block,
                                                 &last_detected_info);
-      if (last_result != wav2prg_not_mine) {
+      if (last_result != wav2prg_unrecognized) {
         result = last_result;
         if (new_conf)
           delete_state(new_conf);
@@ -723,7 +722,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
        or if the same loader can be kept (keep_using_plugin),
        or if the loader at the root of the dependency tree has to be used */
     {
-      enum wav2prg_recognize found_dependent_plugin = wav2prg_not_mine, keep_using_plugin = wav2prg_not_mine;
+      enum wav2prg_recognize found_dependent_plugin = wav2prg_unrecognized, keep_using_plugin = wav2prg_unrecognized;
 
       free(previously_found_block_info);
       previously_found_block_info = NULL;
@@ -736,10 +735,10 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                                            &conf,
                                                            &block->block,
                                                            &previously_found_block_info);
-      if(found_dependent_plugin != wav2prg_not_mine) {
+      if(found_dependent_plugin != wav2prg_unrecognized) {
         /* the block just found suits a loader dependent on the one just used */
         free(comparison_block);
-        if(found_dependent_plugin == wav2prg_mine) {
+        if(found_dependent_plugin == wav2prg_recognize_multiple) {
           comparison_block = malloc(sizeof(struct wav2prg_block));
           memcpy(comparison_block, &block, sizeof(struct wav2prg_block));
         }
@@ -752,14 +751,14 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                                         conf,
                                                         comparison_block,
                                                         &previously_found_block_info);
-        if(keep_using_plugin != wav2prg_mine) {
+        if(keep_using_plugin != wav2prg_recognize_multiple) {
           free(comparison_block);
           comparison_block = NULL;
         }
       }
 
-      if (keep_using_plugin == wav2prg_not_mine){
-        if (found_dependent_plugin == wav2prg_not_mine) {
+      if (keep_using_plugin == wav2prg_unrecognized){
+        if (found_dependent_plugin == wav2prg_unrecognized) {
           /* neither the loader just used or any of its dependencies can be used */
           free(previously_found_block_info);
           previously_found_block_info = NULL;

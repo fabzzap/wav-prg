@@ -4,7 +4,6 @@
 #include <malloc.h>
 
 #include "loaders.h"
-#include "dependency_tree.h"
 
 struct loader {
   const struct wav2prg_plugin_functions* functions;
@@ -17,29 +16,9 @@ static struct loader *loader_list = NULL;
 static enum wav2prg_bool register_loader(const struct wav2prg_plugin_functions* functions, const char* name) {
   struct loader *new_loader = malloc(sizeof(struct loader));
   struct loader **last_loader;
-  const struct wav2prg_plugin_conf *model_conf;
 
   if (get_loader_by_name(name, wav2prg_false))
     return wav2prg_false;/*duplicate name*/
-
-  if(functions->recognize_block_as_mine_with_start_end_func
-     && functions->get_block_info
-    )
-    return wav2prg_false;
-
-  if(
-     (!functions->recognize_block_as_mine_with_start_end_func
-    || functions->recognize_block_as_mine_func)
-   && !functions->get_block_info
-    )
-    return wav2prg_false;
-
-  model_conf = functions->get_new_plugin_state();
-  if(
-      (functions->recognize_block_as_mine_with_start_end_func
-    || functions->recognize_block_as_mine_func)
-    && !model_conf->dependency)
-    return wav2prg_false;
 
   for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
   new_loader->functions=functions;
@@ -117,8 +96,7 @@ char** get_loaders(enum wav2prg_bool single_loader_analysis) {
 
   for(loader = loader_list; loader != NULL; loader = loader->next)
   {
-    if(are_all_dependencies_ok(loader->name)
-    && (!single_loader_analysis || loader->functions->get_block_info)) {
+    if (!single_loader_analysis || loader->functions->get_block_info) {
       *loader_to_add = malloc(sizeof(struct loader_for_single_loader_analysis));
       (*loader_to_add)->name = loader->name;
       (*loader_to_add)->next = NULL;

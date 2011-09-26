@@ -9,7 +9,6 @@
 #include "write_cleaned_tap.h"
 #include "write_prg.h"
 #include "yet_another_getopt.h"
-#include "dependency_tree.h"
 
 static enum wav2prg_bool getrawpulse(struct wav2prg_input_object* audiotap, uint32_t* pulse)
 {
@@ -73,17 +72,6 @@ static void sync(struct display_interface_internal *internal, uint32_t start_of_
     printf(" but no block followed\n");
 }
 
-static void fail_dep(struct display_interface_internal *internal, const char *loader, struct plugin_tree* tree)
-{
-  printf("Failed to load %s", loader);
-
-  while(tree){
-    printf(", dependency of %s", tree->node);
-    tree = tree->first_child;
-  }
-  printf(".\n");
-}
-
 static void progress(struct display_interface_internal *internal, uint32_t pos)
 {
 }
@@ -128,7 +116,6 @@ static void end(struct display_interface_internal *internal, unsigned char valid
 }
 
 static struct display_interface text_based_display = {
-  fail_dep,
   try_sync,
   sync,
   progress,

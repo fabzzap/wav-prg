@@ -18,7 +18,6 @@ static const struct wav2prg_plugin_conf pavlodaold =
   with 0, they are ignored anyway*/
   {1,0,0},
   514,
-  NULL,
   first_to_last,
   NULL
 };
@@ -74,7 +73,6 @@ static const struct wav2prg_plugin_functions pavlodaold_functions =
   pavlodaold_get_new_state,
   pavlodaold_compute_checksum_step,
   pavlodaold_get_loaded_checksum,
-  NULL,
   NULL
 };
 

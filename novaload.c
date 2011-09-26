@@ -16,7 +16,6 @@ const struct wav2prg_plugin_conf novaload_conf =
   sizeof(novaload_pilot_sequence),
   novaload_pilot_sequence,
   0,
-  NULL,
   first_to_last,
   NULL
 };
@@ -97,7 +96,6 @@ static const struct wav2prg_plugin_functions novaload_functions =
   novaload_get_block_info,
   novaload_get_block,
   novaload_get_new_state,
-  NULL,
   NULL,
   NULL,
   NULL

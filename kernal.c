@@ -13,12 +13,6 @@ static uint16_t kernal_ideal_pulse_lengths[]={384, 512, 688};
 static uint8_t kernal_1stcopy_pilot_sequence[]={137,136,135,134,133,132,131,130,129};
 static uint8_t kernal_2ndcopy_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
-static struct wav2prg_dependency datachunk_dependency = {
-  wav2prg_kernal_header,
-  NULL,
-  0
-};
-
 static const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
 {
   lsbf,
@@ -31,7 +25,6 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
   9,
   kernal_1stcopy_pilot_sequence,
   0,
-  NULL,
   first_to_last,
   &headerchunk_generate_private_state
 };
@@ -48,7 +41,6 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_second_copy =
   9,
   kernal_2ndcopy_pilot_sequence,
   0,
-  NULL,
   first_to_last,
   &headerchunk_generate_private_state
 };
@@ -65,7 +57,6 @@ static const struct wav2prg_plugin_conf kernal_datachunk_first_copy =
   9,
   kernal_1stcopy_pilot_sequence,
   0,
-  &datachunk_dependency,
   first_to_last,
   NULL
 };
@@ -82,7 +73,6 @@ static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
   9,
   kernal_2ndcopy_pilot_sequence,
   0,
-  &datachunk_dependency,
   first_to_last,
   NULL
 };
@@ -241,18 +231,56 @@ static const struct wav2prg_plugin_conf* kernal_datachunk_secondcopy_get_new_sta
   return &kernal_datachunk_second_copy;
 }
 
-static enum wav2prg_recognize is_headerchunk(struct wav2prg_plugin_conf* conf, struct wav2prg_block* block, struct wav2prg_block_info* info)
+static enum wav2prg_recognize is_headerchunk(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_recognize_struct* recognize_struct)
 {
   if(block->info.start == 828
   && block->info.end >= 849
   && block->info.end <= 1020
   && (block->data[0] == 1 || block->data[0] == 3)){
-    info->start = block->data[1] + (block->data[2] << 8);
-    info->end   = block->data[3] + (block->data[4] << 8);
+    recognize_struct->info.start = block->data[1] + (block->data[2] << 8);
+    recognize_struct->info.end   = block->data[3] + (block->data[4] << 8);
 
-    return wav2prg_mine_following_not;
+    recognize_struct->found_block_info = wav2prg_true;
+    recognize_struct->no_gaps_allowed  = wav2prg_false;
+    return wav2prg_recognize_single;
   }
-  return wav2prg_not_mine;
+  return wav2prg_unrecognized;
+}
+
+static enum wav2prg_recognize second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_recognize_struct* recognize_struct){
+  recognize_struct->info.start = block->info.start;
+  recognize_struct->info.end   = block->info.end;
+  recognize_struct->found_block_info = wav2prg_true;
+  recognize_struct->no_gaps_allowed  = wav2prg_true;
+  return wav2prg_recognize_single;
+}
+
+static struct wav2prg_observed_loaders headerchunk_2nd_dependency[] = {
+  {"Kernal header chunk 1st copy",second_copy_after_first_copy},
+  {NULL,NULL}
+};
+
+static const struct wav2prg_observed_loaders* headerchunk_2nd_get_observed_loaders(void){
+  return headerchunk_2nd_dependency;
+}
+
+static struct wav2prg_observed_loaders datachunk_1st_dependency[] = {
+  {"khc",is_headerchunk},
+  {NULL,NULL}
+};
+
+static const struct wav2prg_observed_loaders* datachunk_1st_get_observed_loaders(void){
+  return datachunk_1st_dependency;
+}
+
+static struct wav2prg_observed_loaders datachunk_2nd_dependency[] = {
+  {"khc",is_headerchunk},
+  {"Kernal data chunk 1st copy",second_copy_after_first_copy},
+  {NULL,NULL}
+};
+
+static const struct wav2prg_observed_loaders* datachunk_2nd_get_observed_loaders(void){
+  return datachunk_2nd_dependency;
 }
 
 static const struct wav2prg_plugin_functions kernal_headerchunk_firstcopy_functions =
@@ -266,7 +294,6 @@ static const struct wav2prg_plugin_functions kernal_headerchunk_firstcopy_functi
   kernal_headerchunk_firstcopy_get_new_state,
   NULL,
   kernal_get_loaded_checksum,
-  NULL,
   NULL
 };
 
@@ -281,8 +308,7 @@ static const struct wav2prg_plugin_functions kernal_headerchunk_secondcopy_funct
   kernal_headerchunk_secondcopy_get_new_state,
   NULL,
   kernal_get_loaded_checksum,
-  NULL,
-  NULL
+  headerchunk_2nd_get_observed_loaders
 };
 
 static const struct wav2prg_plugin_functions kernal_datachunk_firstcopy_functions =
@@ -296,8 +322,7 @@ static const struct wav2prg_plugin_functions kernal_datachunk_firstcopy_function
   kernal_datachunk_firstcopy_get_new_state,
   NULL,
   kernal_get_loaded_checksum,
-  NULL,
-  is_headerchunk
+  datachunk_1st_get_observed_loaders
 };
 
 static const struct wav2prg_plugin_functions kernal_datachunk_secondcopy_functions =
@@ -311,8 +336,7 @@ static const struct wav2prg_plugin_functions kernal_datachunk_secondcopy_functio
   kernal_datachunk_secondcopy_get_new_state,
   NULL,
   kernal_get_loaded_checksum,
-  NULL,
-  is_headerchunk
+  datachunk_2nd_get_observed_loaders
 };
 
 PLUGIN_ENTRY(kernal)
