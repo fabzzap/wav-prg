@@ -26,9 +26,8 @@ static struct wav2prg_observed_loaders** get_list_of_observers_maybe_adding_obse
   int number_of_observed = 0;
 
   if (observed_list == NULL)
-  {
     observed_list = calloc(sizeof(struct wav2prg_observed), 1);
-  }
+
   for(current_observed = observed_list; current_observed->name != NULL; current_observed++, number_of_observed++){
     if (!strcmp(observed_name, current_observed->name))
       return &current_observed->observers;
@@ -71,4 +70,16 @@ void add_observed(const char *observer_name, const struct wav2prg_observed_loade
 struct wav2prg_observed_loaders* get_observers(const char *observed_name){
   struct wav2prg_observed_loaders **observer = get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_false);
   return observer ? *observer : NULL;
+}
+
+void free_observers(void){
+  struct wav2prg_observed *current_observed;
+
+  if (observed_list == NULL)
+    return;
+
+  for(current_observed = observed_list; current_observed->observers != NULL; current_observed++)
+    free(current_observed->observers);
+  free(observed_list);
+  observed_list = NULL;
 }
