@@ -123,6 +123,23 @@ static struct display_interface text_based_display = {
   end
 };
 
+struct wav2prg_selected_loader {
+  const char *loader_name;
+  struct wav2prg_plugin_conf* conf;
+};
+
+static enum wav2prg_bool check_single_loader(const char* loader_name, void* sel)
+{
+  struct wav2prg_selected_loader *selected = (struct wav2prg_selected_loader*)sel;
+  if (selected->loader_name){
+    printf("Cannot choose more than one loader\n");
+    return wav2prg_false;
+  }
+  selected->conf = wav2prg_get_loader(loader_name);
+  selected->loader_name = strdup(loader_name);
+  return wav2prg_true;
+}
+
 enum dump_types{
   dump_to_tap,
   dump_to_prg,
@@ -157,6 +174,7 @@ static enum wav2prg_bool add_to_dump_list(const char* filename, void* dumps)
 
 int main(int argc, char** argv)
 {
+  struct wav2prg_selected_loader selected_loader = {NULL, NULL};
   struct wav2prg_input_object input_object;
   struct block_list_element *blocks;
   struct dump_element *dump = calloc(1, sizeof(struct dump_element)), *current_dump;
@@ -167,22 +185,14 @@ int main(int argc, char** argv)
   struct dump_argument tap_dump = {dump_to_tap, &dump};
   struct dump_argument prg_dump = {dump_to_prg, &dump};
   struct get_option options[] ={
-    /*{
+    {
       o1names,
-      "Name of loader for single-loader analysis",
+      "Name of loader to start analysis with",
       check_single_loader,
       &selected_loader,
       wav2prg_false,
       option_must_have_argument
     },
-    {
-      o2names,
-      "Name of loader for multi-loader analysis",
-      check_multi_loader,
-      &selected_loader,
-      wav2prg_true,
-      option_must_have_argument
-    },*/
     {
       option_tap_names,
       "Dump to a TAP file",
@@ -218,7 +228,7 @@ int main(int argc, char** argv)
 
   blocks = wav2prg_analyse(
     wav2prg_adaptively_tolerant,
-    "Kernal header chunk 1st copy",
+    selected_loader.loader_name ? selected_loader.loader_name : "Kernal header chunk 1st copy",
     &input_object,
     &input_functions,
     &text_based_display, NULL

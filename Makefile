@@ -1,6 +1,7 @@
 wav2prg: wav2prg_core.o \
          main.o \
          loaders.o \
+         observers.o \
          get_pulse.o \
          write_cleaned_tap.o \
          write_prg.o \

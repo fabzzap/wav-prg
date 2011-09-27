@@ -4,6 +4,7 @@
 #include "display_interface.h"
 #include "wav2prg_block_list.h"
 #include "get_pulse.h"
+#include "observers.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -475,27 +476,25 @@ static enum wav2prg_recognize look_for_dependent_plugin(const char* current_load
                                          struct wav2prg_block* block,
                                          struct wav2prg_recognize_struct* recognize)
 {
+  struct wav2prg_observed_loaders* observers = get_observers(current_loader), *current_observer;
+
   *new_conf = NULL;
-  for(/*all observed*/;;){
-    if (!strcmp(current_loader, ""/*this observed*/)){
-      for(/*observers*/;;){
-        enum wav2prg_recognize result;
-        *new_conf =
-          strcmp(""/*this observed*/, ""/*this observer*/)
-          ? wav2prg_get_loader(""/*this observer*/)
+  for(current_observer = observers; current_observer->loader != NULL; current_observer++){
+    enum wav2prg_recognize result;
+    *new_conf =
+          strcmp(current_loader, current_observer->loader)
+          ? wav2prg_get_loader(current_observer->loader)
           : old_conf;
-        recognize->no_gaps_allowed = wav2prg_false;
-        recognize->found_block_info = wav2prg_false;
-        /*result = observer_function(recognize);*/
-        if (result != wav2prg_unrecognized){
-          *new_loader = ""/*this observer*/;
-          return result;
-        }
-        if(*new_conf != old_conf)
-          delete_state(*new_conf);
-        *new_conf = NULL;
-      }
+    recognize->no_gaps_allowed = wav2prg_false;
+    recognize->found_block_info = wav2prg_false;
+    result = current_observer->recognize_func(old_conf, block, recognize);
+    if (result != wav2prg_unrecognized){
+      *new_loader = ""/*this observer*/;
+      return result;
     }
+    if(*new_conf != old_conf)
+      delete_state(*new_conf);
+    *new_conf = NULL;
   }
 
   return wav2prg_unrecognized;
