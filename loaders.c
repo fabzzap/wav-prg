@@ -4,6 +4,7 @@
 #include <malloc.h>
 
 #include "loaders.h"
+#include "observers.h"
 
 struct loader {
   const struct wav2prg_plugin_functions* functions;
@@ -25,6 +26,10 @@ static enum wav2prg_bool register_loader(const struct wav2prg_plugin_functions* 
   new_loader->name=name;
   new_loader->next=NULL;
   *last_loader=new_loader;
+  if (functions->get_observed_loaders_func)
+  {
+    add_observed(name, functions->get_observed_loaders_func());
+  }
 
   return wav2prg_true;
 }
