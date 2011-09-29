@@ -614,7 +614,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     res = context.recognize.no_gaps_allowed ?
       get_sync(&context, &functions, conf) :
       get_sync_insist(&context, &functions, conf);
-    if(res != wav2prg_true && context.recognize.no_gaps_allowed)
+    if(res != wav2prg_true && !context.recognize.no_gaps_allowed)
       break;
 
     /* Found start of a block */
@@ -690,13 +690,20 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                    context.raw_block.length_so_far);
     }while(0);
 
+	if (!(*context.current_block)
+      || (*context.current_block)->block_status == block_sync_no_info
+      || (*context.current_block)->block_status == block_sync_invalid_info){
+      free(*context.current_block);
+      *context.current_block = NULL;
+	   continue;
+	}
+    context.current_block = &(*context.current_block)->next;
     /* got the block */
     adapt_tolerances(context.strict_tolerances
                    , block->adaptive_tolerances
                    , conf->ideal_pulse_lengths
                    , conf->num_pulse_lengths
                     );
-    context.current_block = &(*context.current_block)->next;
 
     /* find out if a new loader should be loaded (found_dependent_plugin),
        or if the same loader can be kept (keep_using_plugin),
