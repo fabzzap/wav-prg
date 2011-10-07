@@ -61,12 +61,18 @@ static void try_sync(struct display_interface_internal* internal, const char* lo
   printf("trying to get a sync using loader %s\n", loader_name);
 }
 
-static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info)
+static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info, const struct wav2prg_observed_loaders* dependencies)
 {
   printf("got a pilot tone from %u to %u", start_of_pilot_pos, sync_pos);
   if (info){
     printf(" and a block at %u\n", info_pos);
     printf("name %s start %u end %u\n", info->name, info->start, info->end);
+  }
+  else if (dependencies){
+    const struct wav2prg_observed_loaders* dep;
+    printf("\nThe chosen loader cannot find block info. A better solution is to use a loader this depends on.\n");
+    for(dep = dependencies; dep->loader != NULL; dep++)
+      printf("-- %s\n", dep->loader);
   }
   else
     printf(" but no block followed\n");

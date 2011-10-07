@@ -632,14 +632,21 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       block->block_status = block_sync_no_info;
 
       if (!context.recognize.found_block_info) {
-        res = plugin_functions->get_block_info(&context, &functions, conf, &block->block.info);
+        const struct wav2prg_observed_loaders* dependencies = NULL;
+        if(plugin_functions->get_block_info == NULL){
+          res = wav2prg_false;
+          dependencies = plugin_functions->get_observed_loaders_func();
+        }
+        else
+          res = plugin_functions->get_block_info(&context, &functions, conf, &block->block.info);
         if(res != wav2prg_true){
           context.display_interface->sync(
             context.display_interface_internal,
             block->syncs[0].start_sync,
             block->syncs[0].end_sync,
             0,
-            NULL);
+            NULL,
+            dependencies);
           break; /* error in get_block_info */
         }
       }
@@ -653,6 +660,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
             block->syncs[0].start_sync,
             block->syncs[0].end_sync,
             0,
+            NULL,
             NULL);
         break; /* get_block_info succeeded but returned an invalid block */
       }
@@ -665,7 +673,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         block->syncs[0].start_sync,
         block->syncs[0].end_sync,
         block->end_of_info,
-        &block->block.info);
+        &block->block.info,
+        NULL);
       initialize_raw_block(&context.raw_block, block->block.info.end - block->block.info.start, block->block.data, conf);
       enable_checksum_default(&context);
       res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block->block.info.end - block->block.info.start);
