@@ -25,26 +25,23 @@ static const struct wav2prg_plugin_conf* connection_get_state(void)
   return &connection;
 }
 
-static enum wav2prg_recognize is_connection(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* datachunk_block, struct wav2prg_recognize_struct* recognize_struct)
+static enum wav2prg_bool is_connection(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* datachunk_block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block)
 {
   if(datachunk_block->info.start != 698 || datachunk_block->info.end != 812)
-    return wav2prg_unrecognized;
+    return wav2prg_false;
   
   if (datachunk_block->data[702-698] == 173 && datachunk_block->data[717-698] == 173)
-    recognize_struct->info.start=datachunk_block->data[791-698]*256+datachunk_block->data[773-698];
+    info->start=datachunk_block->data[791-698]*256+datachunk_block->data[773-698];
   else if (datachunk_block->data[702-698] == 165 && datachunk_block->data[717-698] == 165)
-    recognize_struct->info.start=2049;
+    info->start=2049;
   else
-    return wav2prg_unrecognized;
+    return wav2prg_false;
     
-  if (datachunk_block->data[707-698] == 173 && datachunk_block->data[712-698] == 173)
-    recognize_struct->info.end=datachunk_block->data[780-698]*256+datachunk_block->data[787-698];
-  else
-    return wav2prg_unrecognized;
-
-  recognize_struct->no_gaps_allowed = wav2prg_false;
-  recognize_struct->found_block_info = wav2prg_true;
-  return wav2prg_recognize_single;
+  if (datachunk_block->data[707-698] == 173 && datachunk_block->data[712-698] == 173) {
+    info->end=datachunk_block->data[780-698]*256+datachunk_block->data[787-698];
+    return wav2prg_true;
+  }
+  return wav2prg_false;
 }
 
 static const struct wav2prg_observed_loaders connection_dependency[] = {

@@ -235,6 +235,7 @@ int main(int argc, char** argv)
   blocks = wav2prg_analyse(
     wav2prg_adaptively_tolerant,
     selected_loader.loader_name ? selected_loader.loader_name : "Kernal header chunk 1st copy",
+    NULL,
     &input_object,
     &input_functions,
     &text_based_display, NULL

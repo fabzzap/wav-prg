@@ -7,6 +7,7 @@ wav2prg: wav2prg_core.o \
          write_prg.o \
          tapfile_write.o \
          yet_another_getopt.o \
+         wav2prg_block_list.o \
          turbotape.o \
          kernal.o \
          novaload.o \

@@ -17,7 +17,8 @@ typedef int32_t           (*wav2prg_get_pos_func)(void* audiotap);
 struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name);
 
 struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance_type,
-                             const char* loader_name,
+                             const char* start_loader,
+                             struct wav2prg_plugin_conf* start_conf,
                              struct wav2prg_input_object *input_object,
                              struct wav2prg_input_functions *input,
                              struct display_interface *display_interface,

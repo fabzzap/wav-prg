@@ -98,7 +98,7 @@ static enum wav2prg_bool rackit_get_block(struct wav2prg_context* context, const
   return result;
 }
 
-static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_recognize_struct* recognize_struct){
+static enum wav2prg_bool is_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
   const uint8_t xor_bytes[]={0x98,0xe8,0x60,0x08,0x98,0xec,0xb4,0x04,0x08,0x24,0xe8,0xc0,
                              0x28,0x24,0x80,0xc0,0xbc,0xe0,0xa4,0xc0,0xe0,0xa4,0x40,0x80};
@@ -107,7 +107,7 @@ static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, const 
   const uint16_t start_first_part = 234, end_first_part = 403, start_second_part = 423;
 
   if (block->info.start != 0x316 || block->info.end < 0x570)
-    return wav2prg_unrecognized;
+    return wav2prg_false;
 
   for(i = start_first_part; i < end_first_part; i++){
     if (block->data[i   ] == 0xad
@@ -138,7 +138,7 @@ static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, const 
     }
   }
   if (i == end_first_part)
-    return wav2prg_unrecognized;
+    return wav2prg_false;
 
   for(i = start_second_part;
       i < block->info.end - block->info.start - 23;
@@ -187,20 +187,14 @@ static enum wav2prg_recognize is_rackit(struct wav2prg_plugin_conf* conf, const 
 
       conf->byte_sync.pilot_byte        = block->data[i+ 1] ^ xor_byte;
       conf->byte_sync.pilot_sequence[0] = block->data[i+23] ^ xor_byte;
-      recognize_struct->found_block_info = wav2prg_false;
-      recognize_struct->no_gaps_allowed  = wav2prg_false;
-      return wav2prg_recognize_single;
+      return wav2prg_true;
     }
   }
-  return wav2prg_unrecognized;
+  return wav2prg_false;
 }
 
-static enum wav2prg_recognize keep_doing_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_recognize_struct* recognize_struct){
-  if (block->info.start == 0xfffc && block->info.end == 0xfffe)
-    return wav2prg_unrecognized;
-  recognize_struct->found_block_info = wav2prg_false;
-  recognize_struct->no_gaps_allowed  = wav2prg_false;
-  return wav2prg_recognize_single;
+static enum wav2prg_bool keep_doing_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
+  return (block->info.start != 0xfffc || block->info.end != 0xfffe);
 }
 
 static const struct wav2prg_observed_loaders rackit_observed_loaders[] = {

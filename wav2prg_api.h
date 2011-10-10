@@ -25,18 +25,6 @@ enum wav2prg_block_filling {
 
 struct wav2prg_raw_block;
 
-enum wav2prg_recognize {
-  wav2prg_unrecognized,
-  wav2prg_recognize_single,
-  wav2prg_recognize_multiple
-};
-
-struct wav2prg_recognize_struct {
-  enum wav2prg_bool no_gaps_allowed;
-  enum wav2prg_bool found_block_info;
-  struct wav2prg_block_info info;
-};
-
 struct wav2prg_context;
 struct wav2prg_functions;
 struct wav2prg_plugin_conf;
@@ -61,7 +49,7 @@ typedef void                       (*wav2prg_enable_checksum)(struct wav2prg_con
 typedef void                       (*wav2prg_disable_checksum)(struct wav2prg_context*);
 typedef const struct wav2prg_plugin_conf* (*wav2prg_get_new_plugin_state)(void);
 typedef enum wav2prg_bool          (*wav2prg_register_loader)(const struct wav2prg_plugin_functions* functions, const char* name);
-typedef enum wav2prg_recognize     (*wav2prg_recognize_block)(struct wav2prg_plugin_conf*, const struct wav2prg_block*, struct wav2prg_recognize_struct*);
+typedef enum wav2prg_bool          (*wav2prg_recognize_block)(struct wav2prg_plugin_conf*, const struct wav2prg_block*, struct wav2prg_block_info*, enum wav2prg_bool*, enum wav2prg_bool*);
 typedef void                       (*wav2prg_number_to_name)(uint8_t number, char* name);
 typedef void                       (*wav2prg_add_byte_to_block)(struct wav2prg_raw_block* block, uint8_t byte);
 typedef void                       (*wav2prg_remove_byte_from_block)(struct wav2prg_raw_block* block);

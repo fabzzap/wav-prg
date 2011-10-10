@@ -27,12 +27,10 @@ struct wav2prg_context {
   enum wav2prg_tolerance_type current_tolerance_type;
   struct wav2prg_tolerance* strict_tolerances;
   uint8_t checksum;
-  struct wav2prg_comparison_block *comparison_block;
   struct wav2prg_raw_block raw_block;
   uint8_t checksum_enabled;
   struct block_list_element *blocks;
   struct block_list_element **current_block;
-  struct wav2prg_recognize_struct recognize;
   struct display_interface *display_interface;
   struct display_interface_internal *display_interface_internal;
 };
@@ -253,7 +251,7 @@ static enum wav2prg_bool sync_to_byte_default(struct wav2prg_context* context, c
   return wav2prg_true;
 };
 
-static enum wav2prg_bool get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_bool get_sync_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   switch(conf->findpilot_type) {
   case wav2prg_synconbit : return sync_to_bit_default (context, functions, conf);
@@ -261,22 +259,24 @@ static enum wav2prg_bool get_sync(struct wav2prg_context* context, const struct 
   }
 }
 
-static enum wav2prg_bool get_sync_insist(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_bool get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, enum wav2prg_bool insist)
 {
   enum wav2prg_bool res = wav2prg_true;
 
-  if((*context->current_block) != NULL)
+  if((*context->current_block)->syncs != NULL)
     (*context->current_block)->syncs[(*context->current_block)->num_of_syncs - 1].end =
     context->input->get_pos(context->input_object);
 
   context->current_tolerance_type = wav2prg_intolerant;
-  while(!context->input->is_eof(context->input_object)){
-    uint32_t pos = context->input->get_pos(context->input_object);
+  do{
+    uint32_t pos;
+
+    if(context->input->is_eof(context->input_object))
+      break;
+    pos = context->input->get_pos(context->input_object);
 
     res = context->subclassed_functions.get_sync(context, functions, conf);
     if (res == wav2prg_true) {
-      if((*context->current_block) == NULL)
-        *context->current_block = calloc(1, sizeof(struct block_list_element));
       (*context->current_block)->syncs = realloc((*context->current_block)->syncs, ((*context->current_block)->num_of_syncs + 1) * sizeof (*(*context->current_block)->syncs));
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].start_sync = pos;
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].end_sync   = context->input->get_pos(context->input_object);
@@ -284,8 +284,13 @@ static enum wav2prg_bool get_sync_insist(struct wav2prg_context* context, const 
       context->current_tolerance_type = context->userdefined_tolerance_type;
       return wav2prg_true;
     }
-  }
+  }while(insist);
   return wav2prg_false;
+}
+
+static enum wav2prg_bool get_sync_insist(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+{
+  return get_sync(context, functions, conf, wav2prg_true);
 }
 
 static enum wav2prg_checksum_state check_checksum_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
@@ -418,7 +423,7 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
   context->get_sync_byte                     =
     plugin_functions->get_sync_byte         ? plugin_functions->get_sync_byte         : get_sync_byte_using_shift_register;
   context->subclassed_functions.get_sync     =
-    plugin_functions->get_sync              ? plugin_functions->get_sync              : get_sync;
+    plugin_functions->get_sync              ? plugin_functions->get_sync              : get_sync_default;
   context->subclassed_functions.get_bit_func =
     plugin_functions->get_bit_func          ? plugin_functions->get_bit_func          : get_bit_default;
   context->subclassed_functions.get_byte_func =
@@ -448,56 +453,64 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
   return plugin_functions;
 }
 
-/*static enum wav2prg_recognize compare_block_on_one_plugin(const struct wav2prg_plugin_functions* plugin_functions,
-                                         struct wav2prg_plugin_conf* conf,
-                                         struct wav2prg_block* block,
-                                         struct wav2prg_block_info** detected_info) {
-  if (plugin_functions->recognize_block_as_mine_func)
-    return plugin_functions->recognize_block_as_mine_func(conf, block);
-  if (plugin_functions->recognize_block_as_mine_with_start_end_func){
-    *detected_info = malloc(sizeof(struct wav2prg_block_info));
-    memcpy((*detected_info)->name, block->info.name, sizeof(block->info.name));
-    return plugin_functions->recognize_block_as_mine_with_start_end_func(conf,
-                                                                         block,
-                                                                         *detected_info);
-  }
-  return wav2prg_unrecognized;
-}*/
-
 struct wav2prg_plugin_conf* wav2prg_get_loader(const char* loader_name){
   const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
   return plugin_functions ? get_new_state(plugin_functions) : NULL;
 }
 
-static enum wav2prg_recognize look_for_dependent_plugin(const char* current_loader,
-                                         const char** new_loader,
-                                         struct wav2prg_plugin_conf* old_conf,
-                                         struct wav2prg_plugin_conf** new_conf,
-                                         struct wav2prg_block* block,
-                                         struct wav2prg_recognize_struct* recognize)
+static enum wav2prg_bool allocate_info_and_recognize(struct wav2prg_plugin_conf* conf,
+                                                    struct wav2prg_block *block,
+                                                    enum wav2prg_bool *no_gaps_allowed,
+                                                    struct wav2prg_block_info **info,
+                                                    wav2prg_recognize_block recognize_func,
+                                                    enum wav2prg_bool *try_further_recognitions_using_same_block){
+  enum wav2prg_bool result;
+
+  *try_further_recognitions_using_same_block = wav2prg_false;
+  *info = malloc(sizeof(**info));
+  (*info)->start = (*info)->end = 0xFFFF;
+  memcpy(&(*info)->name, block->info.name, sizeof(block->info.name));
+  result = recognize_func(conf, block, *info, no_gaps_allowed, try_further_recognitions_using_same_block);
+  if (!result || ((*info)->end > 0 && (*info)->end <= (*info)->start)){
+    free(*info);
+    *info = NULL;
+  }
+  return result;
+}
+
+static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
+                                                   const char** new_loader,
+                                                   struct wav2prg_plugin_conf** conf,
+                                                   struct wav2prg_block *block,
+                                                   enum wav2prg_bool *no_gaps_allowed,
+                                                   struct wav2prg_block_info **info,
+                                                   wav2prg_recognize_block *recognize_func
+                                                  )
 {
   struct wav2prg_observed_loaders* observers = get_observers(current_loader), *current_observer;
+  struct wav2prg_plugin_conf *old_conf = *conf;
 
-  *new_conf = NULL;
   for(current_observer = observers; current_observer->loader != NULL; current_observer++){
-    enum wav2prg_recognize result;
-    *new_conf =
-          strcmp(current_loader, current_observer->loader)
-          ? wav2prg_get_loader(current_observer->loader)
-          : old_conf;
-    recognize->no_gaps_allowed = wav2prg_false;
-    recognize->found_block_info = wav2prg_false;
-    result = current_observer->recognize_func(old_conf, block, recognize);
-    if (result != wav2prg_unrecognized){
-      *new_loader = ""/*this observer*/;
+    enum wav2prg_bool result, try_further_recognitions_using_same_block;
+
+    if(strcmp(current_loader, current_observer->loader))
+      *conf = wav2prg_get_loader(current_observer->loader);
+    result = allocate_info_and_recognize(*conf, block, no_gaps_allowed, info, current_observer->recognize_func, &try_further_recognitions_using_same_block);
+    if (result){
+      *new_loader = current_observer->loader;
+      if(try_further_recognitions_using_same_block)
+         *recognize_func = current_observer->recognize_func;
+      if(*conf != old_conf)
+        delete_state(old_conf);
       return result;
     }
-    if(*new_conf != old_conf)
-      delete_state(*new_conf);
-    *new_conf = NULL;
+    if(*conf != old_conf){
+      delete_state(*conf);
+      *conf = old_conf;
+    }
   }
 
-  return wav2prg_unrecognized;
+  return wav2prg_false;
 }
 
 /* if the final adaptive tolerances were stricter than the strict tolerances,
@@ -523,13 +536,12 @@ static void adapt_tolerances(const struct wav2prg_tolerance* strict, struct wav2
 
 struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance_type,
                              const char* start_loader,
+                             struct wav2prg_plugin_conf* start_conf,
                              struct wav2prg_input_object *input_object,
                              struct wav2prg_input_functions *input,
                              struct display_interface *display_interface,
                              struct display_interface_internal *display_interface_internal)
 {
-  struct plugin_tree* dependency_tree = NULL;
-  struct plugin_tree* current_plugin_in_tree = NULL;
   const struct wav2prg_plugin_functions* plugin_functions = NULL;
   struct wav2prg_context context =
   {
@@ -560,7 +572,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     tolerance_type,
     NULL,
     0,
-    NULL,
     {
       0,
       0,
@@ -570,16 +581,12 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     0,
     NULL,
     &context.blocks,
-    {
-      wav2prg_false,
-      wav2prg_false
-    },
     display_interface,
     display_interface_internal
   };
   struct wav2prg_functions functions =
   {
-    get_sync,
+    get_sync_default,
     get_sync_insist,
     get_pulse,
     get_bit_default,
@@ -600,38 +607,44 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
   struct wav2prg_block *comparison_block = NULL;
   const char *loader_name = start_loader;
   struct wav2prg_plugin_conf* conf = NULL;
+  enum wav2prg_bool no_gaps_allowed = wav2prg_false;
+  struct wav2prg_block_info *recognized_info = NULL;
+  wav2prg_recognize_block recognize_func = NULL;
+  enum wav2prg_bool found_dependent_plugin;
 
   while(1){
     enum wav2prg_bool res;
     struct block_list_element *block;
 
-    if (plugin_functions == NULL)
-      plugin_functions = get_plugin_functions(loader_name, &context, &conf);
+    found_dependent_plugin = wav2prg_false;
+
+    plugin_functions = get_plugin_functions(loader_name, &context, &conf);
 
     disable_checksum_default(&context);
     context.display_interface->try_sync(context.display_interface_internal, loader_name);
+    *context.current_block = new_block_list_element(conf->num_pulse_lengths);
 
-    res = context.recognize.no_gaps_allowed ?
-      get_sync(&context, &functions, conf) :
-      get_sync_insist(&context, &functions, conf);
-    if(res != wav2prg_true && !context.recognize.no_gaps_allowed)
+    res = get_sync(&context, &functions, conf, !no_gaps_allowed);
+    if(res != wav2prg_true && !no_gaps_allowed){
+      free(*context.current_block);
+      *context.current_block = NULL;
       break;
+    }
 
     /* Found start of a block */
     do{
       if(res != wav2prg_true){
-        context.recognize.no_gaps_allowed = wav2prg_false;
+        no_gaps_allowed = wav2prg_false;
+        free(recognized_info);
+        recognized_info = NULL;
         break;
       }
       block = *context.current_block;
       block->loader_name = strdup(loader_name);
       block->conf = copy_conf(conf);
-      if (tolerance_type == wav2prg_adaptively_tolerant)
-        block->adaptive_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths);
-
       block->block_status = block_sync_no_info;
 
-      if (!context.recognize.found_block_info) {
+      if (recognized_info == NULL) {
         const struct wav2prg_observed_loaders* dependencies = NULL;
         if(plugin_functions->get_block_info == NULL){
           res = wav2prg_false;
@@ -650,11 +663,14 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
           break; /* error in get_block_info */
         }
       }
-      else
-        memcpy(&block->block.info, &context.recognize.info, sizeof block->block.info);
+      else{
+        memcpy(&block->block.info, recognized_info, sizeof block->block.info);
+        free(recognized_info);
+        recognized_info = NULL;
+      }
 
       block->block_status = block_sync_invalid_info;
-      if(block->block.info.end < block->block.info.start && block->block.info.end != 0){
+      if(block->block.info.end <= block->block.info.start && block->block.info.end != 0){
         context.display_interface->sync(
           context.display_interface_internal,
             block->syncs[0].start_sync,
@@ -699,74 +715,71 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                    context.raw_block.length_so_far);
     }while(0);
 
-	if (!(*context.current_block)
+    if (!(*context.current_block)
       || (*context.current_block)->block_status == block_sync_no_info
       || (*context.current_block)->block_status == block_sync_invalid_info){
-      free(*context.current_block);
+      free_block_list_element(*context.current_block);
       *context.current_block = NULL;
-	   continue;
-	}
-    context.current_block = &(*context.current_block)->next;
-    /* got the block */
-    adapt_tolerances(context.strict_tolerances
-                   , block->adaptive_tolerances
-                   , conf->ideal_pulse_lengths
-                   , conf->num_pulse_lengths
-                    );
-
-    /* find out if a new loader should be loaded (found_dependent_plugin),
-       or if the same loader can be kept (keep_using_plugin),
-       or if the loader at the root of the dependency tree has to be used */
-    {
+    }
+    else{
       const char *new_loader;
-      struct wav2prg_plugin_conf** new_conf;
-      enum wav2prg_recognize found_dependent_plugin = wav2prg_unrecognized;
+      wav2prg_recognize_block new_recognize_func = NULL;
 
+      context.current_block = &(*context.current_block)->next;
+      /* got the block */
+      adapt_tolerances(context.strict_tolerances
+                     , block->adaptive_tolerances
+                     , conf->ideal_pulse_lengths
+                     , conf->num_pulse_lengths
+                      );
 
-      if(block->block_status != wav2prg_checksum_state_load_error
-        && block->block_status == block_complete
-        && current_plugin_in_tree != NULL)
-        /* check if the block just found suits a loader dependent on the one just used */
-        found_dependent_plugin = look_for_dependent_plugin(loader_name,
+      /* find out if a new loader should be loaded,
+         or if the same loader can be kept,
+         or if the loader at the root of the dependency tree has to be used */
+
+      /* a block was found using loader_name. check whether any loader observes loader_name
+         and recognizes the block */
+      found_dependent_plugin = look_for_dependent_plugin(loader_name,
                                          &new_loader,
-                                         conf,
-                                         new_conf,
+                                         &conf,
                                          &block->block,
-                                         &context.recognize);
-      if(found_dependent_plugin != wav2prg_unrecognized) {
-        /* the block just found suits a loader dependent on the one just used */
+                                         &no_gaps_allowed,
+                                         &recognized_info,
+                                         &new_recognize_func);
+      if(found_dependent_plugin) {
+        loader_name = new_loader;
+        /* a loader observing loader_name
+           recognized the block */
         free(comparison_block);
-        if(found_dependent_plugin == wav2prg_recognize_multiple) {
+        if(new_recognize_func) {
           comparison_block = malloc(sizeof(struct wav2prg_block));
           memcpy(comparison_block, &block, sizeof(struct wav2prg_block));
+          recognize_func = new_recognize_func;
         }
-        else
+        else {
           comparison_block = NULL;
+          recognize_func = NULL;
+        }
       }
-      /*else if (comparison_block != NULL) {
-         check if the loader just used can be used again
-        keep_using_plugin = compare_block_on_one_plugin(plugin_functions,
-                                                        conf,
-                                                        comparison_block,
-                                                        &previously_found_block_info);
-        if(keep_using_plugin != wav2prg_recognize_multiple) {
+      else if (comparison_block != NULL && recognize_func != NULL) {
+        /* check if the loader just used can be used again */
+        enum wav2prg_bool dummy;
+
+        found_dependent_plugin = allocate_info_and_recognize(conf, &block->block, &no_gaps_allowed, &recognized_info, recognize_func, &dummy);
+        if(!found_dependent_plugin) {
           free(comparison_block);
           comparison_block = NULL;
+          recognize_func = NULL;
         }
       }
+    }
 
-      if (keep_using_plugin == wav2prg_unrecognized) */{
-        if (found_dependent_plugin == wav2prg_unrecognized) {
-          /* neither the loader just used or any of its dependencies can be used */
-          current_plugin_in_tree = dependency_tree;
-          if (current_plugin_in_tree){
-            /* if checking many loaders, a new conf is needed, delete this one */
-            delete_state(conf);
-            conf = NULL;
-            /* if checking a single loader, the same conf will always be used */
-          }
-        }
+    if (!found_dependent_plugin) {
+      if (conf != start_conf){
+        delete_state(conf);
+        conf = start_conf;
       }
+      loader_name = start_loader;
     }
   }
   return context.blocks;
