@@ -418,6 +418,8 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
 {
   const struct wav2prg_plugin_functions* plugin_functions = get_loader_by_name(loader_name);
 
+  if(plugin_functions == NULL)
+    return NULL;
   context->compute_checksum_step             =
     plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step : compute_checksum_step_default;
   context->get_sync_byte                     =
@@ -619,6 +621,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     found_dependent_plugin = wav2prg_false;
 
     plugin_functions = get_plugin_functions(loader_name, &context, &conf);
+    if(plugin_functions == NULL)
+      break;
 
     disable_checksum_default(&context);
     context.display_interface->try_sync(context.display_interface_internal, loader_name);
