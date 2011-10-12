@@ -490,7 +490,7 @@ static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
   struct wav2prg_observed_loaders* observers = get_observers(current_loader), *current_observer;
   struct wav2prg_plugin_conf *old_conf = *conf;
 
-  for(current_observer = observers; current_observer->loader != NULL; current_observer++){
+  for(current_observer = observers; current_observer && current_observer->loader != NULL; current_observer++){
     enum wav2prg_bool result, try_further_recognitions_using_same_block;
 
     if(strcmp(current_loader, current_observer->loader))
