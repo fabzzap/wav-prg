@@ -11,7 +11,7 @@ const struct wav2prg_plugin_conf novaload_conf =
   sizeof(novaload_ideal_pulse_lengths)/sizeof(*novaload_ideal_pulse_lengths),
   novaload_thresholds,
   novaload_ideal_pulse_lengths,
-  wav2prg_synconbyte,/*ignored, overriding get_first_sync*/
+  wav2prg_synconbyte,
   0,                 /*ignored, overriding get_first_sync*/
   sizeof(novaload_pilot_sequence),
   novaload_pilot_sequence,
@@ -24,11 +24,13 @@ enum wav2prg_bool novaload_get_first_sync(struct wav2prg_context* context, const
 {
   uint8_t shift_reg = 0xFF;
   uint8_t bit;
+  uint8_t old_shift_reg_lsb;
   do{
     if(functions->get_bit_func(context,functions, conf, &bit) == wav2prg_false)
       return wav2prg_false;
+    old_shift_reg_lsb = shift_reg & 1;
     shift_reg = (shift_reg >> 1) | (bit << 7);
-  }while(!bit || (shift_reg & 1));
+  }while((!bit) || old_shift_reg_lsb);
   return functions->get_byte_func(context, functions, conf, byte);
 }
 
