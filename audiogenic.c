@@ -148,11 +148,9 @@ static enum wav2prg_bool audiogenic_specialagent_get_block(struct wav2prg_contex
   do{
     switch(state->state){
     case audiogenic_synced:
-      functions->enable_checksum_func(context);
       ret = functions->get_block_func(context, functions, conf, block, 256);
       if (ret == wav2prg_true && functions->check_checksum_func(context, functions, conf) != wav2prg_checksum_state_correct)
         ret = wav2prg_false;
-      functions->disable_checksum_func(context);
       state->state = audiogenic_not_synced;
       proceed_res = go_on;
       break;

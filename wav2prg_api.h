@@ -54,6 +54,7 @@ typedef void                       (*wav2prg_number_to_name)(uint8_t number, cha
 typedef void                       (*wav2prg_add_byte_to_block)(struct wav2prg_raw_block* block, uint8_t byte);
 typedef void                       (*wav2prg_remove_byte_from_block)(struct wav2prg_raw_block* block);
 typedef const struct wav2prg_observed_loaders* (*wav2prg_get_observed_loaders)(void);
+typedef uint8_t                    (*wav2prg_postprocess_data_byte)(struct wav2prg_plugin_conf*, uint8_t);
 
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
@@ -61,18 +62,19 @@ struct wav2prg_functions {
   wav2prg_get_pulse_func get_pulse_func;
   wav2prg_get_bit_func get_bit_func;
   wav2prg_get_byte_func get_byte_func;
+  wav2prg_get_byte_func get_data_byte_func;
   wav2prg_get_word_func get_word_func;
+  wav2prg_get_word_func get_data_word_func;
   wav2prg_get_word_bigendian_func get_word_bigendian_func;
   wav2prg_get_block_func get_block_func;
   wav2prg_check_checksum check_checksum_func;
   wav2prg_get_loaded_checksum get_loaded_checksum_func;
-  wav2prg_enable_checksum enable_checksum_func;
-  wav2prg_disable_checksum disable_checksum_func;
   wav2prg_reset_checksum_to reset_checksum_to_func;
   wav2prg_reset_checksum reset_checksum_func;
   wav2prg_number_to_name number_to_name_func;
   wav2prg_add_byte_to_block add_byte_to_block_func;
   wav2prg_remove_byte_from_block remove_byte_from_block_func;
+  wav2prg_postprocess_data_byte postprocess_data_byte_func;
 };
 
 struct wav2prg_generate_private_state
@@ -97,6 +99,7 @@ struct wav2prg_plugin_functions {
   wav2prg_compute_checksum_step compute_checksum_step;
   wav2prg_get_loaded_checksum get_loaded_checksum_func;
   wav2prg_get_observed_loaders get_observed_loaders_func;
+  wav2prg_postprocess_data_byte postprocess_data_byte_func;
 };
 
 struct wav2prg_plugin_conf {

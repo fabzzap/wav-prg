@@ -28,7 +28,6 @@ struct wav2prg_context {
   struct wav2prg_tolerance* strict_tolerances;
   uint8_t checksum;
   struct wav2prg_raw_block raw_block;
-  uint8_t checksum_enabled;
   struct block_list_element *blocks;
   struct block_list_element **current_block;
   struct display_interface *display_interface;
@@ -80,19 +79,6 @@ static uint8_t compute_checksum_step_default(struct wav2prg_plugin_conf* conf, u
   }
 }
 
-static void enable_checksum_default(struct wav2prg_context* context)
-{
-  if(!context->checksum_enabled){
-    context->checksum_enabled = 1;
-    reset_checksum(context);
-  }
-}
-
-static void disable_checksum_default(struct wav2prg_context* context)
-{
-  context->checksum_enabled = 0;
-}
-
 static enum wav2prg_bool evolve_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
   uint8_t bit;
@@ -106,6 +92,17 @@ static enum wav2prg_bool evolve_byte(struct wav2prg_context* context, const stru
   }
 }
 
+static enum wav2prg_bool get_data_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+{
+  if (functions->get_byte_func(context, functions, conf, byte))
+    return wav2prg_false;
+  if (functions->postprocess_data_byte_func)
+    *byte = functions->postprocess_data_byte_func(conf, *byte);
+  context->checksum = context->compute_checksum_step(conf, context->checksum, *byte);
+
+  return wav2prg_true;
+}
+
 static enum wav2prg_bool get_byte_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
   uint8_t i;
@@ -115,22 +112,29 @@ static enum wav2prg_bool get_byte_default(struct wav2prg_context* context, const
       return wav2prg_false;
   }
 
-  if (context->checksum_enabled)
-    context->checksum = context->compute_checksum_step(conf, context->checksum, *byte);
+  return wav2prg_true;
+}
 
+static enum wav2prg_bool get_word_base(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word, wav2prg_get_byte_func get_byte_func)
+{
+  uint8_t byte;
+  if (get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    return wav2prg_false;
+  *word = byte;
+  if (get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    return wav2prg_false;
+  *word |= (byte << 8);
   return wav2prg_true;
 }
 
 static enum wav2prg_bool get_word_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word)
 {
-  uint8_t byte;
-  if (context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_false)
-    return wav2prg_false;
-  *word = byte;
-  if (context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_false)
-    return wav2prg_false;
-  *word |= (byte << 8);
-  return wav2prg_true;
+  return get_word_base(context, functions, conf, word, context->subclassed_functions.get_byte_func);
+}
+
+static enum wav2prg_bool get_data_word(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word)
+{
+  return get_word_base(context, functions, conf, word, context->subclassed_functions.get_data_byte_func);
 }
 
 static enum wav2prg_bool get_word_bigendian_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word)
@@ -557,13 +561,13 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       get_pulse,
       NULL,
       NULL,
+      get_data_byte,
       get_word_default,
+      get_data_word,
       get_word_bigendian_default,
       NULL,
       check_checksum_default,
       NULL,
-      enable_checksum_default,
-      disable_checksum_default,
       reset_checksum_to,
       reset_checksum,
       number_to_name,
@@ -580,7 +584,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       NULL,
       NULL
     },
-    0,
     NULL,
     &context.blocks,
     display_interface,
@@ -593,13 +596,13 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     get_pulse,
     get_bit_default,
     get_byte_default,
+    get_data_byte,
     get_word_default,
+    get_data_word,
     get_word_bigendian_default,
     get_block_default,
     check_checksum_default,
     get_loaded_checksum_default,
-    enable_checksum_default,
-    disable_checksum_default,
     reset_checksum_to,
     reset_checksum,
     number_to_name,
@@ -624,7 +627,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     if(plugin_functions == NULL)
       break;
 
-    disable_checksum_default(&context);
     context.display_interface->try_sync(context.display_interface_internal, loader_name);
     *context.current_block = new_block_list_element(conf->num_pulse_lengths);
 
@@ -696,7 +698,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         &block->block.info,
         NULL);
       initialize_raw_block(&context.raw_block, block->block.info.end - block->block.info.start, block->block.data, conf);
-      enable_checksum_default(&context);
+      reset_checksum(&context);
       res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block->block.info.end - block->block.info.start);
       block->real_length = context.raw_block.length_so_far;
       block->syncs[block->num_of_syncs - 1].end = context.input->get_pos(context.input_object);

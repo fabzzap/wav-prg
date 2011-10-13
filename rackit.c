@@ -4,13 +4,11 @@ struct rackit_private_state {
   uint8_t xor_value_present;
   uint8_t xor_value;
   uint8_t checksum;
-  uint8_t in_data;
 };
 
 static const struct rackit_private_state rackit_private_state_model = {
   1,
   0x77,
-  0,
   0
 };
 static struct wav2prg_generate_private_state rackit_generate_private_state = {
@@ -46,15 +44,10 @@ static enum wav2prg_bool rackit_get_loaded_checksum(struct wav2prg_context* cont
   return wav2prg_true;
 }
 
-static enum wav2prg_bool rackit_get_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+static uint8_t rackit_postprocess_data_byte(struct wav2prg_plugin_conf *conf, uint8_t byte)
 {
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
-  enum wav2prg_bool result = functions->get_byte_func(context, functions, conf, byte);
-
-  if (state->in_data)
-    *byte ^= state->xor_value;
-
-  return result;
+  return byte ^ state->xor_value;
 }
 
 static enum wav2prg_bool rackit_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
@@ -85,17 +78,6 @@ static enum wav2prg_bool rackit_get_block_info(struct wav2prg_context* context, 
 
 static const struct wav2prg_plugin_conf* rackit_get_new_state(void) {
   return &rackit;
-}
-
-static enum wav2prg_bool rackit_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size){
-  struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
-  enum wav2prg_bool result;
-
-  state->in_data = 1;
-  result = functions->get_block_func(context, functions, conf, block, block_size);
-  state->in_data = 0;
-
-  return result;
 }
 
 static enum wav2prg_bool is_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
@@ -210,15 +192,16 @@ static const struct wav2prg_observed_loaders* rackit_get_observed_loaders(void){
 static const struct wav2prg_plugin_functions rackit_functions =
 {
   NULL,
-  rackit_get_byte,
+  NULL,
   NULL,
   NULL,
   rackit_get_block_info,
-  rackit_get_block,
+  NULL,
   rackit_get_new_state,
   NULL,
   rackit_get_loaded_checksum,
-  rackit_get_observed_loaders
+  rackit_get_observed_loaders,
+  rackit_postprocess_data_byte
 };
 
 PLUGIN_ENTRY(rackit)

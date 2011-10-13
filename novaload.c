@@ -41,9 +41,7 @@ enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const
   uint16_t unused;
   uint16_t blocklen;
 
-  functions->enable_checksum_func(context);
-
-  if (functions->get_byte_func(context, functions, conf, &namelen) == wav2prg_false)
+  if (functions->get_data_byte_func(context, functions, conf, &namelen) == wav2prg_false)
     return wav2prg_false;
   /* Despite what Tapclean docs say, nothing forbids a Novaload program to have a name
      0x55 chars long. However, it is highly unlikely that the program name is very long.
@@ -51,16 +49,16 @@ enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const
   if (namelen > 16)
     return wav2prg_false;
   for(i = 0; i < namelen; i++)
-    if (functions->get_byte_func(context, functions, conf, (uint8_t*)info->name + i) == wav2prg_false)
+    if (functions->get_data_byte_func(context, functions, conf, (uint8_t*)info->name + i) == wav2prg_false)
       return wav2prg_false;
 
-  if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
+  if (functions->get_data_word_func(context, functions, conf, &info->start) == wav2prg_false)
     return wav2prg_false;
   /* According to Markus Brenner and Tomaz Kac, this should be the end address
      But the actual C64 implementation does not use these two bytes, so nor do we */
-  if (functions->get_word_func(context, functions, conf, &unused) == wav2prg_false)
+  if (functions->get_data_word_func(context, functions, conf, &unused) == wav2prg_false)
     return wav2prg_false;
-  if (functions->get_word_func(context, functions, conf, &blocklen) == wav2prg_false)
+  if (functions->get_data_word_func(context, functions, conf, &blocklen) == wav2prg_false)
     return wav2prg_false;
 
   if (blocklen < 256 || info->start + blocklen > 65536)
