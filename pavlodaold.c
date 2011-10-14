@@ -4,6 +4,22 @@ static uint16_t pavlodaold_thresholds[]={0x14A};
 static uint16_t pavlodaold_ideal_pulse_lengths[]={248, 504};
 static uint8_t pavlodaold_pilot_sequence[]={0x55};
 
+struct pavloda_private_state {
+  enum{
+    dont_be_tolerant,
+    be_tolerant,
+    already_been_tolerant_enough_is_enough
+  } tolerance;
+};
+
+static const struct pavloda_private_state pavloda_private_state_model = {
+  dont_be_tolerant
+};
+static struct wav2prg_generate_private_state pavloda_generate_private_state = {
+  sizeof(pavloda_private_state_model),
+  &pavloda_private_state_model
+};
+
 static const struct wav2prg_plugin_conf pavlodaold =
 {
   msbf,
@@ -19,7 +35,7 @@ static const struct wav2prg_plugin_conf pavlodaold =
   {1,0,0},
   514,
   first_to_last,
-  NULL
+  &pavloda_generate_private_state
 };
 
 static uint8_t pavlodaold_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte) {
@@ -41,11 +57,24 @@ static const struct wav2prg_plugin_conf* pavlodaold_get_new_state(void) {
 
 static enum wav2prg_bool pavlodaold_get_bit(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit) {
   uint8_t pulse;
-  
-  if(functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
+  struct pavloda_private_state *state = (struct pavloda_private_state *)conf->private_state;
+
+  if(state->tolerance == already_been_tolerant_enough_is_enough)
     return wav2prg_false;
+
+  if(functions->get_pulse_func(context, conf, &pulse) == wav2prg_false){
+    if(state->tolerance == dont_be_tolerant)
+      return wav2prg_false;
+    pulse = 1;
+    state->tolerance = already_been_tolerant_enough_is_enough;
+  }
+
   if (pulse == 0){
-    functions->get_pulse_func(context, conf, &pulse);/*and ignore the result, the very last pulse can be corrupted*/
+    if(functions->get_pulse_func(context, conf, &pulse) == wav2prg_false){
+      if(state->tolerance == dont_be_tolerant)
+        return wav2prg_false;
+      state->tolerance = already_been_tolerant_enough_is_enough;
+    }
     *bit = 1;
   }
   else
@@ -56,9 +85,14 @@ static enum wav2prg_bool pavlodaold_get_bit(struct wav2prg_context* context, con
 
 enum wav2prg_bool pavlodaold_get_loaded_checksum(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte){
 /* In Pavloda Old, it is very common that the last 0 bit of the checksum is corrupted.
-   If any problems occur in loading the checksum, assume the last bit is a 0 and see if the checksum is correct */
-  if(functions->get_byte_func(context, functions, conf, byte) == wav2prg_false)
-    (*byte) <<= 1;
+   So, while loading the checksum, tolerate 1 wrong pulse, but no more */
+  struct pavloda_private_state *state = (struct pavloda_private_state *)conf->private_state;
+  enum wav2prg_bool result;
+
+  state->tolerance = be_tolerant;
+  result = functions->get_loaded_checksum_func(context, functions, conf, byte);
+  state->tolerance = dont_be_tolerant;
+
   return wav2prg_true;
 }
 
