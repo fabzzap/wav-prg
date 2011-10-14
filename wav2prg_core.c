@@ -701,7 +701,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       reset_checksum(&context);
       res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block->block.info.end - block->block.info.start);
       block->real_length = context.raw_block.length_so_far;
-      block->syncs[block->num_of_syncs - 1].end = context.input->get_pos(context.input_object);
 
       if(res == wav2prg_true){
         /* final checksum */
@@ -713,6 +712,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
           block_checksum_expected_but_missing : block_complete;
 
       }
+      block->syncs[block->num_of_syncs - 1].end = context.input->get_pos(context.input_object);
       context.display_interface->end(context.display_interface_internal,
                                    res == wav2prg_true,
                                    block->state,
