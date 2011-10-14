@@ -94,7 +94,7 @@ static enum wav2prg_bool evolve_byte(struct wav2prg_context* context, const stru
 
 static enum wav2prg_bool get_data_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
-  if (functions->get_byte_func(context, functions, conf, byte))
+  if (functions->get_byte_func(context, functions, conf, byte) == wav2prg_false)
     return wav2prg_false;
   if (functions->postprocess_data_byte_func)
     *byte = functions->postprocess_data_byte_func(conf, *byte);
@@ -190,7 +190,7 @@ static enum wav2prg_bool get_block_default(struct wav2prg_context* context, cons
   uint16_t bytes;
   for(bytes = 0; bytes < numbytes; bytes++){
     uint8_t byte;
-    if (context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    if (context->subclassed_functions.get_data_byte_func(context, functions, conf, &byte) == wav2prg_false)
       return wav2prg_false;
     add_byte_to_block(block, byte);
   }
