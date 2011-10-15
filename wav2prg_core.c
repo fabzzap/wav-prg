@@ -649,6 +649,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       block->loader_name = strdup(loader_name);
       block->conf = copy_conf(conf);
       block->block_status = block_sync_no_info;
+      reset_checksum(&context);
 
       if (recognized_info == NULL) {
         const struct wav2prg_observed_loaders* dependencies = NULL;
@@ -698,7 +699,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         &block->block.info,
         NULL);
       initialize_raw_block(&context.raw_block, block->block.info.end - block->block.info.start, block->block.data, conf);
-      reset_checksum(&context);
       res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block->block.info.end - block->block.info.start);
       block->real_length = context.raw_block.length_so_far;
 

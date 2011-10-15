@@ -87,6 +87,11 @@ static const struct wav2prg_plugin_conf* novaload_get_new_state(void) {
   return &novaload_conf;
 }
 
+static enum wav2prg_bool novaload_get_loaded_checksum(struct wav2prg_context *context, const struct wav2prg_functions *functions, struct wav2prg_plugin_conf *conf, uint8_t *byte)
+{
+  return functions->get_data_byte_func(context, functions, conf, byte);
+}
+
 static const struct wav2prg_plugin_functions novaload_functions =
 {
   NULL,
@@ -97,6 +102,7 @@ static const struct wav2prg_plugin_functions novaload_functions =
   novaload_get_block,
   novaload_get_new_state,
   NULL,
+  novaload_get_loaded_checksum,
   NULL,
   NULL
 };
