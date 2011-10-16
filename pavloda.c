@@ -160,10 +160,10 @@ static enum wav2prg_bool pavloda_get_block(struct wav2prg_context* context, cons
       res = wav2prg_false;
       break;
     }
+    functions->reset_checksum_func(context);
     if(state->bytes_still_to_load_from_primary_subblock > 0){
       bytes_now = state->bytes_still_to_load_from_primary_subblock;
       state->bytes_still_to_load_from_primary_subblock = 0;
-      functions->reset_checksum_func(context);
     }
     else{
       bytes_now = 256;
