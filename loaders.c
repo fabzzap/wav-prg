@@ -58,6 +58,7 @@ void rackit_get_plugin(wav2prg_register_loader register_loader_func);
 void detective_get_plugin(wav2prg_register_loader register_loader_func);
 void turbo220_get_plugin(wav2prg_register_loader register_loader_func);
 void freeload_get_plugin(wav2prg_register_loader register_loader_func);
+void wildsave_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -74,6 +75,7 @@ void register_loaders(void) {
   detective_get_plugin(register_loader);
   turbo220_get_plugin(register_loader);
   freeload_get_plugin(register_loader);
+  wildsave_get_plugin(register_loader);
 #endif
 }
 

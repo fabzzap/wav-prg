@@ -150,7 +150,7 @@ enum wav2prg_bool kernal_headerchunk_get_block_info(struct wav2prg_context* cont
   const uint16_t num_of_necessary_bytes = sizeof(headerchunk_necessary_bytes->headerchunk_necessary_bytes);
 
   for(i = 0; i < num_of_necessary_bytes; i++){
-    if(functions->get_data_byte_func(context, functions, conf, headerchunk_necessary_bytes->headerchunk_necessary_bytes + i) == wav2prg_false)
+    if(functions->get_data_byte_func(context, functions, conf, headerchunk_necessary_bytes->headerchunk_necessary_bytes + i, 0) == wav2prg_false)
       return wav2prg_false;
   }
   if (headerchunk_necessary_bytes->headerchunk_necessary_bytes[0] != 1

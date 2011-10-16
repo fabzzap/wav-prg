@@ -23,7 +23,8 @@ struct block_list_element {
     block_checksum_expected_but_missing,
     block_complete
   } block_status;
-  uint16_t real_length;
+  uint16_t real_start;
+  uint16_t real_end;
   const char* loader_name;
   struct wav2prg_plugin_conf *conf;
   enum wav2prg_checksum_state state;

@@ -34,6 +34,7 @@ struct wav2prg_observed_loaders;
 typedef enum wav2prg_bool (*wav2prg_get_pulse_func)(struct wav2prg_context*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_bit_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_byte_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
+typedef enum wav2prg_bool (*wav2prg_get_data_byte_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*, uint16_t);
 typedef enum wav2prg_bool (*wav2prg_get_word_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
 typedef enum wav2prg_bool (*wav2prg_get_word_bigendian_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
 typedef enum wav2prg_bool (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_raw_block*, uint16_t);
@@ -54,7 +55,7 @@ typedef void                       (*wav2prg_number_to_name)(uint8_t number, cha
 typedef void                       (*wav2prg_add_byte_to_block)(struct wav2prg_raw_block* block, uint8_t byte);
 typedef void                       (*wav2prg_remove_byte_from_block)(struct wav2prg_raw_block* block);
 typedef const struct wav2prg_observed_loaders* (*wav2prg_get_observed_loaders)(void);
-typedef uint8_t                    (*wav2prg_postprocess_data_byte)(struct wav2prg_plugin_conf*, uint8_t);
+typedef uint8_t                    (*wav2prg_postprocess_data_byte)(struct wav2prg_plugin_conf*, uint8_t, uint16_t);
 
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
@@ -62,7 +63,7 @@ struct wav2prg_functions {
   wav2prg_get_pulse_func get_pulse_func;
   wav2prg_get_bit_func get_bit_func;
   wav2prg_get_byte_func get_byte_func;
-  wav2prg_get_byte_func get_data_byte_func;
+  wav2prg_get_data_byte_func get_data_byte_func;
   wav2prg_get_word_func get_word_func;
   wav2prg_get_word_func get_data_word_func;
   wav2prg_get_word_bigendian_func get_word_bigendian_func;
@@ -74,7 +75,6 @@ struct wav2prg_functions {
   wav2prg_number_to_name number_to_name_func;
   wav2prg_add_byte_to_block add_byte_to_block_func;
   wav2prg_remove_byte_from_block remove_byte_from_block_func;
-  wav2prg_postprocess_data_byte postprocess_data_byte_func;
 };
 
 struct wav2prg_generate_private_state

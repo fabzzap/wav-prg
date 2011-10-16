@@ -10,9 +10,9 @@
 #include <string.h>
 
 struct wav2prg_raw_block {
-  uint16_t skipped_at_beginning;
-  uint16_t length_so_far;
-  uint8_t* data;
+  uint16_t location_of_first_byte;
+  uint8_t* start_of_data;
+  uint8_t* end_of_data;
   uint8_t* current_byte;
   enum wav2prg_block_filling filling;
 };
@@ -21,6 +21,7 @@ struct wav2prg_context {
   struct wav2prg_input_object *input_object;
   struct wav2prg_input_functions *input;
   wav2prg_get_sync_byte get_sync_byte;
+  wav2prg_postprocess_data_byte postprocess_data_byte_func;
   wav2prg_compute_checksum_step compute_checksum_step;
   struct wav2prg_functions subclassed_functions;
   enum wav2prg_tolerance_type userdefined_tolerance_type;
@@ -92,12 +93,12 @@ static enum wav2prg_bool evolve_byte(struct wav2prg_context* context, const stru
   }
 }
 
-static enum wav2prg_bool get_data_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+static enum wav2prg_bool get_data_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte, uint16_t location)
 {
   if (functions->get_byte_func(context, functions, conf, byte) == wav2prg_false)
     return wav2prg_false;
-  if (functions->postprocess_data_byte_func)
-    *byte = functions->postprocess_data_byte_func(conf, *byte);
+  if (context->postprocess_data_byte_func)
+    *byte = context->postprocess_data_byte_func(conf, *byte, location);
   context->checksum = context->compute_checksum_step(conf, context->checksum, *byte);
 
   return wav2prg_true;
@@ -115,26 +116,28 @@ static enum wav2prg_bool get_byte_default(struct wav2prg_context* context, const
   return wav2prg_true;
 }
 
-static enum wav2prg_bool get_word_base(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word, wav2prg_get_byte_func get_byte_func)
+static enum wav2prg_bool get_word_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word)
 {
   uint8_t byte;
-  if (get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+  if (context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_false)
     return wav2prg_false;
   *word = byte;
-  if (get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+  if (context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_false)
     return wav2prg_false;
   *word |= (byte << 8);
   return wav2prg_true;
 }
 
-static enum wav2prg_bool get_word_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word)
-{
-  return get_word_base(context, functions, conf, word, context->subclassed_functions.get_byte_func);
-}
-
 static enum wav2prg_bool get_data_word(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word)
 {
-  return get_word_base(context, functions, conf, word, context->subclassed_functions.get_data_byte_func);
+  uint8_t byte;
+  if (context->subclassed_functions.get_data_byte_func(context, functions, conf, &byte, 0) == wav2prg_false)
+    return wav2prg_false;
+  *word = byte;
+  if (context->subclassed_functions.get_data_byte_func(context, functions, conf, &byte, 0) == wav2prg_false)
+    return wav2prg_false;
+  *word |= (byte << 8);
+  return wav2prg_true;
 }
 
 static enum wav2prg_bool get_word_bigendian_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint16_t* word)
@@ -149,38 +152,36 @@ static enum wav2prg_bool get_word_bigendian_default(struct wav2prg_context* cont
   return wav2prg_true;
 }
 
-static void initialize_raw_block(struct wav2prg_raw_block* block, uint16_t total_length, uint8_t* data, struct wav2prg_plugin_conf* conf) {
-  block->skipped_at_beginning = conf->filling == first_to_last ? 0 : total_length;
-  block->length_so_far = 0;
-  block->data = block->current_byte = data;
+static void initialize_raw_block(struct wav2prg_raw_block* block, uint16_t location_of_last_byte, uint16_t location_of_first_byte, uint8_t* data, struct wav2prg_plugin_conf* conf) {
+  block->location_of_first_byte = location_of_first_byte;
+  block->start_of_data = data;
+  block->end_of_data = block->start_of_data + location_of_last_byte - location_of_first_byte;
   block->filling = conf->filling;
   if (conf->filling == last_to_first)
-    block->current_byte += total_length;
+    block->current_byte = block->end_of_data - 1;
+  else
+    block->current_byte = block->start_of_data;
 }
 
 static void add_byte_to_block(struct wav2prg_raw_block* block, uint8_t byte) {
   *block->current_byte = byte;
-  block->length_so_far++;
   switch(block->filling){
   case first_to_last:
     block->current_byte++;
     break;
   case last_to_first:
     block->current_byte--;
-    block->skipped_at_beginning--;
     break;
   }
 }
 
 static void remove_byte_from_block(struct wav2prg_raw_block* block) {
-  block->length_so_far--;
   switch(block->filling){
   case first_to_last:
     block->current_byte--;
     break;
   case last_to_first:
     block->current_byte++;
-    block->skipped_at_beginning++;
     break;
   }
 }
@@ -190,7 +191,7 @@ static enum wav2prg_bool get_block_default(struct wav2prg_context* context, cons
   uint16_t bytes;
   for(bytes = 0; bytes < numbytes; bytes++){
     uint8_t byte;
-    if (context->subclassed_functions.get_data_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    if (context->subclassed_functions.get_data_byte_func(context, functions, conf, &byte, block->current_byte - block->start_of_data + block->location_of_first_byte) == wav2prg_false)
       return wav2prg_false;
     add_byte_to_block(block, byte);
   }
@@ -363,6 +364,11 @@ static struct wav2prg_plugin_conf* copy_conf(const struct wav2prg_plugin_conf *m
 
   conf->endianness = model_conf->endianness;
   conf->checksum_type = model_conf->checksum_type;
+  conf->num_pulse_lengths = model_conf->num_pulse_lengths;
+  conf->thresholds = malloc((conf->num_pulse_lengths - 1) * sizeof(uint16_t));
+  memcpy(conf->thresholds, model_conf->thresholds, (conf->num_pulse_lengths - 1) * sizeof(uint16_t));
+  conf->ideal_pulse_lengths = malloc(conf->num_pulse_lengths * sizeof(uint16_t));
+  memcpy(conf->ideal_pulse_lengths, model_conf->ideal_pulse_lengths, conf->num_pulse_lengths * sizeof(uint16_t));
   conf->findpilot_type = model_conf->findpilot_type;
   switch(conf->findpilot_type){
     case wav2prg_synconbyte:
@@ -376,12 +382,8 @@ static struct wav2prg_plugin_conf* copy_conf(const struct wav2prg_plugin_conf *m
       break;
   }
 
-  conf->num_pulse_lengths = model_conf->num_pulse_lengths;
-  conf->ideal_pulse_lengths = malloc(conf->num_pulse_lengths * sizeof(uint16_t));
-  memcpy(conf->ideal_pulse_lengths, model_conf->ideal_pulse_lengths, conf->num_pulse_lengths * sizeof(uint16_t));
-  conf->thresholds = malloc((conf->num_pulse_lengths - 1) * sizeof(uint16_t));
-  memcpy(conf->thresholds, model_conf->thresholds, (conf->num_pulse_lengths - 1) * sizeof(uint16_t));
   conf->min_pilots=model_conf->min_pilots;
+  conf->filling=model_conf->filling;
  
   return conf;
 }
@@ -424,10 +426,6 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
 
   if(plugin_functions == NULL)
     return NULL;
-  context->compute_checksum_step             =
-    plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step : compute_checksum_step_default;
-  context->get_sync_byte                     =
-    plugin_functions->get_sync_byte         ? plugin_functions->get_sync_byte         : get_sync_byte_using_shift_register;
   context->subclassed_functions.get_sync     =
     plugin_functions->get_sync              ? plugin_functions->get_sync              : get_sync_default;
   context->subclassed_functions.get_bit_func =
@@ -438,6 +436,11 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
     plugin_functions->get_block_func ? plugin_functions->get_block_func : get_block_default;
   context->subclassed_functions.get_loaded_checksum_func =
     plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default;
+  context->postprocess_data_byte_func = plugin_functions->postprocess_data_byte_func;
+  context->compute_checksum_step             =
+    plugin_functions->compute_checksum_step ? plugin_functions->compute_checksum_step : compute_checksum_step_default;
+  context->get_sync_byte                     =
+    plugin_functions->get_sync_byte         ? plugin_functions->get_sync_byte         : get_sync_byte_using_shift_register;
 
   if (*conf == NULL)
     *conf = get_new_state(plugin_functions);
@@ -555,6 +558,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     input,
     NULL,
     NULL,
+    NULL,
     {
       NULL,
       get_sync_insist,
@@ -580,9 +584,9 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     0,
     {
       0,
-      0,
       NULL,
-      NULL
+      NULL,
+      first_to_last
     },
     NULL,
     &context.blocks,
@@ -698,9 +702,18 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         block->end_of_info,
         &block->block.info,
         NULL);
-      initialize_raw_block(&context.raw_block, block->block.info.end - block->block.info.start, block->block.data, conf);
+      initialize_raw_block(&context.raw_block, block->block.info.end, block->block.info.start, block->block.data, conf);
       res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block->block.info.end - block->block.info.start);
-      block->real_length = context.raw_block.length_so_far;
+      switch(context.raw_block.filling){
+      case first_to_last:
+        block->real_start = block->block.info.start;
+        block->real_end   = block->real_start + context.raw_block.current_byte - context.raw_block.start_of_data;
+        break;
+      case last_to_first:
+        block->real_end   = block->block.info.end;
+        block->real_start = block->real_end + context.raw_block.current_byte - context.raw_block.end_of_data + 1;
+        break;
+      }
 
       if(res == wav2prg_true){
         /* final checksum */
@@ -718,7 +731,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                    block->state,
                                    conf->checksum_type != wav2prg_no_checksum,
                                    block->syncs[block->num_of_syncs - 1].end,
-                                   context.raw_block.length_so_far);
+                                   block->real_end - block->real_start);
     }while(0);
 
     if (!(*context.current_block)

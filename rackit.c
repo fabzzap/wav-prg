@@ -44,7 +44,7 @@ static enum wav2prg_bool rackit_get_loaded_checksum(struct wav2prg_context* cont
   return wav2prg_true;
 }
 
-static uint8_t rackit_postprocess_data_byte(struct wav2prg_plugin_conf *conf, uint8_t byte)
+static uint8_t rackit_postprocess_data_byte(struct wav2prg_plugin_conf *conf, uint8_t byte, uint16_t location)
 {
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
   return byte ^ state->xor_value;

@@ -50,15 +50,15 @@ static enum wav2prg_bool pavloda_get_block_info(struct wav2prg_context* context,
   uint8_t load_offset;
   struct pavloda_private_state* state = (struct pavloda_private_state*)conf->private_state;
 
-  if(functions->get_data_byte_func(context, functions, conf, &state->block_num) == wav2prg_false)
+  if(functions->get_data_byte_func(context, functions, conf, &state->block_num, 0) == wav2prg_false)
     return wav2prg_false;
-  if(functions->get_byte_func(context, functions, conf, &subblocks) == wav2prg_false || subblocks != 0)
+  if(functions->get_data_byte_func(context, functions, conf, &subblocks, 0) == wav2prg_false || subblocks != 0)
     return wav2prg_false;
   if(functions->get_data_word_func(context, functions, conf, &info->start) == wav2prg_false)
     return wav2prg_false;
-  if(functions->get_data_byte_func(context, functions, conf, &subblocks) == wav2prg_false)
+  if(functions->get_data_byte_func(context, functions, conf, &subblocks, 0) == wav2prg_false)
     return wav2prg_false;
-  if(functions->get_data_byte_func(context, functions, conf, &load_offset) == wav2prg_false)
+  if(functions->get_data_byte_func(context, functions, conf, &load_offset, 0) == wav2prg_false)
     return wav2prg_false;
   state->bytes_still_to_load_from_primary_subblock = 256 - load_offset;
   info->end = info->start + 256 + 256*subblocks;
@@ -170,12 +170,12 @@ static enum wav2prg_bool pavloda_get_block(struct wav2prg_context* context, cons
       res = functions->get_sync(context, functions, conf);
       if(res != wav2prg_true)
         break;
-      res = functions->get_data_byte_func(context, functions, conf, &subblocks);
+      res = functions->get_data_byte_func(context, functions, conf, &subblocks, 0);
       if(res != wav2prg_true)
         break;
       if(subblocks != state->block_num)
         continue;
-      res = functions->get_data_byte_func(context, functions, conf, &subblocks);
+      res = functions->get_data_byte_func(context, functions, conf, &subblocks, 0);
       if(res != wav2prg_true)
         break;
       if(subblocks != expected_subblock_num)

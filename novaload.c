@@ -41,7 +41,7 @@ enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const
   uint16_t unused;
   uint16_t blocklen;
 
-  if (functions->get_data_byte_func(context, functions, conf, &namelen) == wav2prg_false)
+  if (functions->get_data_byte_func(context, functions, conf, &namelen, 0) == wav2prg_false)
     return wav2prg_false;
   /* Despite what Tapclean docs say, nothing forbids a Novaload program to have a name
      0x55 chars long. However, it is highly unlikely that the program name is very long.
@@ -49,7 +49,7 @@ enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const
   if (namelen > 16)
     return wav2prg_false;
   for(i = 0; i < namelen; i++)
-    if (functions->get_data_byte_func(context, functions, conf, (uint8_t*)info->name + i) == wav2prg_false)
+    if (functions->get_data_byte_func(context, functions, conf, (uint8_t*)info->name + i, 0) == wav2prg_false)
       return wav2prg_false;
 
   if (functions->get_data_word_func(context, functions, conf, &info->start) == wav2prg_false)
@@ -89,7 +89,7 @@ static const struct wav2prg_plugin_conf* novaload_get_new_state(void) {
 
 static enum wav2prg_bool novaload_get_loaded_checksum(struct wav2prg_context *context, const struct wav2prg_functions *functions, struct wav2prg_plugin_conf *conf, uint8_t *byte)
 {
-  return functions->get_data_byte_func(context, functions, conf, byte);
+  return functions->get_data_byte_func(context, functions, conf, byte, 0);
 }
 
 static const struct wav2prg_plugin_functions novaload_functions =
