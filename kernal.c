@@ -174,15 +174,21 @@ static enum wav2prg_bool kernal_get_block(struct wav2prg_context* context, const
 
   for(bytes_received = 0; bytes_received <= numbytes; bytes_received++) {
     uint8_t byte;
+    enum wav2prg_bool marker_found = wav2prg_false;
+
     switch(sync_with_byte_and_get_it(context, functions, conf, &byte, 0)){
     case byte_found:
+      functions->postprocess_and_update_checksum_func(context, conf, &byte, 0);
       functions->add_byte_to_block_func(raw_block, byte);
       break;
     case could_not_sync:
       return wav2prg_false;
     case eof_marker_found:
-      return wav2prg_true;
+      marker_found = wav2prg_true;
+      break;
     }
+    if (marker_found)
+      break;
   }
   functions->remove_byte_from_block_func(raw_block);
   return wav2prg_true;

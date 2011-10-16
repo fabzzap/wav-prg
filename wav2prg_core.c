@@ -93,13 +93,19 @@ static enum wav2prg_bool evolve_byte(struct wav2prg_context* context, const stru
   }
 }
 
-static enum wav2prg_bool get_data_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte, uint16_t location)
+static void postprocess_and_update_checksum(struct wav2prg_context *context, struct wav2prg_plugin_conf *conf, uint8_t *byte, uint16_t location)
 {
-  if (functions->get_byte_func(context, functions, conf, byte) == wav2prg_false)
-    return wav2prg_false;
   if (context->postprocess_data_byte_func)
     *byte = context->postprocess_data_byte_func(conf, *byte, location);
   context->checksum = context->compute_checksum_step(conf, context->checksum, *byte);
+}
+
+static enum wav2prg_bool get_data_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte, uint16_t location)
+{
+  if (context->subclassed_functions.get_byte_func(context, functions, conf, byte) == wav2prg_false)
+    return wav2prg_false;
+
+  context->subclassed_functions.postprocess_and_update_checksum_func(context, conf, byte, location);
 
   return wav2prg_true;
 }
@@ -576,7 +582,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       reset_checksum,
       number_to_name,
       add_byte_to_block,
-      remove_byte_from_block
+      remove_byte_from_block,
+      postprocess_and_update_checksum
     },
     tolerance_type,
     tolerance_type,
@@ -611,7 +618,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     reset_checksum,
     number_to_name,
     add_byte_to_block,
-    remove_byte_from_block
+    remove_byte_from_block,
+    postprocess_and_update_checksum
   };
   struct wav2prg_block *comparison_block = NULL;
   const char *loader_name = start_loader;
