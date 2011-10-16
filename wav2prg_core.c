@@ -181,17 +181,6 @@ static void add_byte_to_block(struct wav2prg_raw_block* block, uint8_t byte) {
   }
 }
 
-static void remove_byte_from_block(struct wav2prg_raw_block* block) {
-  switch(block->filling){
-  case first_to_last:
-    block->current_byte--;
-    break;
-  case last_to_first:
-    block->current_byte++;
-    break;
-  }
-}
-
 static enum wav2prg_bool get_block_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t numbytes)
 {
   uint16_t bytes;
@@ -582,7 +571,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       reset_checksum,
       number_to_name,
       add_byte_to_block,
-      remove_byte_from_block,
       postprocess_and_update_checksum
     },
     tolerance_type,
@@ -618,7 +606,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     reset_checksum,
     number_to_name,
     add_byte_to_block,
-    remove_byte_from_block,
     postprocess_and_update_checksum
   };
   struct wav2prg_block *comparison_block = NULL;

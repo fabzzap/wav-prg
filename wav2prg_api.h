@@ -52,7 +52,6 @@ typedef enum wav2prg_bool          (*wav2prg_register_loader)(const struct wav2p
 typedef enum wav2prg_bool          (*wav2prg_recognize_block)(struct wav2prg_plugin_conf*, const struct wav2prg_block*, struct wav2prg_block_info*, enum wav2prg_bool*, enum wav2prg_bool*);
 typedef void                       (*wav2prg_number_to_name)(uint8_t number, char* name);
 typedef void                       (*wav2prg_add_byte_to_block)(struct wav2prg_raw_block* block, uint8_t byte);
-typedef void                       (*wav2prg_remove_byte_from_block)(struct wav2prg_raw_block* block);
 typedef const struct wav2prg_observed_loaders* (*wav2prg_get_observed_loaders)(void);
 typedef uint8_t                    (*wav2prg_postprocess_data_byte)(struct wav2prg_plugin_conf*, uint8_t, uint16_t);
 
@@ -73,7 +72,6 @@ struct wav2prg_functions {
   wav2prg_reset_checksum reset_checksum_func;
   wav2prg_number_to_name number_to_name_func;
   wav2prg_add_byte_to_block add_byte_to_block_func;
-  wav2prg_remove_byte_from_block remove_byte_from_block_func;
   wav2prg_postprocess_and_update_checksum postprocess_and_update_checksum_func;
 };
 

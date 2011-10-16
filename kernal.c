@@ -171,15 +171,16 @@ enum wav2prg_bool kernal_headerchunk_get_block_info(struct wav2prg_context* cont
 static enum wav2prg_bool kernal_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block *raw_block, uint16_t numbytes)
 {
   uint16_t bytes_received = 0;
+  enum wav2prg_bool marker_found = wav2prg_false;
 
-  for(bytes_received = 0; bytes_received <= numbytes; bytes_received++) {
+  do{
     uint8_t byte;
-    enum wav2prg_bool marker_found = wav2prg_false;
 
     switch(sync_with_byte_and_get_it(context, functions, conf, &byte, 0)){
     case byte_found:
       functions->postprocess_and_update_checksum_func(context, conf, &byte, 0);
-      functions->add_byte_to_block_func(raw_block, byte);
+      if (bytes_received++ < numbytes)
+        functions->add_byte_to_block_func(raw_block, byte);
       break;
     case could_not_sync:
       return wav2prg_false;
@@ -187,10 +188,8 @@ static enum wav2prg_bool kernal_get_block(struct wav2prg_context* context, const
       marker_found = wav2prg_true;
       break;
     }
-    if (marker_found)
-      break;
-  }
-  functions->remove_byte_from_block_func(raw_block);
+  }while (!marker_found);
+
   return wav2prg_true;
 }
 
