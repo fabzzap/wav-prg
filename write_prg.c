@@ -68,10 +68,10 @@ void write_prg(struct block_list_element *blocks, const char *dirname){
         break;
       }
 /*      wav2prg_print("Writing file %s", filename);*/
-      start_addr[0] =  blocks->block.info.start       & 0xFF;
-      start_addr[1] = (blocks->block.info.start >> 8) & 0xFF;
+      start_addr[0] =  blocks->real_start       & 0xFF;
+      start_addr[1] = (blocks->real_start >> 8) & 0xFF;
       write(fildes, start_addr, sizeof(start_addr));
-      write(fildes, blocks->block.data, blocks->block.info.end - blocks->block.info.start);
+      write(fildes, blocks->block.data, blocks->real_end - blocks->real_start);
     }while(0);
     close(fildes);
     free(fullpathname);
