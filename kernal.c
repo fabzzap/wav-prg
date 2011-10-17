@@ -238,16 +238,21 @@ static enum wav2prg_bool is_headerchunk(struct wav2prg_plugin_conf* conf, const 
   return wav2prg_false;
 }
 
-static enum wav2prg_bool second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
-  info->start = block->info.start;
-  info->end   = block->info.end;
+static enum wav2prg_bool header_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
   *no_gaps_allowed  = wav2prg_true;
 
   return wav2prg_true;
 }
 
+static enum wav2prg_bool data_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
+  info->start = block->info.start;
+  info->end   = block->info.end;
+
+  return header_second_copy_after_first_copy(conf, block, info, no_gaps_allowed, try_further_recognitions_using_same_block);
+}
+
 static struct wav2prg_observed_loaders headerchunk_2nd_dependency[] = {
-  {"Kernal header chunk 1st copy",second_copy_after_first_copy},
+  {"Kernal header chunk 1st copy",header_second_copy_after_first_copy},
   {NULL,NULL}
 };
 
@@ -266,7 +271,7 @@ static const struct wav2prg_observed_loaders* datachunk_1st_get_observed_loaders
 
 static struct wav2prg_observed_loaders datachunk_2nd_dependency[] = {
   {"khc",is_headerchunk},
-  {"Kernal data chunk 1st copy",second_copy_after_first_copy},
+  {"Kernal data chunk 1st copy",data_second_copy_after_first_copy},
   {NULL,NULL}
 };
 
@@ -337,4 +342,3 @@ PLUGIN_ENTRY(kernal)
   register_loader_func(&kernal_datachunk_firstcopy_functions, "Kernal data chunk 1st copy");
   register_loader_func(&kernal_datachunk_secondcopy_functions, "Kernal data chunk 2nd copy");
 }
-

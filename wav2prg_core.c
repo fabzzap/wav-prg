@@ -186,7 +186,7 @@ static enum wav2prg_bool get_block_default(struct wav2prg_context* context, cons
   uint16_t bytes;
   for(bytes = 0; bytes < numbytes; bytes++){
     uint8_t byte;
-    if (context->subclassed_functions.get_data_byte_func(context, functions, conf, &byte, block->current_byte - block->start_of_data + block->location_of_first_byte) == wav2prg_false)
+    if (context->subclassed_functions.get_data_byte_func(context, functions, conf, &byte, block->location_of_first_byte + (uint16_t)(block->current_byte - block->start_of_data)) == wav2prg_false)
       return wav2prg_false;
     add_byte_to_block(block, byte);
   }
@@ -474,6 +474,7 @@ static enum wav2prg_bool allocate_info_and_recognize(struct wav2prg_plugin_conf*
   *info = malloc(sizeof(**info));
   (*info)->start = (*info)->end = 0xFFFF;
   memcpy(&(*info)->name, block->info.name, sizeof(block->info.name));
+  *no_gaps_allowed = wav2prg_false;
   result = recognize_func(conf, block, *info, no_gaps_allowed, try_further_recognitions_using_same_block);
   if (!result || ((*info)->end > 0 && (*info)->end <= (*info)->start)){
     free(*info);
@@ -579,6 +580,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     0,
     {
       0,
+      NULL,
       NULL,
       NULL,
       first_to_last
