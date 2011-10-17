@@ -56,6 +56,16 @@ static void add_one_observed(const char *observer_name, const char *observed_nam
     add_one_observed(observer_name, "Kernal data chunk 1st copy", recognize_func);
     add_one_observed(observer_name, "Kernal data chunk 2nd copy", recognize_func);
   }
+  else if (!strcmp(observed_name, "khc16"))
+  {
+    add_one_observed(observer_name, "Kernal header chunk 1st copy C16", recognize_func);
+    add_one_observed(observer_name, "Kernal header chunk 2nd copy C16", recognize_func);
+  }
+  else if (!strcmp(observed_name, "kdc16"))
+  {
+    add_one_observed(observer_name, "Kernal data chunk 1st copy C16", recognize_func);
+    add_one_observed(observer_name, "Kernal data chunk 2nd copy C16", recognize_func);
+  }
   else
     add_observer_to_list(get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_true), observer_name, recognize_func);
 }
