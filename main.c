@@ -178,6 +178,12 @@ static enum wav2prg_bool add_to_dump_list(const char* filename, void* dumps)
   return wav2prg_true;
 }
 
+static enum wav2prg_bool help_callback(const char *arg, void *options)
+{
+  list_options((const struct get_option *)options);
+  return wav2prg_true;
+}
+
 int main(int argc, char** argv)
 {
   struct wav2prg_selected_loader selected_loader = {NULL, NULL};
@@ -185,7 +191,7 @@ int main(int argc, char** argv)
   struct block_list_element *blocks;
   struct dump_element *dump = calloc(1, sizeof(struct dump_element)), *current_dump;
   const char *o1names[]={"s", "single", "single-loader", NULL};
-  const char *o2names[]={"m", "multi", "multi-loader", NULL};
+  const char *help_names[]={"h", "help", NULL};
   const char *option_tap_names[]={"t", "tap", NULL};
   const char *option_prg_names[]={"p", "prg", NULL};
   struct dump_argument tap_dump = {dump_to_tap, &dump};
@@ -214,6 +220,14 @@ int main(int argc, char** argv)
       &prg_dump,
       wav2prg_true,
       option_must_have_argument
+    },
+    {
+      help_names,
+      "Show help",
+      help_callback,
+      options,
+      wav2prg_false,
+      option_no_argument
     },
     {NULL}
   };

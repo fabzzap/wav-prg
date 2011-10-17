@@ -261,6 +261,38 @@ enum wav2prg_bool yet_another_getopt(const struct get_option *options, uint32_t 
   return ok_so_far;
 }
 
+void list_options(const struct get_option *options)
+{
+  const struct get_option *option;
+
+  for(option = options; option->names != NULL; option++){
+    const char **names;
+    enum wav2prg_bool first = wav2prg_true;
+    for(names = option->names; *names != NULL; names++){
+      if (first)
+        first = wav2prg_false;
+      else
+        printf(", ");
+      if(strlen(*names) == 1)
+        printf("-");
+      else
+        printf("--");
+      printf("%s", *names);
+    }
+    switch(option->arguments){
+    case option_no_argument:
+      break;
+    case option_may_have_argument:
+      printf(" [argument]");
+      break;
+    case option_must_have_argument:
+      printf(" <argument>");
+      break;
+    }
+    printf(":\n\t%s\n", option->description);
+  }
+}
+
 /*
 static enum wav2prg_bool c1(const char* arg, void* a)
 {
