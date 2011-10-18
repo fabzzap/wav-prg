@@ -654,6 +654,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
 
       if (recognized_info == NULL) {
         const struct wav2prg_observed_loaders* dependencies = NULL;
+        memcpy(block->block.info.name, "                ", 16);
         if(plugin_functions->get_block_info == NULL){
           res = wav2prg_false;
           dependencies = plugin_functions->get_observed_loaders_func();

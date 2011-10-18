@@ -16,3 +16,5 @@ struct get_option {
 };
 
 enum wav2prg_bool yet_another_getopt(const struct get_option *options, uint32_t *argc, char **argv);
+void list_options(const struct get_option *options);
+
