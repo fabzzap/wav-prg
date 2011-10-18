@@ -90,32 +90,26 @@ const struct wav2prg_plugin_functions* get_loader_by_name(const char* name) {
   return NULL;
 }
 
-char** get_loaders(enum wav2prg_bool single_loader_analysis) {
-  struct loader_for_single_loader_analysis {
-    const char* name;
-    struct loader_for_single_loader_analysis* next;
-  } *valid_loaders = NULL, **loader_to_add = &valid_loaders, *this_loader, *next_loader;
-  struct loader *loader;
-  int found_loaders = 0, this_loader_index = 0;
-  char** valid_loader_names;
+static char** add_string_to_list(char **old_list, const char *new_string, uint32_t *old_size)
+{
+  char **new_list = realloc(old_list, sizeof(char*) * (*old_size + 2));
+  new_list[(*old_size)++] = strdup(new_string);
+  new_list[ *old_size   ] = NULL;
 
-  for(loader = loader_list; loader != NULL; loader = loader->next)
-  {
-    if (!single_loader_analysis || loader->functions->get_block_info) {
-      *loader_to_add = malloc(sizeof(struct loader_for_single_loader_analysis));
-      (*loader_to_add)->name = loader->name;
-      (*loader_to_add)->next = NULL;
-      loader_to_add = &(*loader_to_add)->next;
-      found_loaders++;
-    }
-  }
-  valid_loader_names = malloc(sizeof(char*) * (found_loaders + 1));
-  for(this_loader = valid_loaders; this_loader != NULL; this_loader = next_loader) {
-    valid_loader_names[this_loader_index++] = strdup(this_loader->name);
-    next_loader = this_loader->next;
-    free(this_loader);
-  }
-  valid_loader_names[found_loaders] = NULL;
-  return valid_loader_names;
+  return new_list;
 }
 
+char** get_loaders(enum wav2prg_bool with_dependencies) {
+  struct loader *loader;
+  int found_loaders = 0;
+  char** valid_loader_names = malloc(sizeof (char*));
+
+  valid_loader_names[0] = NULL;
+  for(loader = loader_list; loader != NULL; loader = loader->next){
+    if ( (with_dependencies && !loader->functions->get_block_info)
+      ||(!with_dependencies &&  loader->functions->get_block_info))
+      valid_loader_names = add_string_to_list(valid_loader_names, loader->name, &found_loaders);
+  }
+
+  return valid_loader_names;
+}

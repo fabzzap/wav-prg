@@ -178,6 +178,39 @@ static enum wav2prg_bool add_to_dump_list(const char* filename, void* dumps)
   return wav2prg_true;
 }
 
+static enum wav2prg_bool display_list_of_loaders(const char* ununsed1, void* unused2)
+{
+  char **all_loaders = get_loaders(wav2prg_false);
+  char **one_loader;
+
+  for(one_loader = all_loaders; *one_loader != NULL; one_loader++){
+    printf("%s\n", *one_loader);
+    free(*one_loader);
+  }
+  free(all_loaders);
+  return wav2prg_true;
+}
+
+static enum wav2prg_bool display_list_of_loaders_with_dependencies(const char* ununsed1, void* unused2)
+{
+  char **all_loaders = get_loaders(wav2prg_true);
+  char **one_loader;
+
+  printf("\nThese loaders cannot be used as argument of -s. For each, the loaders they depend on are listed.\n");
+  for(one_loader = all_loaders; *one_loader != NULL; one_loader++){
+    const struct wav2prg_observed_loaders *dep;
+    const struct wav2prg_plugin_functions *plugin_functions = get_loader_by_name(*one_loader);
+
+    printf("%s\n", *one_loader);
+    for(dep = plugin_functions->get_observed_loaders_func(); dep && dep->loader != NULL; dep++)
+      printf("\t%s\n", dep->loader);
+    free(*one_loader);
+  }
+
+  free(all_loaders);
+  return wav2prg_true;
+}
+
 static enum wav2prg_bool help_callback(const char *arg, void *options)
 {
   list_options((const struct get_option *)options);
@@ -194,6 +227,8 @@ int main(int argc, char** argv)
   const char *help_names[]={"h", "help", NULL};
   const char *option_tap_names[]={"t", "tap", NULL};
   const char *option_prg_names[]={"p", "prg", NULL};
+  const char *list_names[]={"l", "list", "list-loaders", NULL};
+  const char *list_dep_names[]={"list-dependent", NULL};
   struct dump_argument tap_dump = {dump_to_tap, &dump};
   struct dump_argument prg_dump = {dump_to_prg, &dump};
   struct get_option options[] ={
@@ -226,6 +261,22 @@ int main(int argc, char** argv)
       "Show help",
       help_callback,
       options,
+      wav2prg_false,
+      option_no_argument
+    },
+    {
+      list_names,
+      "List available loaders",
+      display_list_of_loaders,
+      NULL,
+      wav2prg_false,
+      option_no_argument
+    },
+    {
+      list_dep_names,
+      "List loaders with dependencies",
+      display_list_of_loaders_with_dependencies,
+      NULL,
       wav2prg_false,
       option_no_argument
     },
