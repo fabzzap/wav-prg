@@ -11,7 +11,7 @@ static const struct wav2prg_plugin_conf connection =
   2,
   connection_thresholds,
   connection_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,
   2,
   sizeof(connection_pilot_sequence),
   connection_pilot_sequence,

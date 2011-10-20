@@ -23,7 +23,7 @@ static const struct wav2prg_plugin_conf wildsave =
   2,
   wildsave_thresholds,
   wildsave_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,
   160,
   sizeof(wildsave_pilot_sequence),
   wildsave_pilot_sequence,

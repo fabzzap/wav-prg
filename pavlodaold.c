@@ -27,12 +27,10 @@ static const struct wav2prg_plugin_conf pavlodaold =
   2,
   pavlodaold_thresholds,
   pavlodaold_ideal_pulse_lengths,
-  wav2prg_synconbit,
-  /*Only the first element of a union can be initialised.
-  So, initialise byte_sync.pilot_byte with 1, so actually
-  bit_sync is initialised. Fill the other fields of byte_sync
-  with 0, they are ignored anyway*/
-  {1,0,0},
+  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
+  0,/*ignored, no sync sequence*/
+  0,
+  NULL,
   514,
   first_to_last,
   &pavloda_generate_private_state

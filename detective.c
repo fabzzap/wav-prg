@@ -20,7 +20,7 @@ static const struct wav2prg_plugin_conf turbotape =
   2,
   detective_thresholds,
   detective_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,
   2,
   sizeof(detective_pilot_sequence),
   detective_pilot_sequence,
@@ -52,3 +52,4 @@ PLUGIN_ENTRY(detective)
 {
   register_loader_func(&detective_functions, "Detective");
 }
+

@@ -20,7 +20,7 @@ static const struct wav2prg_plugin_conf freeload =
   2,
   freeload_thresholds,
   freeload_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,
   64,
   sizeof(freeload_pilot_sequence),
   freeload_pilot_sequence,

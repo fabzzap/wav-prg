@@ -29,11 +29,11 @@ static const struct wav2prg_plugin_conf pavlodapenetrator =
   3,
   pavlodapenetrator_thresholds,
   pavlodapenetrator_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,/*ignored, get_sync overridden*/
   0x08,
   sizeof(pavlodapenetrator_pilot_sequence),
   pavlodapenetrator_pilot_sequence,
-  0,
+  256,
   first_to_last,
   &pavlodapenetrator_generate_private_state
 };
@@ -118,14 +118,14 @@ static enum wav2prg_bool pavlodapenetrator_get_sync_byte(struct wav2prg_context*
       *byte = (*byte << 1) | bit;
       if (*byte == 0x3f)
         state->bit_status = status_2;
-    }while(*byte != conf->byte_sync.pilot_byte);
+    }while(*byte != conf->pilot_byte);
     num_of_pilot_bytes_found = 0;
     do{
       num_of_pilot_bytes_found++;
       if(functions->get_byte_func(context, functions, conf, byte) == wav2prg_false)
         return wav2prg_false;
-    } while (*byte == conf->byte_sync.pilot_byte);
-  } while (num_of_pilot_bytes_found < 256);
+    } while (*byte == conf->pilot_byte);
+  } while (num_of_pilot_bytes_found < conf->min_pilots);
   return wav2prg_true;
 };
 

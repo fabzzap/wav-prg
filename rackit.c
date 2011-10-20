@@ -27,7 +27,7 @@ static const struct wav2prg_plugin_conf rackit =
   2,
   rackit_thresholds,
   rackit_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,
   0x25,
   sizeof(rackit_pilot_sequence),
   rackit_pilot_sequence,
@@ -167,8 +167,8 @@ static enum wav2prg_bool is_rackit(struct wav2prg_plugin_conf* conf, const struc
         continue;
       }
 
-      conf->byte_sync.pilot_byte        = block->data[i+ 1] ^ xor_byte;
-      conf->byte_sync.pilot_sequence[0] = block->data[i+23] ^ xor_byte;
+      conf->pilot_byte       = block->data[i+ 1] ^ xor_byte;
+      conf->sync_sequence[0] = block->data[i+23] ^ xor_byte;
       return wav2prg_true;
     }
   }

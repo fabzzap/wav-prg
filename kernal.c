@@ -22,8 +22,8 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
   3,
   kernal_thresholds,
   kernal_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+  0,/*ignored, overriding get_sync_byte*/
   9,
   kernal_1stcopy_pilot_sequence,
   0,
@@ -38,8 +38,8 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_second_copy =
   3,
   kernal_thresholds,
   kernal_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+  0,/*ignored, overriding get_sync_byte*/
   9,
   kernal_2ndcopy_pilot_sequence,
   0,
@@ -54,8 +54,8 @@ static const struct wav2prg_plugin_conf kernal_datachunk_first_copy =
   3,
   kernal_thresholds,
   kernal_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+  0,/*ignored, overriding get_sync_byte*/
   9,
   kernal_1stcopy_pilot_sequence,
   0,
@@ -70,8 +70,8 @@ static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
   3,
   kernal_thresholds,
   kernal_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+  0,/*ignored, overriding get_sync_byte*/
   9,
   kernal_2ndcopy_pilot_sequence,
   0,
@@ -86,8 +86,8 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_16_first_copy =
   3,
   kernal_c16_thresholds,
   kernal_c16_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+  0,/*ignored, overriding get_sync_byte*/
   9,
   kernal_1stcopy_pilot_sequence,
   0,
@@ -102,8 +102,8 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_16_second_copy =
   3,
   kernal_c16_thresholds,
   kernal_c16_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+  0,/*ignored, overriding get_sync_byte*/
   9,
   kernal_2ndcopy_pilot_sequence,
   0,
@@ -118,8 +118,8 @@ static const struct wav2prg_plugin_conf kernal_datachunk_16_first_copy =
   3,
   kernal_c16_thresholds,
   kernal_c16_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+  0,/*ignored, overriding get_sync_byte*/
   9,
   kernal_1stcopy_pilot_sequence,
   0,
@@ -134,8 +134,8 @@ static const struct wav2prg_plugin_conf kernal_datachunk_16_second_copy =
   3,
   kernal_c16_thresholds,
   kernal_c16_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,/*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+  0,/*ignored, overriding get_sync_byte*/
   9,
   kernal_2ndcopy_pilot_sequence,
   0,

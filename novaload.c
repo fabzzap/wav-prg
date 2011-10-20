@@ -11,8 +11,8 @@ const struct wav2prg_plugin_conf novaload_conf =
   sizeof(novaload_ideal_pulse_lengths)/sizeof(*novaload_ideal_pulse_lengths),
   novaload_thresholds,
   novaload_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  0,                 /*ignored, overriding get_first_sync*/
+  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_*/
+  0,/*ignored, overriding get_sync*/
   sizeof(novaload_pilot_sequence),
   novaload_pilot_sequence,
   0,
@@ -20,7 +20,7 @@ const struct wav2prg_plugin_conf novaload_conf =
   NULL
 };
 
-enum wav2prg_bool novaload_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+enum wav2prg_bool novaload_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t shift_reg = 0xFF;
   uint8_t bit;
@@ -31,7 +31,7 @@ enum wav2prg_bool novaload_get_first_sync(struct wav2prg_context* context, const
     old_shift_reg_lsb = shift_reg & 1;
     shift_reg = (shift_reg >> 1) | (bit << 7);
   }while((!bit) || old_shift_reg_lsb);
-  return functions->get_byte_func(context, functions, conf, byte);
+  return wav2prg_true;
 }
 
 enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
@@ -96,8 +96,8 @@ static const struct wav2prg_plugin_functions novaload_functions =
 {
   NULL,
   NULL,
-  NULL,
   novaload_get_first_sync,
+  NULL,
   novaload_get_block_info,
   novaload_get_block,
   novaload_get_new_state,

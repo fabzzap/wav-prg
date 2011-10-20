@@ -14,8 +14,9 @@ enum wav2prg_checksum {
 };
 
 enum wav2prg_findpilot_type {
-  wav2prg_synconbit,
-  wav2prg_synconbyte
+  wav2prg_pilot_tone_with_shift_register,
+  wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
+  wav2prg_pilot_tone_made_of_0_bits_followed_by_1
 };
 
 enum wav2prg_block_filling {
@@ -107,14 +108,9 @@ struct wav2prg_plugin_conf {
   uint16_t *thresholds;
   uint16_t *ideal_pulse_lengths;
   enum wav2prg_findpilot_type findpilot_type;
-  union{
-    struct{
-      uint8_t pilot_byte;
-      uint8_t len_of_pilot_sequence;
-      uint8_t *pilot_sequence;
-    } byte_sync;
-    uint8_t bit_sync;
-  };
+  uint8_t pilot_byte;
+  uint8_t len_of_sync_sequence;
+  uint8_t *sync_sequence;
   uint32_t min_pilots;
   enum wav2prg_block_filling filling;
   void* private_state;

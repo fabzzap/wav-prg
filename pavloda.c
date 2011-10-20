@@ -31,7 +31,7 @@ static const struct wav2prg_plugin_conf pavloda =
   3,
   pavloda_thresholds,
   pavloda_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,/*ignored, get_sync overridden*/
   0x01,
   sizeof(pavloda_pilot_sequence),
   pavloda_pilot_sequence,
@@ -123,27 +123,25 @@ static enum wav2prg_bool pavloda_get_bit(struct wav2prg_context* context, const 
 }
 
 /* Almost a copy-paste of get_sync_byte_using_shift_register */
-static enum wav2prg_bool pavloda_get_sync_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
+static enum wav2prg_bool pavloda_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct pavloda_private_state* state = (struct pavloda_private_state*)conf->private_state;
   uint32_t num_of_pilot_bits_found = 0, old_num_of_pilot_bits_found;
+  uint8_t byte = 0;
 
-  *byte = 0;
   do{
     uint8_t bit;
     enum wav2prg_bool res = pavloda_get_bit(context, functions, conf, &bit);
     if (res == wav2prg_false)
       return wav2prg_false;
-    *byte = (*byte << 1) | bit;
-    if (*byte == 0xff){
-      *byte = (*byte << 1);
+    byte = (byte << 1) | bit;
+    if (byte == 0xff){
+      byte = (byte << 1);
       state->bit_status = next_is_0;
     }
     old_num_of_pilot_bits_found = num_of_pilot_bits_found;
-    num_of_pilot_bits_found = (*byte) == 0 ? num_of_pilot_bits_found + 1 : 0;
-  }while(num_of_pilot_bits_found > 0 || old_num_of_pilot_bits_found < conf->min_pilots || *byte != conf->byte_sync.pilot_byte);
-  if(functions->get_byte_func(context, functions, conf, byte) == wav2prg_false)
-    return wav2prg_false;
+    num_of_pilot_bits_found = (byte) == 0 ? num_of_pilot_bits_found + 1 : 0;
+  }while(num_of_pilot_bits_found > 0 || old_num_of_pilot_bits_found < conf->min_pilots || byte != conf->pilot_byte);
   return wav2prg_true;
 };
 
@@ -194,8 +192,8 @@ static const struct wav2prg_plugin_functions pavloda_functions =
 {
   pavloda_get_bit,
   NULL,
+  pavloda_get_sync,
   NULL,
-  pavloda_get_sync_byte,
   pavloda_get_block_info,
   pavloda_get_block,
   pavloda_get_new_state,

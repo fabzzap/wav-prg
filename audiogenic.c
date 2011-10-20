@@ -65,7 +65,7 @@ static const struct wav2prg_plugin_conf audiogenic =
   2,
   audiogenic_thresholds,
   audiogenic_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,
   240,
   sizeof(audiogenic_pilot_sequence),
   audiogenic_pilot_sequence,
@@ -84,10 +84,10 @@ static const struct wav2prg_plugin_conf specialagent =
   3,
   specialagent_thresholds,
   specialagent_ideal_pulse_lengths,
-  wav2prg_synconbyte,
-  240,                              /*ignored, default get_sync unused*/
-  sizeof(audiogenic_pilot_sequence),/*ignored, default get_sync unused*/
-  audiogenic_pilot_sequence,        /*ignored, default get_sync unused*/
+  wav2prg_pilot_tone_with_shift_register,
+  0,                              /*ignored, default get_sync unused*/
+  0,
+  NULL,
   0,                                /*ignored, default get_sync unused*/
   first_to_last,
   &audiogenic_specialagent_generate_private_state

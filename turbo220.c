@@ -16,14 +16,14 @@ static uint16_t turbo220_thresholds[]={263};
 static uint16_t turbo220_ideal_pulse_lengths[]={224, 336};
 static uint8_t turbo220_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
-static const struct wav2prg_plugin_conf turbotape =
+static const struct wav2prg_plugin_conf turbo220 =
 {
   msbf,
   wav2prg_no_checksum,
   2,
   turbo220_thresholds,
   turbo220_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,
   2,
   sizeof(turbo220_pilot_sequence),
   turbo220_pilot_sequence,
@@ -34,7 +34,7 @@ static const struct wav2prg_plugin_conf turbotape =
 
 static const struct wav2prg_plugin_conf* turbo220_get_state(void)
 {
-  return &turbotape;
+  return &turbo220;
 }
 
 static const struct wav2prg_plugin_functions turbo220_functions = {
@@ -55,3 +55,4 @@ PLUGIN_ENTRY(turbo220)
 {
   register_loader_func(&turbo220_functions, "Turbo 220");
 }
+

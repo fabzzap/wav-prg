@@ -36,7 +36,7 @@ static const struct wav2prg_plugin_conf turbotape =
   2,
   turbotape_thresholds,
   turbotape_ideal_pulse_lengths,
-  wav2prg_synconbyte,
+  wav2prg_pilot_tone_with_shift_register,
   2,
   sizeof(turbotape_pilot_sequence),
   turbotape_pilot_sequence,
