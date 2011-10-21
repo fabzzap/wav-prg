@@ -257,12 +257,13 @@ static enum wav2prg_bool get_sync_using_pilot_and_sync_sequence(struct wav2prg_c
 
 static enum wav2prg_bool get_sync_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  enum wav2prg_bool res = wav2prg_true;
+  enum wav2prg_bool res = 
+    (conf->findpilot_type == wav2prg_pilot_tone_made_of_1_bits_followed_by_0
+      || conf->findpilot_type == wav2prg_pilot_tone_made_of_0_bits_followed_by_1)
+    ? sync_to_bit(context, functions, conf,
+      conf->findpilot_type == wav2prg_pilot_tone_made_of_1_bits_followed_by_0 ? 0 : 1)
+    : wav2prg_true;
 
-  if (conf->findpilot_type == wav2prg_pilot_tone_made_of_1_bits_followed_by_0
-   || conf->findpilot_type == wav2prg_pilot_tone_made_of_0_bits_followed_by_1)
-    res = sync_to_bit(context, functions, conf,
-      conf->findpilot_type == wav2prg_pilot_tone_made_of_1_bits_followed_by_0 ? 0 : 1);
   if (res == wav2prg_false)
     return wav2prg_false;
   if (conf->len_of_sync_sequence > 0)
