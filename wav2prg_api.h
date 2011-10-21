@@ -16,7 +16,8 @@ enum wav2prg_checksum {
 enum wav2prg_findpilot_type {
   wav2prg_pilot_tone_with_shift_register,
   wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
-  wav2prg_pilot_tone_made_of_0_bits_followed_by_1
+  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
+  wav2prg_custom_pilot_tone
 };
 
 enum wav2prg_block_filling {
@@ -40,7 +41,6 @@ typedef enum wav2prg_bool (*wav2prg_get_word_func)(struct wav2prg_context*, cons
 typedef enum wav2prg_bool (*wav2prg_get_word_bigendian_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
 typedef enum wav2prg_bool (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_raw_block*, uint16_t);
 typedef enum wav2prg_bool (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
-typedef enum wav2prg_bool (*wav2prg_get_sync_byte)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_block_info*);
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef enum wav2prg_bool (*wav2prg_get_loaded_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
@@ -91,7 +91,7 @@ struct wav2prg_plugin_functions {
   wav2prg_get_bit_func get_bit_func;
   wav2prg_get_byte_func get_byte_func;
   wav2prg_get_sync get_sync;
-  wav2prg_get_sync_byte get_sync_byte;
+  wav2prg_get_byte_func get_first_byte_of_sync_sequence;
   wav2prg_get_block_info get_block_info;
   wav2prg_get_block_func get_block_func;
   wav2prg_get_new_plugin_state get_new_plugin_state;
