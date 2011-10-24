@@ -4,7 +4,7 @@ static uint16_t pavlodaold_thresholds[]={0x14A};
 static uint16_t pavlodaold_ideal_pulse_lengths[]={248, 504};
 static uint8_t pavlodaold_pilot_sequence[]={0x55};
 
-struct pavloda_private_state {
+struct pavlodaold_private_state {
   enum{
     dont_be_tolerant,
     be_tolerant,
@@ -12,7 +12,7 @@ struct pavloda_private_state {
   } tolerance;
 };
 
-static const struct pavloda_private_state pavloda_private_state_model = {
+static const struct pavlodaold_private_state pavloda_private_state_model = {
   dont_be_tolerant
 };
 static struct wav2prg_generate_private_state pavloda_generate_private_state = {
@@ -55,7 +55,7 @@ static const struct wav2prg_plugin_conf* pavlodaold_get_new_state(void) {
 
 static enum wav2prg_bool pavlodaold_get_bit(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit) {
   uint8_t pulse;
-  struct pavloda_private_state *state = (struct pavloda_private_state *)conf->private_state;
+  struct pavlodaold_private_state *state = (struct pavlodaold_private_state *)conf->private_state;
 
   if(state->tolerance == already_been_tolerant_enough_is_enough)
     return wav2prg_false;
@@ -81,17 +81,16 @@ static enum wav2prg_bool pavlodaold_get_bit(struct wav2prg_context* context, con
   return wav2prg_true;
 }
 
-enum wav2prg_bool pavlodaold_get_loaded_checksum(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte){
-/* In Pavloda Old, it is very common that the last 0 bit of the checksum is corrupted.
-   So, while loading the checksum, tolerate 1 wrong pulse, but no more */
-  struct pavloda_private_state *state = (struct pavloda_private_state *)conf->private_state;
+static enum wav2prg_bool pavlodaold_get_block_func(struct wav2prg_context *context, const struct wav2prg_functions *functions, struct wav2prg_plugin_conf *conf, struct wav2prg_raw_block *block, uint16_t len)
+{
+  struct pavlodaold_private_state *state = (struct pavlodaold_private_state *)conf->private_state;
   enum wav2prg_bool result;
 
-  state->tolerance = be_tolerant;
-  result = functions->get_loaded_checksum_func(context, functions, conf, byte);
   state->tolerance = dont_be_tolerant;
+  result = functions->get_block_func(context, functions, conf, block, len);
+  state->tolerance = be_tolerant;
 
-  return wav2prg_true;
+  return result;
 }
 
 static const struct wav2prg_plugin_functions pavlodaold_functions =
@@ -101,10 +100,9 @@ static const struct wav2prg_plugin_functions pavlodaold_functions =
   NULL,
   NULL,
   pavlodaold_get_block_info,
-  NULL,
+  pavlodaold_get_block_func,
   pavlodaold_get_new_state,
   pavlodaold_compute_checksum_step,
-  pavlodaold_get_loaded_checksum,
   NULL
 };
 
