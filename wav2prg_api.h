@@ -68,7 +68,6 @@ struct wav2prg_functions {
   wav2prg_get_word_bigendian_func get_word_bigendian_func;
   wav2prg_get_block_func get_block_func;
   wav2prg_check_checksum check_checksum_func;
-  wav2prg_get_loaded_checksum get_loaded_checksum_func;
   wav2prg_reset_checksum_to reset_checksum_to_func;
   wav2prg_reset_checksum reset_checksum_func;
   wav2prg_number_to_name number_to_name_func;

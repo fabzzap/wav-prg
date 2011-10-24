@@ -23,6 +23,7 @@ struct wav2prg_context {
   wav2prg_get_byte_func get_first_byte_of_sync_sequence;
   wav2prg_postprocess_data_byte postprocess_data_byte_func;
   wav2prg_compute_checksum_step compute_checksum_step;
+  wav2prg_get_loaded_checksum get_loaded_checksum_func;
   struct wav2prg_functions subclassed_functions;
   enum wav2prg_tolerance_type userdefined_tolerance_type;
   enum wav2prg_tolerance_type current_tolerance_type;
@@ -257,18 +258,17 @@ static enum wav2prg_bool get_sync_using_pilot_and_sync_sequence(struct wav2prg_c
 
 static enum wav2prg_bool get_sync_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  enum wav2prg_bool res = 
-    (conf->findpilot_type == wav2prg_pilot_tone_made_of_1_bits_followed_by_0
+  if ((conf->findpilot_type == wav2prg_pilot_tone_made_of_1_bits_followed_by_0
       || conf->findpilot_type == wav2prg_pilot_tone_made_of_0_bits_followed_by_1)
-    ? sync_to_bit(context, functions, conf,
+    && (sync_to_bit(context, functions, conf,
       conf->findpilot_type == wav2prg_pilot_tone_made_of_1_bits_followed_by_0 ? 0 : 1)
-    : wav2prg_true;
-
-  if (res == wav2prg_false)
+      == wav2prg_false)
+     )
     return wav2prg_false;
-  if (conf->len_of_sync_sequence > 0)
-    res = get_sync_using_pilot_and_sync_sequence(context, functions, conf);
-  return res;
+  if (conf->len_of_sync_sequence == 0)
+    return wav2prg_true;
+
+  return get_sync_using_pilot_and_sync_sequence(context, functions, conf);
 }
 
 static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, enum wav2prg_bool insist)
@@ -316,7 +316,7 @@ static enum wav2prg_checksum_state check_checksum_default(struct wav2prg_context
   if (conf->checksum_type == wav2prg_no_checksum)
     return wav2prg_checksum_state_unverified;
 
-  if (context->subclassed_functions.get_loaded_checksum_func(context, functions, conf, &loaded_checksum) == wav2prg_false)
+  if (context->get_loaded_checksum_func(context, functions, conf, &loaded_checksum) == wav2prg_false)
     return wav2prg_checksum_state_unverified;
 
   end_pos = context->input->get_pos(context->input_object);
@@ -433,7 +433,7 @@ static const struct wav2prg_plugin_functions* get_plugin_functions(const char* l
     plugin_functions->get_byte_func            ? plugin_functions->get_byte_func            : get_byte_default;
   context->subclassed_functions.get_block_func =
     plugin_functions->get_block_func           ? plugin_functions->get_block_func           : get_block_default;
-  context->subclassed_functions.get_loaded_checksum_func =
+  context->get_loaded_checksum_func =
     plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default;
   context->postprocess_data_byte_func = plugin_functions->postprocess_data_byte_func;
   context->compute_checksum_step =
@@ -559,6 +559,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     NULL,
     NULL,
     NULL,
+    NULL,
     {
       NULL,
       get_sync_insist,
@@ -571,7 +572,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       get_word_bigendian_default,
       NULL,
       check_checksum_default,
-      NULL,
       reset_checksum_to,
       reset_checksum,
       number_to_name,
@@ -607,7 +607,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     get_word_bigendian_default,
     get_block_default,
     check_checksum_default,
-    get_loaded_checksum_default,
     reset_checksum_to,
     reset_checksum,
     number_to_name,
