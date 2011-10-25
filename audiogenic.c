@@ -129,19 +129,20 @@ static enum wav2prg_bool audiogenic_specialagent_get_block(struct wav2prg_contex
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
   uint8_t received_blocks = 0;
   uint8_t num_of_blocks = block_size / 256; /* it is always a multiple */
+  enum wav2prg_bool new_block_is_consecutive;
 
   do{
     uint8_t new_block;
-    enum wav2prg_bool new_block_is_consecutive;
 
     functions->reset_checksum_func(context);
     if (!functions->get_block_func(context, functions, conf, block, 256))
       return wav2prg_false;
-    received_blocks++;
     state->checksum_state = checksum_state_loading_checksum;
     if(functions->check_checksum_func(context, functions, conf) != wav2prg_checksum_state_correct)
       return wav2prg_false;
     state->state = audiogenic_not_synced;
+    if (++received_blocks == num_of_blocks)
+      break;
     if (!check_if_block_valid(state->last_block_loaded, state))
       break;
     if (!functions->get_sync_insist(context, functions, conf))
@@ -153,9 +154,7 @@ static enum wav2prg_bool audiogenic_specialagent_get_block(struct wav2prg_contex
     state->state = audiogenic_synced;
     new_block_is_consecutive = new_block == state->last_block_loaded + 1;
     state->last_block_loaded = new_block;
-    if (!new_block_is_consecutive)
-      break;
-  }while(received_blocks != num_of_blocks);
+  }while(new_block_is_consecutive);
   state->checksum_state = checksum_state_switching_blocks;
   return wav2prg_true;
 }
