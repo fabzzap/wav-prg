@@ -434,7 +434,8 @@ static enum wav2prg_bool allocate_info_and_recognize(struct wav2prg_plugin_conf*
                                                     enum wav2prg_bool *no_gaps_allowed,
                                                     struct wav2prg_block_info **info,
                                                     wav2prg_recognize_block recognize_func,
-                                                    enum wav2prg_bool *try_further_recognitions_using_same_block){
+                                                    enum wav2prg_bool *try_further_recognitions_using_same_block,
+                                                    wav2prg_change_thresholds change_thresholds_func){
   enum wav2prg_bool result;
 
   *try_further_recognitions_using_same_block = wav2prg_false;
@@ -442,7 +443,7 @@ static enum wav2prg_bool allocate_info_and_recognize(struct wav2prg_plugin_conf*
   (*info)->start = (*info)->end = 0xFFFF;
   memcpy(&(*info)->name, block->info.name, sizeof(block->info.name));
   *no_gaps_allowed = wav2prg_false;
-  result = recognize_func(conf, block, *info, no_gaps_allowed, try_further_recognitions_using_same_block);
+  result = recognize_func(conf, block, *info, no_gaps_allowed, try_further_recognitions_using_same_block, change_thresholds_func);
   if (!result || ((*info)->end > 0 && (*info)->end <= (*info)->start)){
     free(*info);
     *info = NULL;
@@ -456,7 +457,8 @@ static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
                                                    struct wav2prg_block *block,
                                                    enum wav2prg_bool *no_gaps_allowed,
                                                    struct wav2prg_block_info **info,
-                                                   wav2prg_recognize_block *recognize_func
+                                                   wav2prg_recognize_block *recognize_func,
+                                                   wav2prg_change_thresholds change_thresholds_func
                                                   )
 {
   struct wav2prg_observed_loaders* observers = get_observers(current_loader), *current_observer;
@@ -467,7 +469,7 @@ static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
 
     if(strcmp(current_loader, current_observer->loader))
       *conf = wav2prg_get_loader_with_private_state(current_observer->loader);
-    result = allocate_info_and_recognize(*conf, block, no_gaps_allowed, info, current_observer->recognize_func, &try_further_recognitions_using_same_block);
+    result = allocate_info_and_recognize(*conf, block, no_gaps_allowed, info, current_observer->recognize_func, &try_further_recognitions_using_same_block, change_thresholds_func);
     if (result){
       *new_loader = current_observer->loader;
       if(try_further_recognitions_using_same_block)
@@ -503,6 +505,30 @@ static void adapt_tolerances(const struct wav2prg_tolerance* strict, struct wav2
       adaptive[i + 1].less_than_ideal +=  overlap      / 2;
       adaptive[i    ].more_than_ideal += (overlap + 1) / 2;
     }
+  }
+}
+
+static void change_thresholds(struct wav2prg_plugin_conf* conf,
+                              uint8_t num_of_thresholds,
+                              uint16_t *thresholds)
+{
+  uint8_t i;
+
+  conf->num_pulse_lengths = num_of_thresholds + 1;
+  conf->thresholds = realloc(conf->thresholds, num_of_thresholds * sizeof(uint16_t));
+  memcpy(conf->thresholds, thresholds, num_of_thresholds * sizeof(uint16_t));
+  conf->ideal_pulse_lengths = realloc(conf->ideal_pulse_lengths, conf->num_pulse_lengths * sizeof(uint16_t));
+
+  for(i = 1; i < num_of_thresholds; i++)
+    conf->ideal_pulse_lengths[i] =
+      conf->thresholds[i - 1] / 2 + conf->thresholds[i] / 2;
+  if (num_of_thresholds > 1){
+    conf->ideal_pulse_lengths[0] = 2 * conf->thresholds[0] - conf->ideal_pulse_lengths[1];
+    conf->ideal_pulse_lengths[num_of_thresholds] = 2 * conf->thresholds[num_of_thresholds - 1] - conf->ideal_pulse_lengths[num_of_thresholds - 1];
+  }
+  else {
+    conf->ideal_pulse_lengths[0] = (uint16_t)(conf->thresholds[0] * 0.75);
+    conf->ideal_pulse_lengths[1] = (uint16_t)(conf->thresholds[0] * 1.25);
   }
 }
 
@@ -764,7 +790,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                          &block->block,
                                          &no_gaps_allowed,
                                          &recognized_info,
-                                         &new_recognize_func);
+                                         &new_recognize_func,
+                                         change_thresholds);
       if(found_dependent_plugin) {
         loader_name = new_loader;
         /* a loader observing loader_name
@@ -784,7 +811,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         /* check if the loader just used can be used again */
         enum wav2prg_bool dummy;
 
-        found_dependent_plugin = allocate_info_and_recognize(conf, &block->block, &no_gaps_allowed, &recognized_info, recognize_func, &dummy);
+        found_dependent_plugin = allocate_info_and_recognize(conf, &block->block, &no_gaps_allowed, &recognized_info, recognize_func, &dummy, change_thresholds);
         if(!found_dependent_plugin) {
           free(comparison_block);
           comparison_block = NULL;

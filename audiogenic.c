@@ -149,8 +149,10 @@ static enum wav2prg_bool audiogenic_specialagent_get_block(struct wav2prg_contex
       return wav2prg_false;
     if (!functions->get_byte_func(context, functions, conf, &new_block))
       return wav2prg_false;
-    if (!check_if_block_valid(new_block, state))
+    if (!check_if_block_valid(new_block, state)){
+      state->last_block_loaded = new_block;
       break;
+    }
     state->state = audiogenic_synced;
     new_block_is_consecutive = new_block == state->last_block_loaded + 1;
     state->last_block_loaded = new_block;
@@ -185,10 +187,83 @@ static const struct wav2prg_plugin_conf* specialagent_get_new_state(void) {
   return &specialagent;
 }
 
-static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
+static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block, wav2prg_change_thresholds change_thresholds_func){
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
 
-  return state->state == audiogenic_synced;
+  return state->state == audiogenic_synced
+  || (state->last_block_loaded != 0
+   && (state->last_block_loaded != 2 || !state->two_is_an_empty_block)
+     );
+}
+
+static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block, wav2prg_change_thresholds change_thresholds_func){
+  struct{
+    enum wav2prg_bool register_filled;
+    uint8_t value;
+  } dd04_7[4] ={{wav2prg_false, 0},{wav2prg_false, 0},{wav2prg_false, 0},{wav2prg_false, 0}};
+  const int LDA= 0xA9, LDX=0xA2, STA=0x8D, STX=0x8E;
+  uint16_t i = 0x35b - 0x33c;
+  enum wav2prg_bool a_initialized = wav2prg_false, x_initialized = wav2prg_false;
+  uint8_t a_value, x_value;
+
+  if (block->info.start != 828 || block->info.end != 1020
+    || block->data[0] != 3
+    || block->data[1] != 0xa7
+    || block->data[2] != 2
+    || block->data[3] != 0x14
+    || block->data[4] != 3
+  )
+    return wav2prg_false;
+  do{
+    if (block->data[i] == LDA){
+      a_initialized = wav2prg_true;
+      a_value = block->data[i + 1];
+      i = i + 2;
+      continue;
+    }
+    if (block->data[i] == LDX){
+      x_initialized = wav2prg_true;
+      x_value = block->data[i + 1];
+      i = i + 2;
+      continue;
+    }
+    if (block->data[i] == STA
+     && block->data[i + 1] >= 4
+     && block->data[i + 1] <= 7
+     && block->data[i + 2] == 0xdd
+     && a_initialized
+    ){
+      dd04_7[block->data[i + 1] - 4].register_filled = wav2prg_true;
+      dd04_7[block->data[i + 1] - 4].value = a_value;
+      i = i + 3;
+      continue;
+    }
+    if (block->data[i] == STX
+     && block->data[i + 1] >= 4
+     && block->data[i + 1] <= 7
+     && block->data[i + 2] == 0xdd
+     && x_initialized
+    ){
+      dd04_7[block->data[i + 1] - 4].register_filled = wav2prg_true;
+      dd04_7[block->data[i + 1] - 4].value = x_value;
+      i = i + 3;
+      continue;
+    }
+    i = i+1;
+  }while(i<=1017-828);
+  if(dd04_7[0].register_filled == wav2prg_true
+  && dd04_7[1].register_filled == wav2prg_true
+  && dd04_7[2].register_filled == wav2prg_true
+  && dd04_7[3].register_filled == wav2prg_true
+  ){
+    uint16_t thresholds[2] = {
+      dd04_7[0].value + (dd04_7[1].value << 8),
+      dd04_7[2].value + (dd04_7[3].value << 8)
+    };
+    change_thresholds_func(conf, 2, thresholds);
+    return wav2prg_true;
+  }
+  return wav2prg_false;
 }
 
 static const struct wav2prg_observed_loaders audiogenic_observed_loaders[] = {
@@ -202,6 +277,7 @@ static const struct wav2prg_observed_loaders* audiogenic_get_observed_loaders(vo
 
 static const struct wav2prg_observed_loaders specialagent_observed_loaders[] = {
   {"Special Agent/Strike Force Cobra", recognize_itself},
+  {"khc",recognize_hc},
   {NULL,NULL}
 };
 

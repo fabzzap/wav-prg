@@ -67,7 +67,7 @@ static uint8_t wildsave_postprocess_data_byte(struct wav2prg_plugin_conf *conf, 
   return byte ^ location;
 }
 
-static enum wav2prg_bool keep_doing_wildsave(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
+static enum wav2prg_bool keep_doing_wildsave(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block, wav2prg_change_thresholds change_thresholds_func){
   return wav2prg_true;
 }
 
