@@ -8,6 +8,7 @@
 
 #include <malloc.h>
 #include <string.h>
+#include <limits.h>
 
 struct wav2prg_raw_block {
   uint16_t location_of_first_byte;
@@ -27,7 +28,8 @@ struct wav2prg_context {
   struct wav2prg_functions subclassed_functions;
   enum wav2prg_tolerance_type userdefined_tolerance_type;
   enum wav2prg_tolerance_type current_tolerance_type;
-  struct wav2prg_tolerance* strict_tolerances;
+  struct wav2prg_tolerance *strict_tolerances;
+  struct wav2prg_oscillation *measured_oscillation;
   uint8_t checksum;
   struct wav2prg_raw_block raw_block;
   struct block_list_element *blocks;
@@ -47,7 +49,7 @@ static enum wav2prg_bool get_pulse(struct wav2prg_context* context, struct wav2p
   switch(context->current_tolerance_type){
   case wav2prg_tolerant           : return get_pulse_tolerant           (raw_pulse, conf, pulse);
   case wav2prg_adaptively_tolerant: return get_pulse_adaptively_tolerant(raw_pulse, (*context->current_block)->adaptive_tolerances, conf, pulse);
-  case wav2prg_intolerant         : return get_pulse_intolerant         (raw_pulse, context->strict_tolerances, conf, pulse);
+  case wav2prg_intolerant         : return get_pulse_intolerant         (raw_pulse, context->strict_tolerances, context->measured_oscillation, conf, pulse);
   }
 }
 
@@ -282,6 +284,13 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
   context->current_tolerance_type = wav2prg_intolerant;
   do{
     uint32_t pos;
+    int i;
+
+    for(i = 0; i < conf->num_pulse_lengths; i++){
+      context->measured_oscillation[i].min_oscillation = SHRT_MAX;
+      context->measured_oscillation[i].max_oscillation = SHRT_MIN;
+    }
+
 
     if(context->input->is_eof(context->input_object))
       break;
@@ -570,6 +579,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     tolerance_type,
     tolerance_type,
     NULL,
+    NULL,
     0,
     {
       0,
@@ -646,6 +656,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     if(context.strict_tolerances == NULL) {
       int i;
       context.strict_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths);
+      context.measured_oscillation = calloc(1, sizeof(struct wav2prg_oscillation) * conf->num_pulse_lengths);
       for(i = 0; i < conf->num_pulse_lengths - 1; i++){
         context.strict_tolerances[i].more_than_ideal =
           context.strict_tolerances[i + 1].less_than_ideal =

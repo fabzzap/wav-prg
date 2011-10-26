@@ -12,6 +12,11 @@ struct wav2prg_tolerance {
   uint16_t more_than_ideal;
 };
 
+struct wav2prg_oscillation {
+  int16_t min_oscillation;
+  int16_t max_oscillation;
+};
+
 struct wav2prg_plugin_conf;
 
 struct block_list_element {

@@ -51,12 +51,20 @@ enum wav2prg_bool get_pulse_adaptively_tolerant(uint32_t raw_pulse, struct wav2p
   return wav2prg_false;
 }
 
-enum wav2prg_bool get_pulse_intolerant(uint32_t raw_pulse, struct wav2prg_tolerance *strict_tolerances, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
+enum wav2prg_bool get_pulse_intolerant(uint32_t raw_pulse, struct wav2prg_tolerance *strict_tolerances, struct wav2prg_oscillation *measured_oscillation, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
 {
   for(*pulse = 0; *pulse < conf->num_pulse_lengths; (*pulse)++){
-    if (raw_pulse > conf->ideal_pulse_lengths[*pulse] - strict_tolerances[*pulse].less_than_ideal
-      && raw_pulse < conf->ideal_pulse_lengths[*pulse] + strict_tolerances[*pulse].more_than_ideal)
+    int32_t distance_from_ideal = raw_pulse - conf->ideal_pulse_lengths[*pulse];
+    if (strict_tolerances[*pulse].less_than_ideal > -distance_from_ideal
+      && distance_from_ideal < strict_tolerances[*pulse].more_than_ideal){
+      if(measured_oscillation){
+        if(measured_oscillation[*pulse].min_oscillation > distance_from_ideal)
+          measured_oscillation[*pulse].min_oscillation = distance_from_ideal;
+        if(measured_oscillation[*pulse].max_oscillation < distance_from_ideal)
+          measured_oscillation[*pulse].max_oscillation = distance_from_ideal;
+      }
       return wav2prg_true;
+    }
   }
   return wav2prg_false;
 }

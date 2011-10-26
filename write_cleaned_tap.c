@@ -34,6 +34,7 @@ void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_o
       uint8_t pulse;
       if (!get_pulse_intolerant(raw_pulse,
                                 current_block->adaptive_tolerances,
+                                NULL,
                                 current_block->conf,
                                 &pulse)
          )
