@@ -541,6 +541,49 @@ static void change_thresholds(struct wav2prg_plugin_conf* conf,
   }
 }
 
+static void initialise_tolerances(struct wav2prg_context *context, struct wav2prg_plugin_conf *conf)
+{
+  int i;
+  context->strict_tolerances = malloc(sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths);
+  context->measured_oscillation = malloc(sizeof(struct wav2prg_oscillation) * conf->num_pulse_lengths);
+  for(i = 0; i < conf->num_pulse_lengths - 1; i++){
+    context->strict_tolerances[i].more_than_ideal =
+      context->strict_tolerances[i + 1].less_than_ideal =
+      (uint16_t)((conf->ideal_pulse_lengths[i + 1] - conf->ideal_pulse_lengths[i]) * 0.42);
+  }
+  context->strict_tolerances[0].less_than_ideal = (uint16_t)(context->strict_tolerances[0].more_than_ideal * 1.1);
+  if (context->strict_tolerances[0].less_than_ideal > conf->ideal_pulse_lengths[0])
+    context->strict_tolerances[0].less_than_ideal = conf->ideal_pulse_lengths[0];
+  context->strict_tolerances[conf->num_pulse_lengths - 1].more_than_ideal =
+    (uint16_t)(context->strict_tolerances[conf->num_pulse_lengths - 1].less_than_ideal * 1.1);
+}
+
+static enum wav2prg_bool initialise_tolerances_after_first_estimate(struct wav2prg_context *context, struct wav2prg_plugin_conf *conf)
+{
+  int i;
+  for(i = 0; i < conf->num_pulse_lengths; i++){
+    if ((context->measured_oscillation[i].max_oscillation - context->measured_oscillation[i].min_oscillation > 80)
+      ||(context->measured_oscillation[i].max_oscillation - context->measured_oscillation[i].min_oscillation <  0))
+      return wav2prg_false;
+    if (context->measured_oscillation[i].max_oscillation >  40
+      || context->measured_oscillation[i].min_oscillation < -40){
+        int32_t move_ideal_pulse_length_by =
+          context->measured_oscillation[i].max_oscillation / 2
+        + context->measured_oscillation[i].min_oscillation / 2;
+        conf->ideal_pulse_lengths[i] += move_ideal_pulse_length_by;
+        context->strict_tolerances[i].more_than_ideal = context->measured_oscillation[i].max_oscillation - move_ideal_pulse_length_by + 1;
+        context->strict_tolerances[i].less_than_ideal = move_ideal_pulse_length_by - context->measured_oscillation[i].min_oscillation + 1;
+    }
+    else{
+      context->strict_tolerances[i].more_than_ideal = 1 +
+        (context->measured_oscillation[i].max_oscillation > 0 ? context->measured_oscillation[i].max_oscillation : 0);
+      context->strict_tolerances[i].less_than_ideal = 1 -
+        (context->measured_oscillation[i].min_oscillation < 0 ? context->measured_oscillation[i].min_oscillation : 0);
+    }
+  }
+  return wav2prg_true;
+}
+
 struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance_type,
                              const char* start_loader,
                              struct wav2prg_plugin_conf* start_conf,
@@ -642,7 +685,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       plugin_functions->get_loaded_checksum_func ? plugin_functions->get_loaded_checksum_func : get_loaded_checksum_default;
     context.postprocess_data_byte_func = plugin_functions->postprocess_data_byte_func;
     context.compute_checksum_step =
-      plugin_functions->compute_checksum_step    ? plugin_functions->compute_checksum_step    :       compute_checksum_step_default;
+      plugin_functions->compute_checksum_step    ? plugin_functions->compute_checksum_step    : compute_checksum_step_default;
     context.get_first_byte_of_sync_sequence                =
       plugin_functions->get_first_byte_of_sync_sequence ? plugin_functions->get_first_byte_of_sync_sequence : get_first_byte_of_sync_sequence_default;
 
@@ -653,19 +696,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
 
     free(context.strict_tolerances);
     context.strict_tolerances = get_strict_tolerances(loader_name);
-    if(context.strict_tolerances == NULL) {
-      int i;
-      context.strict_tolerances = calloc(1, sizeof(struct wav2prg_tolerance) * conf->num_pulse_lengths);
-      context.measured_oscillation = calloc(1, sizeof(struct wav2prg_oscillation) * conf->num_pulse_lengths);
-      for(i = 0; i < conf->num_pulse_lengths - 1; i++){
-        context.strict_tolerances[i].more_than_ideal =
-          context.strict_tolerances[i + 1].less_than_ideal =
-          (uint16_t)((conf->ideal_pulse_lengths[i + 1] - conf->ideal_pulse_lengths[i]) * 0.42);
-      }
-      context.strict_tolerances[0].less_than_ideal = context.strict_tolerances[0].more_than_ideal;
-      context.strict_tolerances[conf->num_pulse_lengths - 1].more_than_ideal =
-      context.strict_tolerances[conf->num_pulse_lengths - 1].less_than_ideal;
-    }
+    if(context.strict_tolerances == NULL)
+      initialise_tolerances(&context, conf);
 
     context.display_interface->try_sync(context.display_interface_internal, loader_name);
     *context.current_block = new_block_list_element(conf->num_pulse_lengths);
@@ -685,6 +717,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         recognized_info = NULL;
         break;
       }
+      if (context.userdefined_tolerance_type == wav2prg_adaptively_tolerant)
+        initialise_tolerances_after_first_estimate(&context, conf);
       block = *context.current_block;
       block->loader_name = strdup(loader_name);
       block->conf = copy_conf(conf);
