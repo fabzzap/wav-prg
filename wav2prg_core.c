@@ -240,23 +240,22 @@ static enum wav2prg_bool sync_to_bit(struct wav2prg_context* context, const stru
 
 static enum wav2prg_bool get_sync_using_pilot_and_sync_sequence(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  uint8_t bytes_sync;
-  uint8_t byte;
+  while(1){
+    uint8_t bytes_sync = 0;
+    uint8_t byte;
 
-  if(context->get_first_byte_of_sync_sequence(context, functions, conf, &byte) == wav2prg_false)
-    return wav2prg_false;
-
-  bytes_sync = 0;
-  while(byte == conf->sync_sequence[bytes_sync])
-  {
-    if(++bytes_sync == conf->len_of_sync_sequence)
-      return wav2prg_true;
-    if(context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    if(context->get_first_byte_of_sync_sequence(context, functions, conf, &byte) == wav2prg_false)
       return wav2prg_false;
-  }
 
-  return wav2prg_false;
-};
+    while(byte == conf->sync_sequence[bytes_sync])
+    {
+      if(++bytes_sync == conf->len_of_sync_sequence)
+        return wav2prg_true;
+      if(context->subclassed_functions.get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+        return wav2prg_false;
+    }
+  }
+}
 
 static enum wav2prg_bool get_sync_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
