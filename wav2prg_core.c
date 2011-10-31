@@ -26,8 +26,7 @@ struct wav2prg_context {
   wav2prg_compute_checksum_step compute_checksum_step;
   wav2prg_get_byte_func get_loaded_checksum_func;
   struct wav2prg_functions subclassed_functions;
-  enum wav2prg_tolerance_type userdefined_tolerance_type;
-  enum wav2prg_tolerance_type current_tolerance_type;
+  enum wav2prg_tolerance_type tolerance_type;
   struct tolerances *tolerances;
   uint8_t checksum;
   struct wav2prg_raw_block raw_block;
@@ -45,7 +44,7 @@ static enum wav2prg_bool get_pulse(struct wav2prg_context* context, struct wav2p
   if (ret == wav2prg_false)
     return wav2prg_false;
 
-  switch(context->current_tolerance_type){
+  switch(context->tolerance_type){
   case wav2prg_tolerant           : return get_pulse_tolerant           (raw_pulse, conf, pulse);
   case wav2prg_adaptively_tolerant: return get_pulse_adaptively_tolerant(raw_pulse, conf->num_pulse_lengths, context->tolerances, pulse);
   }
@@ -293,7 +292,6 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].start_sync = pos;
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].end_sync   = context->input->get_pos(context->input_object);
       (*context->current_block)->num_of_syncs++;
-      context->current_tolerance_type = context->userdefined_tolerance_type;
       add_or_replace_tolerances(conf->num_pulse_lengths, conf->thresholds, context->tolerances);
       return wav2prg_true;
     }
@@ -534,7 +532,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       add_byte_to_block,
       postprocess_and_update_checksum
     },
-    tolerance_type,
     tolerance_type,
     NULL,
     0,
