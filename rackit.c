@@ -80,7 +80,7 @@ static const struct wav2prg_plugin_conf* rackit_get_new_state(void) {
   return &rackit;
 }
 
-static enum wav2prg_bool is_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block, wav2prg_change_thresholds change_thresholds_func){
+static enum wav2prg_bool is_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
   const uint8_t xor_bytes[]={0x98,0xe8,0x60,0x08,0x98,0xec,0xb4,0x04,0x08,0x24,0xe8,0xc0,
                              0x28,0x24,0x80,0xc0,0xbc,0xe0,0xa4,0xc0,0xe0,0xa4,0x40,0x80};
@@ -175,7 +175,7 @@ static enum wav2prg_bool is_rackit(struct wav2prg_plugin_conf* conf, const struc
   return wav2prg_false;
 }
 
-static enum wav2prg_bool keep_doing_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block, wav2prg_change_thresholds change_thresholds_func){
+static enum wav2prg_bool keep_doing_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
   return (block->info.start != 0xfffc || block->info.end != 0xfffe);
 }
 

@@ -187,7 +187,7 @@ static const struct wav2prg_plugin_conf* specialagent_get_new_state(void) {
   return &specialagent;
 }
 
-static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block, wav2prg_change_thresholds change_thresholds_func){
+static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
 
   return state->state == audiogenic_synced
@@ -196,7 +196,7 @@ static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, cons
      );
 }
 
-static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block, wav2prg_change_thresholds change_thresholds_func){
+static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
   struct{
     enum wav2prg_bool register_filled;
     uint8_t value;
@@ -256,11 +256,8 @@ static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const st
   && dd04_7[2].register_filled == wav2prg_true
   && dd04_7[3].register_filled == wav2prg_true
   ){
-    uint16_t thresholds[2] = {
-      dd04_7[0].value + (dd04_7[1].value << 8),
-      dd04_7[2].value + (dd04_7[3].value << 8)
-    };
-    change_thresholds_func(conf, 2, thresholds);
+    conf->thresholds[0] = dd04_7[0].value + (dd04_7[1].value << 8);
+    conf->thresholds[1] = dd04_7[2].value + (dd04_7[3].value << 8);
     return wav2prg_true;
   }
   return wav2prg_false;

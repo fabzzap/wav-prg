@@ -31,10 +31,7 @@ struct wav2prg_functions;
 struct wav2prg_plugin_conf;
 struct wav2prg_plugin_functions;
 
-typedef void              (*wav2prg_change_thresholds)(struct wav2prg_plugin_conf* conf,
-                                          uint8_t num_of_thresholds,
-                                          uint16_t *thresholds);
-typedef enum wav2prg_bool (*wav2prg_recognize_block)(struct wav2prg_plugin_conf*, const struct wav2prg_block*, struct wav2prg_block_info*, enum wav2prg_bool*, enum wav2prg_bool*, wav2prg_change_thresholds change_thresholds_func);
+typedef enum wav2prg_bool (*wav2prg_recognize_block)(struct wav2prg_plugin_conf*, const struct wav2prg_block*, struct wav2prg_block_info*, enum wav2prg_bool*, enum wav2prg_bool*);
 
 struct wav2prg_observed_loaders {
   const char* loader;
