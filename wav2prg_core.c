@@ -280,13 +280,12 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
 
   do{
     uint32_t pos;
-    int i;
 
     if(context->input->is_eof(context->input_object))
       break;
     pos = context->input->get_pos(context->input_object);
 
-    context->tolerances = get_tolerances(conf);
+    context->tolerances = get_tolerances(conf->num_pulse_lengths, conf->thresholds);
 
     res = context->subclassed_functions.get_sync(context, functions, conf);
     if (res == wav2prg_true) {
@@ -295,7 +294,7 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].end_sync   = context->input->get_pos(context->input_object);
       (*context->current_block)->num_of_syncs++;
       context->current_tolerance_type = context->userdefined_tolerance_type;
-      add_or_replace_tolerances(conf, context->tolerances);
+      add_or_replace_tolerances(conf->num_pulse_lengths, conf->thresholds, context->tolerances);
       return wav2prg_true;
     }
     free(context->tolerances);
@@ -610,7 +609,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         plugin_functions->get_new_plugin_state);
 
     context.display_interface->try_sync(context.display_interface_internal, loader_name);
-    *context.current_block = new_block_list_element(conf->num_pulse_lengths);
+    *context.current_block = new_block_list_element(conf->num_pulse_lengths, conf->thresholds);
 
     res = get_sync_and_record(&context, &functions, conf, !no_gaps_allowed);
     if(res != wav2prg_true && !no_gaps_allowed){
@@ -629,7 +628,9 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       }
       block = *context.current_block;
       block->loader_name = strdup(loader_name);
-      block->conf = copy_conf(conf);
+      block->num_pulse_lengths = conf->num_pulse_lengths;
+      block->thresholds = malloc(sizeof(uint16_t) * (conf->num_pulse_lengths - 1));
+      memcpy(block->thresholds, conf->thresholds, sizeof(uint16_t) * (conf->num_pulse_lengths - 1));
       block->block_status = block_sync_no_info;
       reset_checksum(&context);
 
@@ -776,4 +777,3 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
   }
   return context.blocks;
 }
-
