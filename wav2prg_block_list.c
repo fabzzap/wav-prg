@@ -1,6 +1,8 @@
 #include "wav2prg_block_list.h"
 #include "stdlib.h"
 
+#include <string.h>
+
 struct block_list_element* new_block_list_element(uint8_t num_pulse_lengths, uint16_t *thresholds){
   struct block_list_element* block = calloc(1, sizeof(struct block_list_element));
 

@@ -31,6 +31,6 @@ struct block_list_element {
   struct block_list_element* next;
 };
 
-struct block_list_element* new_block_list_element(uint8_t num_pulse_lengths);
+struct block_list_element* new_block_list_element(uint8_t num_pulse_lengths, uint16_t *thresholds);
 void free_block_list_element(struct block_list_element* block);
 
