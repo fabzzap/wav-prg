@@ -636,6 +636,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
             0,
             NULL,
             dependencies);
+          free(context.tolerances);
           break; /* error in get_block_info */
         }
       }
