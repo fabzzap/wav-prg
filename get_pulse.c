@@ -68,28 +68,16 @@ struct tolerances* get_tolerances(uint8_t num_pulse_lengths, const uint16_t *thr
       tolerances[i].measured.max = 0;
       tolerances[i].statistics = 0;
     }
+    tolerances[0].range.min = (uint16_t)(thresholds[0] * 0.519);
+    tolerances[0].range.max = (uint16_t)(thresholds[0] * 0.96);
     for(i = 1; i < num_pulse_lengths - 1; i++){
-      tolerances[i - 1].range.max =
-        (uint16_t)(thresholds[i - 1] * 1.08 - thresholds[i] * .08);
       tolerances[i].range.min =
         (uint16_t)(thresholds[i - 1] *  .92 + thresholds[i] * .08);
       tolerances[i].range.max =
         (uint16_t)(thresholds[i - 1] *  .08 + thresholds[i] * .92);
-      tolerances[i + 1].range.min =
-        (uint16_t)(thresholds[i - 1] * -.08 + thresholds[i] * 1.08);
     }
-    if (num_pulse_lengths > 2){
-      tolerances[0].range.min =
-        (uint16_t)(1.962 * thresholds[0] - 0.962 * thresholds[1]);
-      tolerances[num_pulse_lengths - 1].range.max =
-        (uint16_t)(-0.962 * thresholds[num_pulse_lengths - 3] + 1.962 * thresholds[num_pulse_lengths - 2]);
-    }
-    else {
-      tolerances[0].range.min = (uint16_t)(thresholds[0] * 0.519);
-      tolerances[0].range.max = (uint16_t)(thresholds[0] * 0.96);
-      tolerances[1].range.min = (uint16_t)(thresholds[0] * 1.04);
-      tolerances[1].range.max = (uint16_t)(thresholds[0] * 1.481);
-    }
+    tolerances[num_pulse_lengths - 1].range.min = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.04);
+    tolerances[num_pulse_lengths - 1].range.max = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.481);
   }
 
  return tolerances;

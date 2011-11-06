@@ -292,7 +292,6 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].start_sync = pos;
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].end_sync   = context->input->get_pos(context->input_object);
       (*context->current_block)->num_of_syncs++;
-      add_or_replace_tolerances(conf->num_pulse_lengths, conf->thresholds, context->tolerances);
       return wav2prg_true;
     }
     free(context->tolerances);
@@ -655,9 +654,11 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
             0,
             NULL,
             NULL);
+        free(context.tolerances);
         break; /* get_block_info succeeded but returned an invalid block */
       }
 
+      add_or_replace_tolerances(conf->num_pulse_lengths, conf->thresholds, context.tolerances);
       /* collect data for the block */
       block->block_status = block_error_before_end;
       block->end_of_info = context.input->get_pos(context.input_object);
