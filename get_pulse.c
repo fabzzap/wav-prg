@@ -68,7 +68,7 @@ struct tolerances* get_tolerances(uint8_t num_pulse_lengths, const uint16_t *thr
       tolerances[i].measured.max = 0;
       tolerances[i].statistics = 0;
     }
-    tolerances[0].range.min = (uint16_t)(thresholds[0] * 0.519);
+    tolerances[0].range.min = (uint16_t)(thresholds[0] * 0.51);
     tolerances[0].range.max = (uint16_t)(thresholds[0] * 0.96);
     for(i = 1; i < num_pulse_lengths - 1; i++){
       tolerances[i].range.min =
@@ -77,7 +77,7 @@ struct tolerances* get_tolerances(uint8_t num_pulse_lengths, const uint16_t *thr
         (uint16_t)(thresholds[i - 1] *  .08 + thresholds[i] * .92);
     }
     tolerances[num_pulse_lengths - 1].range.min = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.04);
-    tolerances[num_pulse_lengths - 1].range.max = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.481);
+    tolerances[num_pulse_lengths - 1].range.max = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.49);
   }
 
  return tolerances;
@@ -104,7 +104,7 @@ void add_or_replace_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresh
 }
 
 #define MIN_NUM_PULSES_FOR_RELIABLE_STATISTICS 40
-#define ADAPTATION_STEP 24
+#define ADAPTATION_STEP 32
 
 static enum wav2prg_bool is_this_pulse_right_intolerant(uint32_t raw_pulse, struct tolerances *tolerance)
 {
