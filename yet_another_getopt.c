@@ -246,9 +246,11 @@ enum wav2prg_bool yet_another_getopt(const struct get_option *options, uint32_t 
     else
       current_arg_pos++;
   }
-  if (state == next_is_argument_option)
+  if (state == next_is_argument_option){
     printf("No argument given to option %s\n", last_matched_option);
-	
+    ok_so_far = wav2prg_false;
+  }
+
   for(i = 0; names[i].option_name; i++)
     free(names[i].option_name);
   free(names);
