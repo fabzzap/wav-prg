@@ -106,9 +106,9 @@ void add_or_replace_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresh
 #define MIN_NUM_PULSES_FOR_RELIABLE_STATISTICS 40
 #define ADAPTATION_STEP 32
 
-static enum wav2prg_bool is_this_pulse_right_intolerant(uint32_t raw_pulse, struct tolerances *tolerance)
+static enum wav2prg_bool is_this_pulse_right_intolerant(uint32_t raw_pulse, struct tolerance *tolerance)
 {
-  return raw_pulse > tolerance->range.min && raw_pulse < tolerance->range.max;
+  return raw_pulse > tolerance->min && raw_pulse < tolerance->max;
 }
 
 static enum pulse_right {
@@ -118,7 +118,7 @@ static enum pulse_right {
 } is_this_pulse_right(uint32_t raw_pulse, struct tolerances *tolerance, int16_t* difference)
   {
     if (tolerance->statistics < MIN_NUM_PULSES_FOR_RELIABLE_STATISTICS)
-      return is_this_pulse_right_intolerant(raw_pulse, tolerance)
+      return is_this_pulse_right_intolerant(raw_pulse, &tolerance->range)
         ? within_range
         : not_this_pulse;
     if(raw_pulse >= tolerance->measured.min - ADAPTATION_STEP
@@ -189,7 +189,7 @@ enum wav2prg_bool get_pulse_adaptively_tolerant(uint32_t raw_pulse, uint8_t num_
 enum wav2prg_bool get_pulse_intolerant(uint32_t raw_pulse, struct tolerances *tolerances, uint8_t num_pulse_lengths, uint8_t* pulse)
 {
   for(*pulse = 0; *pulse < num_pulse_lengths; (*pulse)++){
-    if (is_this_pulse_right_intolerant(raw_pulse, tolerances + *pulse))
+    if (is_this_pulse_right_intolerant(raw_pulse, &tolerances[*pulse].range))
     {
       update_statistics(raw_pulse, tolerances + *pulse);
       return wav2prg_true;
