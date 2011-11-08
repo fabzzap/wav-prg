@@ -8,7 +8,7 @@ static struct wav2prg_generate_private_state headerchunk_generate_private_state 
   NULL
 };
 
-static uint16_t kernal_thresholds[]={448, 576};
+static uint16_t kernal_thresholds[]={426, 616};
 static uint16_t kernal_c16_thresholds[]={640, 1260};
 static uint16_t kernal_ideal_pulse_lengths[]={384, 512, 688};
 static uint16_t kernal_c16_ideal_pulse_lengths[]={448, 840, 1680};
