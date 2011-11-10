@@ -33,6 +33,7 @@ static const struct wav2prg_plugin_conf turbotape =
 {
   msbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   2,
   turbotape_thresholds,
   turbotape_ideal_pulse_lengths,

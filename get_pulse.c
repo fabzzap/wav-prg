@@ -77,7 +77,7 @@ struct tolerances* get_tolerances(uint8_t num_pulse_lengths, const uint16_t *thr
         (uint16_t)(thresholds[i - 1] *  .08 + thresholds[i] * .92);
     }
     tolerances[num_pulse_lengths - 1].range.min = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.04);
-    tolerances[num_pulse_lengths - 1].range.max = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.49);
+    tolerances[num_pulse_lengths - 1].range.max = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.56);
   }
 
  return tolerances;
@@ -104,7 +104,7 @@ void add_or_replace_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresh
 }
 
 #define MIN_NUM_PULSES_FOR_RELIABLE_STATISTICS 40
-#define ADAPTATION_STEP 32
+#define MAX_DISTANCE 96
 
 static enum wav2prg_bool is_this_pulse_right_intolerant(uint32_t raw_pulse, struct tolerance *tolerance)
 {
@@ -116,28 +116,28 @@ static enum pulse_right {
   within_measured,
   not_this_pulse
 } is_this_pulse_right(uint32_t raw_pulse, struct tolerances *tolerance, int16_t* difference)
-  {
-    if (tolerance->statistics < MIN_NUM_PULSES_FOR_RELIABLE_STATISTICS)
-      return is_this_pulse_right_intolerant(raw_pulse, &tolerance->range)
-        ? within_range
-        : not_this_pulse;
-    if(raw_pulse >= tolerance->measured.min - ADAPTATION_STEP
-      && raw_pulse < tolerance->measured.min){
-        *difference = raw_pulse - tolerance->range.min;
-        return within_measured;
-    }
-    if(raw_pulse >= tolerance->measured.min
-      && raw_pulse <= tolerance->measured.max){
-        *difference = 0;
-        return within_measured;
-    }
-    if(raw_pulse > tolerance->measured.max
-      && raw_pulse <= tolerance->measured.max + ADAPTATION_STEP){
-        *difference = raw_pulse - tolerance->range.max;
-        return within_measured;
-    }
-    return not_this_pulse;
-    }
+{
+  if (tolerance->statistics < MIN_NUM_PULSES_FOR_RELIABLE_STATISTICS)
+    return is_this_pulse_right_intolerant(raw_pulse, &tolerance->range)
+      ? within_range
+      : not_this_pulse;
+  if(raw_pulse >= tolerance->average - MAX_DISTANCE
+    && raw_pulse < tolerance->measured.min){
+    *difference = raw_pulse - tolerance->measured.min;
+    return within_measured;
+  }
+  if(raw_pulse >= tolerance->measured.min
+    && raw_pulse <= tolerance->measured.max){
+    *difference = 0;
+    return within_measured;
+  }
+  if(raw_pulse > tolerance->measured.max
+    && raw_pulse <= tolerance->average + MAX_DISTANCE){
+    *difference = raw_pulse - tolerance->measured.max;
+    return within_measured;
+  }
+  return not_this_pulse;
+}
 
 static void update_statistics(uint32_t raw_pulse, struct tolerances *tolerance)
 {

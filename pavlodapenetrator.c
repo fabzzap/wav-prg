@@ -26,6 +26,7 @@ static const struct wav2prg_plugin_conf pavlodapenetrator =
 {
   msbf,
   wav2prg_xor_checksum,/*ignored, compute_checksum_step overridden*/
+  wav2prg_compute_and_check_checksum,
   3,
   pavlodapenetrator_thresholds,
   pavlodapenetrator_ideal_pulse_lengths,

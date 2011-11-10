@@ -28,6 +28,7 @@ static const struct wav2prg_plugin_conf pavloda =
 {
   msbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   pavloda_thresholds,
   pavloda_ideal_pulse_lengths,

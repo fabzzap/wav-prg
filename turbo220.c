@@ -19,7 +19,8 @@ static uint8_t turbo220_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 static const struct wav2prg_plugin_conf turbo220 =
 {
   msbf,
-  wav2prg_no_checksum,
+  wav2prg_xor_checksum,/* ignored, not computing checksum */
+  wav2prg_do_not_compute_checksum,
   2,
   turbo220_thresholds,
   turbo220_ideal_pulse_lengths,

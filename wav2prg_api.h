@@ -8,9 +8,14 @@ enum wav2prg_plugin_endianness {
 };
 
 enum wav2prg_checksum {
-  wav2prg_no_checksum,
   wav2prg_xor_checksum,
   wav2prg_add_checksum
+};
+
+enum wav2prg_checksum_computation {
+  wav2prg_do_not_compute_checksum,
+  wav2prg_compute_checksum_but_do_not_check_it_at_end,
+  wav2prg_compute_and_check_checksum
 };
 
 enum wav2prg_findpilot_type {
@@ -101,6 +106,7 @@ struct wav2prg_plugin_functions {
 struct wav2prg_plugin_conf {
   enum wav2prg_plugin_endianness endianness;
   enum wav2prg_checksum checksum_type;
+  enum wav2prg_checksum_computation checksum_computation;
   uint8_t num_pulse_lengths;
   uint16_t *thresholds;
   uint16_t *ideal_pulse_lengths;

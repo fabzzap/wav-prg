@@ -20,6 +20,7 @@ static const struct wav2prg_plugin_conf wildsave =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   2,
   wildsave_thresholds,
   wildsave_ideal_pulse_lengths,

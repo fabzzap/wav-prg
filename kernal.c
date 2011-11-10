@@ -19,6 +19,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   kernal_thresholds,
   kernal_ideal_pulse_lengths,
@@ -35,6 +36,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_second_copy =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   kernal_thresholds,
   kernal_ideal_pulse_lengths,
@@ -51,6 +53,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_first_copy =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   kernal_thresholds,
   kernal_ideal_pulse_lengths,
@@ -67,6 +70,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   kernal_thresholds,
   kernal_ideal_pulse_lengths,
@@ -83,6 +87,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_16_first_copy =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   kernal_c16_thresholds,
   kernal_c16_ideal_pulse_lengths,
@@ -99,6 +104,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_16_second_copy =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   kernal_c16_thresholds,
   kernal_c16_ideal_pulse_lengths,
@@ -115,6 +121,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_16_first_copy =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   kernal_c16_thresholds,
   kernal_c16_ideal_pulse_lengths,
@@ -131,6 +138,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_16_second_copy =
 {
   lsbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   3,
   kernal_c16_thresholds,
   kernal_c16_ideal_pulse_lengths,

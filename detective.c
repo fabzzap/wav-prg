@@ -13,10 +13,11 @@ static uint16_t detective_thresholds[]={248};
 static uint16_t detective_ideal_pulse_lengths[]={192, 336};
 static uint8_t detective_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
-static const struct wav2prg_plugin_conf turbotape =
+static const struct wav2prg_plugin_conf detective =
 {
   lsbf,
   wav2prg_add_checksum,
+  wav2prg_compute_and_check_checksum,
   2,
   detective_thresholds,
   detective_ideal_pulse_lengths,
@@ -31,7 +32,7 @@ static const struct wav2prg_plugin_conf turbotape =
 
 static const struct wav2prg_plugin_conf* detective_get_state(void)
 {
-  return &turbotape;
+  return &detective;
 }
 
 static const struct wav2prg_plugin_functions detective_functions = {
@@ -52,4 +53,3 @@ PLUGIN_ENTRY(detective)
 {
   register_loader_func(&detective_functions, "Detective");
 }
-

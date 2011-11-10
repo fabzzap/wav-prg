@@ -8,6 +8,7 @@ const struct wav2prg_plugin_conf novaload_conf =
 {
   lsbf,
   wav2prg_add_checksum,
+  wav2prg_compute_and_check_checksum,
   sizeof(novaload_ideal_pulse_lengths)/sizeof(*novaload_ideal_pulse_lengths),
   novaload_thresholds,
   novaload_ideal_pulse_lengths,

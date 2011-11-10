@@ -24,6 +24,7 @@ static const struct wav2prg_plugin_conf rackit =
 {
   msbf,
   wav2prg_xor_checksum,
+  wav2prg_compute_and_check_checksum,
   2,
   rackit_thresholds,
   rackit_ideal_pulse_lengths,
