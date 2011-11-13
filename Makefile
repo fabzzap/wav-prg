@@ -20,7 +20,8 @@ wav2prg: wav2prg_core.o \
          turbo220.o \
          freeload.o \
          rackit.o \
-         wildsave.o
+         wildsave.o \
+         theedge.o
 
 	$(CC) -o $@ $^
 

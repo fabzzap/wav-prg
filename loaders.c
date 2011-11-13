@@ -21,6 +21,9 @@ static enum wav2prg_bool register_loader(const struct wav2prg_plugin_functions* 
   if (get_loader_by_name(name))
     return wav2prg_false;/*duplicate name*/
 
+  if (functions->get_new_plugin_state == NULL)
+    return wav2prg_false;/*missing mandatory function*/
+
   for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
   new_loader->functions=functions;
   new_loader->name=name;
@@ -59,6 +62,7 @@ void detective_get_plugin(wav2prg_register_loader register_loader_func);
 void turbo220_get_plugin(wav2prg_register_loader register_loader_func);
 void freeload_get_plugin(wav2prg_register_loader register_loader_func);
 void wildsave_get_plugin(wav2prg_register_loader register_loader_func);
+void theedge_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -76,6 +80,7 @@ void register_loaders(void) {
   turbo220_get_plugin(register_loader);
   freeload_get_plugin(register_loader);
   wildsave_get_plugin(register_loader);
+  theedge_get_plugin(register_loader);
 #endif
 }
 
