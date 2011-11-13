@@ -111,6 +111,42 @@ static enum wav2prg_bool is_this_pulse_right_intolerant(uint32_t raw_pulse, stru
   return raw_pulse >= tolerance->min && raw_pulse <= tolerance->max;
 }
 
+static enum {
+  limited_increment,
+  limited_distance_from_average
+} mode = limited_increment;
+
+static uint32_t distance = 32;
+
+enum wav2prg_bool set_distance_from_current_edge(const char* v, void *unused){
+  distance = atoi(v);
+  return wav2prg_true;
+}
+
+enum wav2prg_bool set_distance_from_current_average(const char* v, void *unused){
+  mode = limited_distance_from_average;
+  distance = v ? atoi(v) : 96;
+  return wav2prg_true;
+}
+
+static uint32_t min_allowed_value(struct tolerances *tolerance){
+  switch(mode){
+  case limited_increment:
+    return tolerance->measured.min - distance;
+  case limited_distance_from_average:
+    return (uint32_t)(tolerance->average - distance);
+  }
+}
+
+static uint32_t max_allowed_value(struct tolerances *tolerance){
+  switch(mode){
+  case limited_increment:
+    return tolerance->measured.max + distance;
+  case limited_distance_from_average:
+    return (uint32_t)(tolerance->average + distance);
+  }
+}
+
 static enum pulse_right {
   within_range,
   within_measured,
@@ -121,18 +157,18 @@ static enum pulse_right {
     return is_this_pulse_right_intolerant(raw_pulse, &tolerance->range)
       ? within_range
       : not_this_pulse;
-  if(raw_pulse >= tolerance->average - MAX_DISTANCE
-    && raw_pulse < tolerance->measured.min){
-    *difference = raw_pulse - tolerance->measured.min;
-    return within_measured;
-  }
   if(raw_pulse >= tolerance->measured.min
     && raw_pulse <= tolerance->measured.max){
     *difference = 0;
     return within_measured;
   }
+  if(raw_pulse < tolerance->measured.min
+    && raw_pulse >= min_allowed_value(tolerance)){
+    *difference = raw_pulse - tolerance->measured.min;
+    return within_measured;
+  }
   if(raw_pulse > tolerance->measured.max
-    && raw_pulse <= tolerance->average + MAX_DISTANCE){
+    && raw_pulse <= max_allowed_value(tolerance)){
     *difference = raw_pulse - tolerance->measured.max;
     return within_measured;
   }
@@ -202,3 +238,4 @@ uint16_t get_average(struct tolerances *tolerance, uint8_t pulse)
 {
   return (uint16_t)((tolerance+pulse)->average);
 }
+

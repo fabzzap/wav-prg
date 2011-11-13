@@ -9,6 +9,7 @@
 #include "write_cleaned_tap.h"
 #include "write_prg.h"
 #include "yet_another_getopt.h"
+#include "get_pulse.h"
 
 static enum wav2prg_bool getrawpulse(struct wav2prg_input_object* audiotap, uint32_t* pulse)
 {
@@ -229,6 +230,8 @@ int main(int argc, char** argv)
   const char *option_prg_names[]={"p", "prg", NULL};
   const char *list_names[]={"l", "list", "list-loaders", NULL};
   const char *list_dep_names[]={"list-dependent", NULL};
+  const char *increment_names[]={"max-increment", NULL};
+  const char *max_distance_names[]={"max-dist", "max-distance", "max-distance-from-avg", NULL};
   struct dump_argument tap_dump = {dump_to_tap, &dump};
   struct dump_argument prg_dump = {dump_to_prg, &dump};
   struct get_option options[] ={
@@ -242,7 +245,7 @@ int main(int argc, char** argv)
     },
     {
       option_tap_names,
-      "Dump to a TAP file",
+      "Create a clean TAP file",
       add_to_dump_list,
       &tap_dump,
       wav2prg_true,
@@ -279,6 +282,22 @@ int main(int argc, char** argv)
       NULL,
       wav2prg_false,
       option_no_argument
+    },
+    {
+      increment_names,
+      "Maxumum allowed increment of pulse length range",
+      set_distance_from_current_edge,
+      NULL,
+      wav2prg_false,
+      option_must_have_argument
+    },
+    {
+      max_distance_names,
+      "Maxumum allowed deviation from average of pulse length",
+      set_distance_from_current_average,
+      NULL,
+      wav2prg_false,
+      option_may_have_argument
     },
     {NULL}
   };

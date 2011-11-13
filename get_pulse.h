@@ -10,3 +10,7 @@ struct tolerances* get_tolerances(uint8_t, const uint16_t*);
 void add_or_replace_tolerances(uint8_t, const uint16_t*, struct tolerances*);
 
 uint16_t get_average(struct tolerances*, uint8_t);
+
+enum wav2prg_bool set_distance_from_current_edge(const char* v, void *unused);
+enum wav2prg_bool set_distance_from_current_average(const char* v, void *unused);
+
