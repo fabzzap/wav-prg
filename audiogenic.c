@@ -13,28 +13,30 @@ struct audiogenic_private_state {
 
 static enum wav2prg_bool specialagent_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  uint8_t pulse2, pulse3;
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
 
-  if (state->state != audiogenic_synced)
+  if (state->state != audiogenic_synced){
+    uint32_t valid_pulses = 0;
+    uint32_t old_valid_pulses;
+    uint8_t pulse;
+
     do{
-      uint32_t valid_pulses = 0;
-      uint32_t old_valid_pulses;
-
-      do{
-        uint8_t pulse;
-
-        old_valid_pulses = valid_pulses;
-        if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
-          return wav2prg_false;
-        valid_pulses = pulse == 2 ? valid_pulses+1 : 0;
-      }while(valid_pulses!=0 || old_valid_pulses<5);
-
-      if (functions->get_pulse_func(context, conf, &pulse2) == wav2prg_false)
+      old_valid_pulses = valid_pulses;
+      if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
         return wav2prg_false;
-      if (functions->get_pulse_func(context, conf, &pulse3) == wav2prg_false)
-        return wav2prg_false;
-    }while((pulse2!=0 && pulse2!=1)||(pulse3!=0 && pulse3!=1));
+      valid_pulses = pulse == 2 ? valid_pulses+1 : 0;
+    }while(valid_pulses!=0);
+
+    if (old_valid_pulses<5)
+      return wav2prg_false;
+
+    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false
+      || (pulse != 0 && pulse != 1))
+      return wav2prg_false;
+    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false
+      || (pulse != 0 && pulse != 1))
+      return wav2prg_false;
+  }
   return wav2prg_true;
 }
 
