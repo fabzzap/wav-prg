@@ -37,7 +37,7 @@ static struct {
 } *store = NULL;
 static uint32_t store_size = 0;
 
-static struct tolerances** get_existing_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresholds)
+struct tolerances** get_existing_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresholds)
 {
   uint32_t i;
 
@@ -230,6 +230,15 @@ enum wav2prg_bool get_pulse_intolerant(uint32_t raw_pulse, struct tolerances *to
       update_statistics(raw_pulse, tolerances + *pulse);
       return wav2prg_true;
     }
+  }
+  return wav2prg_false;
+}
+
+enum wav2prg_bool get_pulse_in_measured_ranges(uint32_t raw_pulse, struct tolerances *tolerances, uint8_t num_pulse_lengths, uint8_t* pulse)
+{
+  for(*pulse = 0; *pulse < num_pulse_lengths; (*pulse)++){
+    if (is_this_pulse_right_intolerant(raw_pulse, &tolerances[*pulse].measured))
+      return wav2prg_true;
   }
   return wav2prg_false;
 }
