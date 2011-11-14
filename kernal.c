@@ -254,7 +254,7 @@ static enum wav2prg_bool kernal_get_block(struct wav2prg_context* context, const
     case byte_found:
       functions->postprocess_and_update_checksum_func(context, conf, &byte, 0);
       if (bytes_received++ < numbytes)
-        functions->add_byte_to_block_func(raw_block, byte);
+        functions->add_byte_to_block_func(context, raw_block, byte);
       break;
     case could_not_sync:
       return wav2prg_false;
@@ -273,7 +273,7 @@ static enum wav2prg_bool kernal_headerchunk_get_block(struct wav2prg_context* co
   uint8_t i;
 
   for (i = 0; i < sizeof(headerchunk_necessary_bytes->headerchunk_necessary_bytes); i++)
-    functions->add_byte_to_block_func(raw_block, headerchunk_necessary_bytes->headerchunk_necessary_bytes[i]);
+    functions->add_byte_to_block_func(context, raw_block, headerchunk_necessary_bytes->headerchunk_necessary_bytes[i]);
   return kernal_get_block(context, functions, conf, raw_block, numbytes - i);
 }
 

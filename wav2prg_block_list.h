@@ -27,7 +27,7 @@ struct block_list_element {
   uint32_t num_of_syncs;
   struct block_syncs* syncs;
   uint32_t end_of_info;
-  uint32_t start_of_checksum;
+  uint32_t last_valid_data_byte;
   struct block_list_element* next;
 };
 
