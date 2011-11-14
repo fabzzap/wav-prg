@@ -15,10 +15,22 @@ static void add_observer_to_list(struct wav2prg_observed_loaders **observers, co
 
   for(current_observers = *observers; current_observers->loader != NULL; current_observers++, number_of_observers++);
   *observers = realloc(*observers, sizeof(**observers) * (2 + number_of_observers));
-  (*observers)[number_of_observers].loader = observer_name;
-  (*observers)[number_of_observers].recognize_func = recognize_func;
   (*observers)[number_of_observers + 1].loader = NULL;
   (*observers)[number_of_observers + 1].recognize_func = NULL;
+  /* recognition of Kernal loaders is added at end,
+     recognition of anything else is added at beginning */
+  if (strcmp(observer_name, "Kernal header chunk 2st copy")
+   && strcmp(observer_name, "Kernal data chunk 1st copy")
+   && strcmp(observer_name, "Kernal data chunk 2st copy")
+   && strcmp(observer_name, "Kernal header chunk 2st copy C16")
+   && strcmp(observer_name, "Kernal data chunk 1st copy C16")
+   && strcmp(observer_name, "Kernal data chunk 2st copy C16")
+   ){
+    memmove((*observers) + 1, *observers, sizeof(**observers) * number_of_observers);
+    number_of_observers = 0;
+  }
+  (*observers)[number_of_observers].loader = observer_name;
+  (*observers)[number_of_observers].recognize_func = recognize_func;
 }
 
 static struct wav2prg_observed_loaders** get_list_of_observers_maybe_adding_observed(const char *observed_name, enum wav2prg_bool add_if_missing){
