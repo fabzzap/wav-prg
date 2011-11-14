@@ -30,9 +30,7 @@ static enum wav2prg_bool register_loader(const struct wav2prg_plugin_functions* 
   new_loader->next=NULL;
   *last_loader=new_loader;
   if (functions->get_observed_loaders_func)
-  {
     add_observed(name, functions->get_observed_loaders_func());
-  }
 
   return wav2prg_true;
 }
