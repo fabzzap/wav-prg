@@ -75,7 +75,7 @@ static enum wav2prg_bool recognize_theedge_hc(struct wav2prg_plugin_conf* conf, 
    && block->data[0x363 - 0x33c] == 0xCB
   ){
     info->start = 0xc900;
-    info->end = 0xca00 +  block->data[9];
+    info->end = 0xca00 +  block->data[0x35a - 0x33c];
     return wav2prg_true;
   }
   return wav2prg_false;
