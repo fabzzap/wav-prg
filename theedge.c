@@ -29,78 +29,39 @@ static enum wav2prg_bool theedge_get_sync(struct wav2prg_context* context, const
   struct theedge_private_state* state = (struct theedge_private_state*)conf->private_state;
   uint32_t num_of_pilot_bits_found = 0, old_num_of_pilot_bits_found;
   uint8_t byte = 0;
-  enum wav2prg_bool res;
   uint32_t i;
   uint8_t bit;
 
   do{
-    res = functions->get_bit_func(context, functions, conf, &bit);
-    if (res == wav2prg_false)
+    do{
+      if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+        return wav2prg_false;
+      byte = (byte << 1) | bit;
+    }while(byte != conf->pilot_byte);
+    if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
       return wav2prg_false;
-    byte = (byte << 1) | bit;
-  }while(byte != conf->pilot_byte);
-  res = functions->get_byte_func(context, functions, conf, &byte);
-  if (res == wav2prg_false)
+    for(i = 0; i < 9 && byte != 0; i++){
+      if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+        return wav2prg_false;
+      byte = (byte << 1) | bit;
+    }
+  }while(byte != 0);
+  return wav2prg_true;
+}
+
+static enum wav2prg_bool theedge_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info *info)
+{
+  uint32_t i;
+  uint8_t byte;
+
+  for(i = 0; i < 256; i++)
+    if(functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+      return wav2prg_false;
+  if(functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
     return wav2prg_false;
-  for(i = 0; i < 9 && byte != 0; i++){
-    res = functions->get_bit_func(context, functions, conf, &bit);
-    if (res == wav2prg_false)
-      return wav2prg_false;
-    byte = (byte << 1) | bit;
-  }
-  return byte == 0;
-}
-
-static enum wav2prg_bool recognize_theedge_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
-  if (block->info.start == 828
-   && block->info.end == 1020
-   && block->data[0x351 - 0x33c] == 0xA9
-   && block->data[0x352 - 0x33c] == 0x00
-   && block->data[0x353 - 0x33c] == 0x85
-   && block->data[0x354 - 0x33c] == 0x8B
-   && block->data[0x355 - 0x33c] == 0xA9
-   && block->data[0x356 - 0x33c] == 0xC9
-   && block->data[0x357 - 0x33c] == 0x85
-   && block->data[0x358 - 0x33c] == 0x8C
-   && block->data[0x359 - 0x33c] == 0xA9
-   && block->data[0x35a - 0x33c] > 3
-   && block->data[0x35b - 0x33c] == 0x85
-   && block->data[0x35c - 0x33c] == 0x8D
-   && block->data[0x35d - 0x33c] == 0xA9
-   && block->data[0x35e - 0x33c] == 0xCA
-   && block->data[0x35f - 0x33c] == 0x85
-   && block->data[0x360 - 0x33c] == 0x8E
-   && block->data[0x361 - 0x33c] == 0x20
-   && block->data[0x362 - 0x33c] == 0x4D
-   && block->data[0x363 - 0x33c] == 0xCB
-  ){
-    info->start = 0xc900;
-    info->end = 0xca00 +  block->data[0x35a - 0x33c];
-    return wav2prg_true;
-  }
-  return wav2prg_false;
-}
-
-static enum wav2prg_bool recognize_theedge_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
-  if (block->info.start == 0xc900
-   && block->info.end > 0xca03
-   && block->info.end < 0xcb00
-  ){
-    info->start = block->data[0x100] + (block->data[0x101] << 8);
-    info->end   = block->data[0x102] + (block->data[0x103] << 8);
-    return wav2prg_true;
-  }
-  return wav2prg_false;
-}
-
-static const struct wav2prg_observed_loaders theedge_observed_loaders[] = {
-  {"khc", recognize_theedge_hc},
-  {"The Edge", recognize_theedge_self},
-  {NULL,NULL}
-};
-
-static const struct wav2prg_observed_loaders* theedge_get_observed_loaders(void){
-  return theedge_observed_loaders;
+  if(functions->get_word_func(context, functions, conf, &info->end) == wav2prg_false)
+    return wav2prg_false;
+  return theedge_get_sync(context, functions, conf);
 }
 
 static const struct wav2prg_plugin_functions theedge_functions =
@@ -109,12 +70,12 @@ static const struct wav2prg_plugin_functions theedge_functions =
   NULL,
   theedge_get_sync,
   NULL,
-  NULL,
+  theedge_get_block_info,
   NULL,
   theedge_get_new_state,
   NULL,
   NULL,
-  theedge_get_observed_loaders,
+  NULL,
   NULL
 };
 
