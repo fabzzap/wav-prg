@@ -8,7 +8,7 @@ void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_o
   struct block_list_element* current_block = blocks;
   uint32_t sync;
   struct tap_handle* handle;
-  struct tolerances *tolerance;
+  const struct tolerances *tolerance;
   enum wav2prg_bool need_new_tolerances = wav2prg_true;
 
   functions->set_pos(object, 0);
@@ -20,7 +20,7 @@ void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_o
 
     while(current_block != NULL){
       if (need_new_tolerances){
-        const struct tolerances *tolerance = get_existing_tolerances(current_block->num_pulse_lengths, current_block->thresholds);
+        tolerance = get_existing_tolerances(current_block->num_pulse_lengths, current_block->thresholds);
         if (tolerance == NULL)
           break;
         need_new_tolerances = wav2prg_false;
