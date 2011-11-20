@@ -61,6 +61,7 @@ void turbo220_get_plugin(wav2prg_register_loader register_loader_func);
 void freeload_get_plugin(wav2prg_register_loader register_loader_func);
 void wildsave_get_plugin(wav2prg_register_loader register_loader_func);
 void theedge_get_plugin(wav2prg_register_loader register_loader_func);
+void maddoctor_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -79,6 +80,7 @@ void register_loaders(void) {
   freeload_get_plugin(register_loader);
   wildsave_get_plugin(register_loader);
   theedge_get_plugin(register_loader);
+  maddoctor_get_plugin(register_loader);
 #endif
 }
 

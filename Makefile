@@ -21,7 +21,8 @@ wav2prg: wav2prg_core.o \
          freeload.o \
          rackit.o \
          wildsave.o \
-         theedge.o
+         theedge.o \
+         maddoctor.o
 
 	$(CC) -o $@ $^
 
