@@ -734,12 +734,12 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         /* a block was found using loader_name. check whether any loader observes loader_name
            and recognizes the block */
         found_dependent_plugin = look_for_dependent_plugin(loader_name,
-                                           &new_loader,
-                                           &conf,
-                                           &block->block,
-                                           &no_gaps_allowed,
-                                           &recognized_info,
-                                           &new_recognize_func);
+                                                           &new_loader,
+                                                           &conf,
+                                                           &block->block,
+                                                           &no_gaps_allowed,
+                                                           &recognized_info,
+                                                           &new_recognize_func);
         if(found_dependent_plugin) {
           loader_name = new_loader;
           /* a loader observing loader_name
@@ -747,7 +747,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
           free(comparison_block);
           if(new_recognize_func) {
             comparison_block = malloc(sizeof(struct wav2prg_block));
-            memcpy(comparison_block, &block, sizeof(struct wav2prg_block));
+            memcpy(comparison_block, &block->block, sizeof(struct wav2prg_block));
             recognize_func = new_recognize_func;
           }
           else {
@@ -759,7 +759,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
           /* check if the loader just used can be used again */
           enum wav2prg_bool dummy;
 
-          found_dependent_plugin = allocate_info_and_recognize(conf, &block->block, &no_gaps_allowed, &recognized_info, recognize_func, &dummy);
+          found_dependent_plugin = allocate_info_and_recognize(conf, comparison_block, &no_gaps_allowed, &recognized_info, recognize_func, &dummy);
           if(!found_dependent_plugin) {
             free(comparison_block);
             comparison_block = NULL;
@@ -777,3 +777,4 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
   }
   return context.blocks;
 }
+
