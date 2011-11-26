@@ -66,7 +66,7 @@ static enum wav2prg_bool maddoctor_get_sync(struct wav2prg_context* context, con
 
 static enum wav2prg_bool maddoctor_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size)
 {
-  uint16_t bytes_received;
+  uint16_t bytes_received = 0;
 
   while(1) {
     if (!functions->get_block_func(context, functions, conf, block, 256))
@@ -165,4 +165,3 @@ PLUGIN_ENTRY(maddoctor)
 {
   register_loader_func(&maddoctor_functions, "Mad Doctor");
 }
-
