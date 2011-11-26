@@ -448,7 +448,7 @@ static enum wav2prg_bool is_c16_headerchunk(struct wav2prg_plugin_conf* conf, co
   if(block->info.start == 819
   && block->info.end == 1010){
     int i;
-    info->start = block->data[0] + (block->data[2] << 8);
+    info->start = block->data[0] + (block->data[1] << 8);
     info->end   = block->data[2] + (block->data[3] << 8);
     for(i = 0; i < 16; i++)
       info->name[i] = block->data[i + 4];
