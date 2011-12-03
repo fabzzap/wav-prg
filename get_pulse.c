@@ -249,7 +249,7 @@ enum wav2prg_bool get_pulse_in_measured_ranges(uint32_t raw_pulse, const struct 
   return wav2prg_false;
 }
 
-uint16_t get_average(struct tolerances *tolerance, uint8_t pulse)
+uint16_t get_average(const struct tolerances *tolerance, uint8_t pulse)
 {
   return (uint16_t)((tolerance+pulse)->average);
 }
