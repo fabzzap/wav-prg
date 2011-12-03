@@ -30,6 +30,12 @@ enum wav2prg_block_filling {
   last_to_first
 };
 
+enum wav2prg_sync_result {
+  wav2prg_sync_success,
+  wav2prg_sync_failure,
+  wav2prg_wrong_pulse_when_syncing
+};
+
 struct wav2prg_raw_block;
 struct wav2prg_context;
 struct wav2prg_functions;
@@ -51,6 +57,7 @@ typedef enum wav2prg_bool (*wav2prg_get_word_func)(struct wav2prg_context*, cons
 typedef enum wav2prg_bool (*wav2prg_get_word_bigendian_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
 typedef enum wav2prg_bool (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_raw_block*, uint16_t);
 typedef enum wav2prg_bool (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
+typedef enum wav2prg_sync_result (*wav2prg_get_sync_check)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef enum wav2prg_bool (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_block_info*);
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef void              (*wav2prg_reset_checksum_to)(struct wav2prg_context*, uint8_t);
@@ -67,6 +74,7 @@ typedef uint8_t           (*wav2prg_postprocess_data_byte)(struct wav2prg_plugin
 struct wav2prg_functions {
   wav2prg_get_sync get_sync;
   wav2prg_get_sync get_sync_insist;
+  wav2prg_get_sync_check get_sync_sequence;
   wav2prg_get_pulse_func get_pulse_func;
   wav2prg_get_bit_func get_bit_func;
   wav2prg_get_byte_func get_byte_func;
@@ -92,7 +100,7 @@ struct wav2prg_generate_private_state
 struct wav2prg_plugin_functions {
   wav2prg_get_bit_func get_bit_func;
   wav2prg_get_byte_func get_byte_func;
-  wav2prg_get_sync get_sync;
+  wav2prg_get_sync_check get_sync;
   wav2prg_get_byte_func get_first_byte_of_sync_sequence;
   wav2prg_get_block_info get_block_info;
   wav2prg_get_block_func get_block_func;

@@ -33,12 +33,12 @@ static const struct wav2prg_plugin_conf wildsave =
   &wildsave_generate_private_state
 };
 
-static enum wav2prg_bool wildsave_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_sync_result wildsave_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct wildsave_private_state *state = (struct wildsave_private_state *)conf->private_state;
   if (state->synced_state)
-    return wav2prg_true;
-  return functions->get_sync(context, functions, conf);
+    return wav2prg_sync_success;
+  return functions->get_sync_sequence(context, functions, conf);
 }
 
 static enum wav2prg_bool wildsave_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)

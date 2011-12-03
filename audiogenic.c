@@ -11,7 +11,7 @@ struct audiogenic_private_state {
   uint8_t two_is_an_empty_block;
 };
 
-static enum wav2prg_bool specialagent_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_sync_result specialagent_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
 
@@ -23,21 +23,23 @@ static enum wav2prg_bool specialagent_sync(struct wav2prg_context* context, cons
     do{
       old_valid_pulses = valid_pulses;
       if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
-        return wav2prg_false;
+        return wav2prg_wrong_pulse_when_syncing;
       valid_pulses = pulse == 2 ? valid_pulses+1 : 0;
     }while(valid_pulses!=0);
 
     if (old_valid_pulses<5)
-      return wav2prg_false;
+      return wav2prg_sync_failure;
 
-    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false
-      || (pulse != 0 && pulse != 1))
-      return wav2prg_false;
-    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false
-      || (pulse != 0 && pulse != 1))
-      return wav2prg_false;
+    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
+      return wav2prg_wrong_pulse_when_syncing;
+    if (pulse != 0 && pulse != 1)
+      return wav2prg_sync_failure;
+    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
+      return wav2prg_wrong_pulse_when_syncing;
+    if (pulse != 0 && pulse != 1)
+      return wav2prg_sync_failure;
   }
-  return wav2prg_true;
+  return wav2prg_sync_success;
 }
 
 static const struct audiogenic_private_state audiogenic_specialagent_private_state_model = {
@@ -91,11 +93,11 @@ static const struct wav2prg_plugin_conf specialagent =
   &audiogenic_specialagent_generate_private_state
 };
 
-static enum wav2prg_bool audiogenic_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_sync_result audiogenic_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
   if (state->state == audiogenic_not_synced)
-    return functions->get_sync(context, functions, conf);
+    return functions->get_sync_sequence(context, functions, conf);
   return wav2prg_true;
 }
 

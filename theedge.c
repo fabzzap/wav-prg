@@ -24,7 +24,7 @@ static const struct wav2prg_plugin_conf* theedge_get_new_state(void) {
   return &theedge;
 }
 
-static enum wav2prg_bool theedge_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_sync_result theedge_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct theedge_private_state* state = (struct theedge_private_state*)conf->private_state;
   uint32_t num_of_pilot_bits_found = 0, old_num_of_pilot_bits_found;
@@ -33,20 +33,18 @@ static enum wav2prg_bool theedge_get_sync(struct wav2prg_context* context, const
   uint8_t bit;
 
   do{
-    do{
-      if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
-        return wav2prg_false;
-      byte = (byte << 1) | bit;
-    }while(byte != conf->pilot_byte);
-    if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
       return wav2prg_false;
-    for(i = 0; i < 9 && byte != 0; i++){
-      if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
-        return wav2prg_false;
-      byte = (byte << 1) | bit;
-    }
-  }while(byte != 0);
-  return wav2prg_true;
+    byte = (byte << 1) | bit;
+  }while(byte != conf->pilot_byte);
+  if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
+    return wav2prg_wrong_pulse_when_syncing;
+  for(i = 0; i < 9 && byte != 0; i++){
+    if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+      return wav2prg_wrong_pulse_when_syncing;
+    byte = (byte << 1) | bit;
+  }
+  return byte == 0 ? wav2prg_sync_success : wav2prg_sync_failure;
 }
 
 static enum wav2prg_bool theedge_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info *info)

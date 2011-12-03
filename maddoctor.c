@@ -36,7 +36,7 @@ static const struct wav2prg_plugin_conf* maddoctor_get_new_state(void) {
   return &maddoctor;
 }
 
-static enum wav2prg_bool maddoctor_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_sync_result maddoctor_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint32_t num_of_pilot_bits_found = 0, old_num_of_pilot_bits_found;
   uint8_t byte = 0;
@@ -46,22 +46,22 @@ static enum wav2prg_bool maddoctor_get_sync(struct wav2prg_context* context, con
 
   res = functions->get_bit_func(context, functions, conf, &bit);
   if (res == wav2prg_false)
-    return wav2prg_false;
+    return wav2prg_wrong_pulse_when_syncing;
   if (bit == 0)
-    return wav2prg_false;
+    return wav2prg_sync_failure;
   for(i = 0; i < conf->min_pilots; i++){
     res = functions->get_byte_func(context, functions, conf, &byte);
     if (res == wav2prg_false)
-      return wav2prg_false;
+      return wav2prg_wrong_pulse_when_syncing;
     if (byte != 1)
-      return wav2prg_false;
+      return wav2prg_sync_failure;
   }
   do{
     res = functions->get_byte_func(context, functions, conf, &byte);
-    if (res == wav2prg_false)
+    if (res == wav2prg_wrong_pulse_when_syncing)
       return wav2prg_false;
   }while(byte != 0xFF);
-  return functions->get_sync(context, functions, conf);
+  return functions->get_sync_sequence(context, functions, conf);
 }
 
 static enum wav2prg_bool maddoctor_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size)

@@ -124,7 +124,7 @@ static enum wav2prg_bool pavloda_get_bit(struct wav2prg_context* context, const 
 }
 
 /* Almost a copy-paste of get_sync_byte_using_shift_register */
-static enum wav2prg_bool pavloda_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
+static enum wav2prg_sync_result pavloda_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct pavloda_private_state* state = (struct pavloda_private_state*)conf->private_state;
   uint32_t num_of_pilot_bits_found = 0, old_num_of_pilot_bits_found;
@@ -134,16 +134,18 @@ static enum wav2prg_bool pavloda_get_sync(struct wav2prg_context* context, const
     uint8_t bit;
     enum wav2prg_bool res = pavloda_get_bit(context, functions, conf, &bit);
     if (res == wav2prg_false)
-      return wav2prg_false;
+      return wav2prg_wrong_pulse_when_syncing;
     byte = (byte << 1) | bit;
     if (byte == 0xff){
       byte = (byte << 1);
       state->bit_status = next_is_0;
     }
     old_num_of_pilot_bits_found = num_of_pilot_bits_found;
-    num_of_pilot_bits_found = (byte) == 0 ? num_of_pilot_bits_found + 1 : 0;
-  }while(num_of_pilot_bits_found > 0 || old_num_of_pilot_bits_found < conf->min_pilots || byte != conf->pilot_byte);
-  return functions->get_sync(context, functions, conf);
+    num_of_pilot_bits_found = (byte == 0) ? num_of_pilot_bits_found + 1 : 0;
+  }while(num_of_pilot_bits_found > 0);
+  if (old_num_of_pilot_bits_found < conf->min_pilots || byte != conf->pilot_byte)
+    return wav2prg_sync_failure;
+  return functions->get_sync_sequence(context, functions, conf);
 };
 
 static enum wav2prg_bool pavloda_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t block_size){
