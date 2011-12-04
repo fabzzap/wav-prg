@@ -235,7 +235,7 @@ static enum wav2prg_sync_result sync_to_bit(struct wav2prg_context* context, con
     min_pilots++;
     if (res == wav2prg_false || (bit != 0 && bit != 1))
       return wav2prg_wrong_pulse_when_syncing;
-  }while(bit == sync_bit);
+  }while(bit != sync_bit);
   return min_pilots <= conf->min_pilots ? wav2prg_sync_failure : wav2prg_sync_success;
 };
 
