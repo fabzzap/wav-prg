@@ -4,17 +4,6 @@ static uint16_t maddoctor_thresholds[]={384};
 static uint16_t maddoctor_ideal_pulse_lengths[]={264, 440};
 static uint8_t maddoctor_sync_sequence[]={0xAA, 0xFF};
 
-struct maddoctor_private_state {
-  uint16_t resume_search_from_here;
-};
-static const struct maddoctor_private_state maddoctor_specialagent_private_state_model = {
-  0
-};
-static struct wav2prg_generate_private_state maddoctor_specialagent_generate_private_state = {
-  sizeof(maddoctor_specialagent_private_state_model),
-  &maddoctor_specialagent_private_state_model
-};
-
 static const struct wav2prg_plugin_conf maddoctor =
 {
   msbf,
@@ -29,7 +18,7 @@ static const struct wav2prg_plugin_conf maddoctor =
   maddoctor_sync_sequence,
   15,
   first_to_last,
-  &maddoctor_specialagent_generate_private_state
+  NULL
 };
 
 static const struct wav2prg_plugin_conf* maddoctor_get_new_state(void) {
@@ -58,8 +47,8 @@ static enum wav2prg_sync_result maddoctor_get_sync(struct wav2prg_context* conte
   }
   do{
     res = functions->get_byte_func(context, functions, conf, &byte);
-    if (res == wav2prg_wrong_pulse_when_syncing)
-      return wav2prg_false;
+    if (res == wav2prg_false)
+      return wav2prg_wrong_pulse_when_syncing;
   }while(byte != 0xFF);
   return functions->get_sync_sequence(context, functions, conf);
 }
@@ -79,8 +68,7 @@ static enum wav2prg_bool maddoctor_get_block(struct wav2prg_context* context, co
   }
 }
 
-
-static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
+static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
   if (block->info.start == 828
    && block->info.end == 1020
    && block->data[0] == 1
@@ -105,31 +93,29 @@ static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_plugin_conf* conf
   return wav2prg_false;
 }
 
-static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
-  uint32_t i;
-  struct maddoctor_private_state *state =(struct maddoctor_private_state *)conf->private_state;
+static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+  uint16_t i;
 
-  if(state->resume_search_from_here == 0)
+  if(*where_to_search_in_block == 0)
     for (i = 0; i < 144 && i + 2 < block->info.end - block->info.start; i++){
       if(block->data[i] == 0xCE
      && (block->data[i + 1] - 3) % 256 == (i + 1 + block->info.start) % 256
      &&  block->data[i + 2] == (block->info.start >> 8)
         ){
-        state->resume_search_from_here = i + 3;
+        *where_to_search_in_block = i + 3;
         break;
       }
     }
-  if(state->resume_search_from_here == 0)
+  if(*where_to_search_in_block == 0)
     return wav2prg_false;
-  for (i = state->resume_search_from_here; i < state->resume_search_from_here + 10 && i + 5 < block->info.end - block->info.start; i++){
+  for (i = *where_to_search_in_block; i < *where_to_search_in_block + 10 && i + 5 < block->info.end - block->info.start; i++){
     if(block->data[i    ] == 0xA9
     && block->data[i + 2] == 0xA2
     && block->data[i + 4] == 0xA0
     ){
       info->start = block->data[i + 3] + (block->data[i + 5] << 8);
       info->end = info->start + (block->data[i + 1] << 8);
-      state->resume_search_from_here = i + 6;
-      *try_further_recognitions_using_same_block = wav2prg_true;
+      *where_to_search_in_block = i + 6;
       return wav2prg_true;
     }
   }

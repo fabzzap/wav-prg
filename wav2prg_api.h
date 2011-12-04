@@ -42,7 +42,7 @@ struct wav2prg_functions;
 struct wav2prg_plugin_conf;
 struct wav2prg_plugin_functions;
 
-typedef enum wav2prg_bool (*wav2prg_recognize_block)(struct wav2prg_plugin_conf*, const struct wav2prg_block*, struct wav2prg_block_info*, enum wav2prg_bool*, enum wav2prg_bool*);
+typedef enum wav2prg_bool (*wav2prg_recognize_block)(struct wav2prg_plugin_conf*, const struct wav2prg_block*, struct wav2prg_block_info*, enum wav2prg_bool*, uint16_t*);
 
 struct wav2prg_observed_loaders {
   const char* loader;

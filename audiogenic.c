@@ -163,7 +163,7 @@ static const struct wav2prg_plugin_conf* specialagent_get_new_state(void) {
   return &specialagent;
 }
 
-static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
+static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
 
   return state->state == audiogenic_synced
@@ -172,7 +172,7 @@ static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, cons
      );
 }
 
-static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, enum wav2prg_bool *try_further_recognitions_using_same_block){
+static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
   struct{
     enum wav2prg_bool register_filled;
     uint8_t value;

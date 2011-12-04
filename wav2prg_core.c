@@ -444,20 +444,25 @@ static struct wav2prg_plugin_conf* wav2prg_get_loader_with_private_state(const c
   return plugin_functions ? get_new_state(NULL, plugin_functions->get_new_plugin_state) : NULL;
 }
 
+struct further_recognition {
+  struct wav2prg_block block;
+  uint16_t where_to_search_in_block;
+  wav2prg_recognize_block recognize_func;
+};
+
 static enum wav2prg_bool allocate_info_and_recognize(struct wav2prg_plugin_conf* conf,
                                                     struct wav2prg_block *block,
                                                     enum wav2prg_bool *no_gaps_allowed,
                                                     struct wav2prg_block_info **info,
                                                     wav2prg_recognize_block recognize_func,
-                                                    enum wav2prg_bool *try_further_recognitions_using_same_block){
+                                                    uint16_t *where_to_resume_search){
   enum wav2prg_bool result;
 
-  *try_further_recognitions_using_same_block = wav2prg_false;
   *info = malloc(sizeof(**info));
   (*info)->start = (*info)->end = 0xFFFF;
   memcpy(&(*info)->name, block->info.name, sizeof(block->info.name));
   *no_gaps_allowed = wav2prg_false;
-  result = recognize_func(conf, block, *info, no_gaps_allowed, try_further_recognitions_using_same_block);
+  result = recognize_func(conf, block, *info, no_gaps_allowed, where_to_resume_search);
   if (!result || ((*info)->end > 0 && (*info)->end <= (*info)->start)){
     free(*info);
     *info = NULL;
@@ -471,7 +476,7 @@ static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
                                                    struct wav2prg_block *block,
                                                    enum wav2prg_bool *no_gaps_allowed,
                                                    struct wav2prg_block_info **info,
-                                                   wav2prg_recognize_block *recognize_func
+                                                   struct further_recognition *further_recognition
                                                   )
 {
   struct wav2prg_observed_loaders* observers = get_observers(current_loader), *current_observer;
@@ -479,14 +484,20 @@ static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
 
   for(current_observer = observers; current_observer && current_observer->loader != NULL; current_observer++){
     enum wav2prg_bool result, try_further_recognitions_using_same_block;
+    uint16_t where_to_search_in_block = 0;
 
     if(strcmp(current_loader, current_observer->loader))
       *conf = wav2prg_get_loader_with_private_state(current_observer->loader);
-    result = allocate_info_and_recognize(*conf, block, no_gaps_allowed, info, current_observer->recognize_func, &try_further_recognitions_using_same_block);
+    result = allocate_info_and_recognize(*conf, block, no_gaps_allowed, info, current_observer->recognize_func, &where_to_search_in_block);
     if (result){
       *new_loader = current_observer->loader;
-      if(try_further_recognitions_using_same_block)
-         *recognize_func = current_observer->recognize_func;
+      if(where_to_search_in_block > 0){
+        further_recognition->recognize_func = current_observer->recognize_func;
+        memcpy(&further_recognition->block, block, sizeof(struct wav2prg_block));
+        further_recognition->where_to_search_in_block = where_to_search_in_block;
+      }
+      else
+        further_recognition->recognize_func = NULL;
       if(*conf != old_conf)
         delete_state(old_conf);
       return result;
@@ -573,12 +584,11 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     add_byte_to_block,
     postprocess_and_update_checksum
   };
-  struct wav2prg_block *comparison_block = NULL;
   const char *loader_name = start_loader;
   struct wav2prg_plugin_conf* conf = NULL;
   enum wav2prg_bool no_gaps_allowed = wav2prg_false;
   struct wav2prg_block_info *recognized_info = NULL;
-  wav2prg_recognize_block recognize_func = NULL;
+  struct further_recognition further_recognition = {{},0,NULL};
   enum wav2prg_bool found_dependent_plugin;
   enum wav2prg_bool keep_broken_blocks = wav2prg_false;
 
@@ -758,32 +768,22 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                                            &block->block,
                                                            &no_gaps_allowed,
                                                            &recognized_info,
-                                                           &new_recognize_func);
+                                                           &further_recognition);
         if(found_dependent_plugin) {
           loader_name = new_loader;
           /* a loader observing loader_name
              recognized the block */
-          free(comparison_block);
-          if(new_recognize_func) {
-            comparison_block = malloc(sizeof(struct wav2prg_block));
-            memcpy(comparison_block, &block->block, sizeof(struct wav2prg_block));
-            recognize_func = new_recognize_func;
-          }
-          else {
-            comparison_block = NULL;
-            recognize_func = NULL;
-          }
         }
-        else if (comparison_block != NULL && recognize_func != NULL) {
+        else if (further_recognition.recognize_func != NULL) {
           /* check if the loader just used can be used again */
-          enum wav2prg_bool dummy;
-
-          found_dependent_plugin = allocate_info_and_recognize(conf, comparison_block, &no_gaps_allowed, &recognized_info, recognize_func, &dummy);
-          if(!found_dependent_plugin) {
-            free(comparison_block);
-            comparison_block = NULL;
-            recognize_func = NULL;
-          }
+          found_dependent_plugin = allocate_info_and_recognize(conf
+                                     ,&further_recognition.block, &no_gaps_allowed
+                                     ,&recognized_info
+                                     ,further_recognition.recognize_func
+                                     ,&further_recognition.where_to_search_in_block
+                                   );
+          if(!found_dependent_plugin)
+            further_recognition.recognize_func = NULL;
         }
       }
     }
