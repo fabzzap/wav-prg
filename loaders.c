@@ -63,6 +63,7 @@ void wildsave_get_plugin(wav2prg_register_loader register_loader_func);
 void theedge_get_plugin(wav2prg_register_loader register_loader_func);
 void maddoctor_get_plugin(wav2prg_register_loader register_loader_func);
 void mikrogen_get_plugin(wav2prg_register_loader register_loader_func);
+void crl_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -83,6 +84,7 @@ void register_loaders(void) {
   theedge_get_plugin(register_loader);
   maddoctor_get_plugin(register_loader);
   mikrogen_get_plugin(register_loader);
+  crl_get_plugin(register_loader);
 #endif
 }
 

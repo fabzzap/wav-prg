@@ -23,7 +23,8 @@ wav2prg: wav2prg_core.o \
          wildsave.o \
          theedge.o \
          maddoctor.o \
-         mikrogen.o
+         mikrogen.o \
+         crl.o
 
 	$(CC) -o $@ $^
 
