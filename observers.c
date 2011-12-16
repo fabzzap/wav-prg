@@ -19,12 +19,12 @@ static void add_observer_to_list(struct wav2prg_observed_loaders **observers, co
   (*observers)[number_of_observers + 1].recognize_func = NULL;
   /* recognition of Kernal loaders is added at end,
      recognition of anything else is added at beginning */
-  if (strcmp(observer_name, "Kernal header chunk 2st copy")
+  if (strcmp(observer_name, "Kernal header chunk 2nd copy")
    && strcmp(observer_name, "Kernal data chunk 1st copy")
-   && strcmp(observer_name, "Kernal data chunk 2st copy")
-   && strcmp(observer_name, "Kernal header chunk 2st copy C16")
+   && strcmp(observer_name, "Kernal data chunk 2nd copy")
+   && strcmp(observer_name, "Kernal header chunk 2nd copy C16")
    && strcmp(observer_name, "Kernal data chunk 1st copy C16")
-   && strcmp(observer_name, "Kernal data chunk 2st copy C16")
+   && strcmp(observer_name, "Kernal data chunk 2nd copy C16")
    ){
     memmove((*observers) + 1, *observers, sizeof(**observers) * number_of_observers);
     number_of_observers = 0;
