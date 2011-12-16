@@ -51,7 +51,7 @@ void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_o
         break;
       if (pulse >= current_block->num_pulse_lengths)
         break;
-      raw_pulse = get_average(tolerance, pulse) + 24;
+      raw_pulse = get_average(tolerance, pulse);
     }
     tapfile_write_set_pulse(handle, raw_pulse);
   }
