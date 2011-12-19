@@ -11,7 +11,7 @@ static const struct wav2prg_plugin_conf theedge =
   2,
   theedge_thresholds,
   theedge_ideal_pulse_lengths,
-  wav2prg_custom_pilot_tone,/*ignored, not using get_sync_default*/
+  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
   0x55,
   0,/*ignored*/
   NULL,/*ignored*/
@@ -31,12 +31,39 @@ static enum wav2prg_sync_result theedge_get_sync(struct wav2prg_context* context
   uint8_t byte = 0;
   uint32_t i;
   uint8_t bit;
-
-  do{
-    if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
-      return wav2prg_false;
-    byte = (byte << 1) | bit;
-  }while(byte != conf->pilot_byte);
+  enum wav2prg_sync_result res;
+  
+  res = functions->get_sync_sequence(context, functions, conf);
+  if (res != wav2prg_sync_success)
+    return res;
+  if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+    return wav2prg_wrong_pulse_when_syncing;
+  if (bit != 0)
+    return wav2prg_sync_failure;
+  if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+    return wav2prg_wrong_pulse_when_syncing;
+  if (bit != 1)
+    return wav2prg_sync_failure;
+  if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+    return wav2prg_wrong_pulse_when_syncing;
+  if (bit != 0)
+    return wav2prg_sync_failure;
+  if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+    return wav2prg_wrong_pulse_when_syncing;
+  if (bit != 1)
+    return wav2prg_sync_failure;
+  if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+    return wav2prg_wrong_pulse_when_syncing;
+  if (bit != 0)
+    return wav2prg_sync_failure;
+  if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+    return wav2prg_wrong_pulse_when_syncing;
+  if (bit != 1)
+    return wav2prg_sync_failure;
+  if (functions->get_bit_func(context, functions, conf, &bit) == wav2prg_false)
+    return wav2prg_wrong_pulse_when_syncing;
+  if (bit != 0)
+    return wav2prg_sync_failure;
   if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
     return wav2prg_wrong_pulse_when_syncing;
   for(i = 0; i < 9 && byte != 0; i++){
@@ -59,7 +86,7 @@ static enum wav2prg_bool theedge_get_block_info(struct wav2prg_context *context,
     return wav2prg_false;
   if(functions->get_word_func(context, functions, conf, &info->end) == wav2prg_false)
     return wav2prg_false;
-  return theedge_get_sync(context, functions, conf);
+  return functions->get_sync(context, functions, conf);
 }
 
 static const struct wav2prg_plugin_functions theedge_functions =
