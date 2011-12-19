@@ -60,12 +60,24 @@ const struct tolerances* get_existing_tolerances(uint8_t num_pulse_lengths, cons
   return t ? *t : NULL;
 }
 
+void copy_tolerances(uint8_t num_pulse_lengths, struct tolerances *dest, const struct tolerances *src)
+{
+  memcpy(dest, src, sizeof(struct tolerances) * num_pulse_lengths);
+}
+
+struct tolerances* new_copy_tolerances(uint8_t num_pulse_lengths, const struct tolerances *src)
+{
+  struct tolerances* dest = malloc(sizeof(*src) * num_pulse_lengths);
+  copy_tolerances(num_pulse_lengths, dest, src);
+  return dest;
+}
+
 struct tolerances* get_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresholds){
   const struct tolerances *existing_tolerances = get_existing_tolerances(num_pulse_lengths, thresholds);
   struct tolerances *tolerances = malloc(sizeof(*tolerances) * num_pulse_lengths);
 
   if (existing_tolerances != NULL)
-    memcpy(tolerances, existing_tolerances, sizeof(*tolerances) * num_pulse_lengths);
+    copy_tolerances(num_pulse_lengths, tolerances, existing_tolerances);
   else {
     uint8_t i;
 

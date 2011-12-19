@@ -35,7 +35,6 @@ struct wav2prg_context {
   struct block_list_element **current_block;
   struct display_interface *display_interface;
   struct display_interface_internal *display_interface_internal;
-  enum wav2prg_bool in_block;
 };
 
 static enum wav2prg_bool get_pulse(struct wav2prg_context* context, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
@@ -284,6 +283,7 @@ static enum wav2prg_sync_result get_sync_default(struct wav2prg_context* context
 static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, enum wav2prg_bool insist)
 {
   enum wav2prg_sync_result res = wav2prg_sync_failure;
+  struct tolerances* old_tolerances = context->tolerances;
 
   if((*context->current_block)->syncs != NULL)
     (*context->current_block)->syncs[(*context->current_block)->num_of_syncs - 1].end =
@@ -294,7 +294,9 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
        ){
     uint32_t pos = context->input->get_pos(context->input_object);
 
-    context->tolerances = get_tolerances(conf->num_pulse_lengths, conf->thresholds);
+    context->tolerances = old_tolerances ?
+	  new_copy_tolerances(conf->num_pulse_lengths, old_tolerances) :
+	  get_tolerances(conf->num_pulse_lengths, conf->thresholds);
 
     res = context->get_sync_check(context, functions, conf);
     if (res == wav2prg_sync_success) {
@@ -302,8 +304,11 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].start_sync = pos;
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].end_sync   = context->input->get_pos(context->input_object);
       (*context->current_block)->num_of_syncs++;
-      if (context->in_block)
-        add_or_replace_tolerances(conf->num_pulse_lengths, conf->thresholds, context->tolerances);
+	  if (old_tolerances != NULL){
+        copy_tolerances(conf->num_pulse_lengths, old_tolerances, context->tolerances);
+	    free(context->tolerances);
+	    context->tolerances = old_tolerances;
+      }
       return wav2prg_true;
     }
     free(context->tolerances);
@@ -561,8 +566,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     NULL,
     &context.blocks,
     display_interface,
-    display_interface_internal,
-    wav2prg_false
+    display_interface_internal
   };
   struct wav2prg_functions functions =
   {
@@ -597,9 +601,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     struct block_list_element *block;
 
     found_dependent_plugin = wav2prg_false;
-
     plugin_functions = get_loader_by_name(loader_name);
-
     if(plugin_functions == NULL)
       break;
     context.subclassed_functions.get_bit_func =
@@ -617,7 +619,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       plugin_functions->get_first_byte_of_sync_sequence ? plugin_functions->get_first_byte_of_sync_sequence : get_first_byte_of_sync_sequence_default;
     context.get_sync_check                =
       plugin_functions->get_sync                 ? plugin_functions->get_sync                 : get_sync_default;
-
+    context.tolerances = NULL;
 
     if (conf == NULL)
       conf = get_new_state(
@@ -702,9 +704,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         &block->block.info,
         NULL);
       initialize_raw_block(&context.raw_block, block->block.info.start, block->block.info.end, block->block.data, conf);
-      context.in_block = wav2prg_true;
       res = context.subclassed_functions.get_block_func(&context, &functions, conf, &context.raw_block, block->block.info.end - block->block.info.start);
-      context.in_block = wav2prg_false;
       switch(context.raw_block.filling){
       case first_to_last:
         block->real_start = context.raw_block.location_of_first_byte;

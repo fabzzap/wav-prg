@@ -11,6 +11,8 @@ enum wav2prg_bool get_pulse_in_measured_ranges(uint32_t raw_pulse, const struct 
 struct tolerances* get_tolerances(uint8_t, const uint16_t*);
 const struct tolerances* get_existing_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresholds);
 void add_or_replace_tolerances(uint8_t, const uint16_t*, struct tolerances*);
+void copy_tolerances(uint8_t num_pulse_lengths, struct tolerances *dest, const struct tolerances *src);
+struct tolerances* new_copy_tolerances(uint8_t num_pulse_lengths, const struct tolerances *src);
 
 uint16_t get_average(const struct tolerances*, uint8_t);
 
