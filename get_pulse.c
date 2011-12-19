@@ -210,7 +210,7 @@ enum wav2prg_bool get_pulse_adaptively_tolerant(uint32_t raw_pulse, uint8_t num_
       break;
     is_higher_pulse_right = is_this_pulse_right(raw_pulse, tolerances + *pulse + 1, &higher_difference);
     if (is_lower_pulse_right == within_measured
-      && (is_higher_pulse_right != within_measured
+      && (is_higher_pulse_right == not_this_pulse
       || (is_higher_pulse_right == within_measured
         && lower_difference < -higher_difference))){
       res = wav2prg_true;
