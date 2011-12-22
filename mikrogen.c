@@ -1,7 +1,6 @@
 #include "wav2prg_api.h"
 
 static uint16_t mikrogen_thresholds[]={544, 1441};
-static uint16_t mikrogen_ideal_pulse_lengths[]={448, 824, 1616};
 
 static const struct wav2prg_plugin_conf mikrogen =
 {
@@ -10,7 +9,7 @@ static const struct wav2prg_plugin_conf mikrogen =
   wav2prg_compute_and_check_checksum,
   3,
   mikrogen_thresholds,
-  mikrogen_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
   0x55,/*ignored*/
   0,
@@ -27,9 +26,7 @@ static const struct wav2prg_plugin_conf* mikrogen_get_new_state(void) {
 static enum wav2prg_sync_result mikrogen_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint32_t num_of_pilot_bits_found = -1;
-  uint8_t byte = 0;
   enum wav2prg_bool res;
-  uint32_t i;
   uint8_t pulse;
 
   do{

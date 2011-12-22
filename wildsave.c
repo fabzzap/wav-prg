@@ -13,7 +13,6 @@ static struct wav2prg_generate_private_state wildsave_generate_private_state = {
 };
 
 static uint16_t wildsave_thresholds[]={480};
-static uint16_t wildsave_ideal_pulse_lengths[]={384, 568};
 static uint8_t wildsave_pilot_sequence[]={10,9,8,7,6,5,4,3,2,1};
 
 static const struct wav2prg_plugin_conf wildsave =
@@ -23,7 +22,7 @@ static const struct wav2prg_plugin_conf wildsave =
   wav2prg_compute_and_check_checksum,
   2,
   wildsave_thresholds,
-  wildsave_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   160,
   sizeof(wildsave_pilot_sequence),

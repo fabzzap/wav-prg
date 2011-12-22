@@ -1,7 +1,6 @@
 #include "wav2prg_api.h"
 
 static uint16_t novaload_thresholds[]={500};
-static uint16_t novaload_ideal_pulse_lengths[]={288, 704};
 static uint8_t novaload_pilot_sequence[]={0xAA};
 
 const struct wav2prg_plugin_conf novaload_conf =
@@ -9,9 +8,9 @@ const struct wav2prg_plugin_conf novaload_conf =
   lsbf,
   wav2prg_add_checksum,
   wav2prg_compute_and_check_checksum,
-  sizeof(novaload_ideal_pulse_lengths)/sizeof(*novaload_ideal_pulse_lengths),
+  sizeof(novaload_thresholds)/sizeof(*novaload_thresholds) + 1,
   novaload_thresholds,
-  novaload_ideal_pulse_lengths,
+  NULL,
   wav2prg_custom_pilot_tone,
   0,/*ignored, using wav2prg_custom_pilot_tone*/
   sizeof(novaload_pilot_sequence),

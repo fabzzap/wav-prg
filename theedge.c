@@ -1,7 +1,7 @@
 #include "wav2prg_api.h"
 
 static uint16_t theedge_thresholds[]={469};
-static uint16_t theedge_ideal_pulse_lengths[]={360, 520};
+static int16_t theedge_pulse_length_deviations[]={24, 0};
 
 static const struct wav2prg_plugin_conf theedge =
 {
@@ -10,7 +10,7 @@ static const struct wav2prg_plugin_conf theedge =
   wav2prg_do_not_compute_checksum,
   2,
   theedge_thresholds,
-  theedge_ideal_pulse_lengths,
+  theedge_pulse_length_deviations,
   wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
   0x55,
   0,/*ignored*/
@@ -26,9 +26,7 @@ static const struct wav2prg_plugin_conf* theedge_get_new_state(void) {
 
 static enum wav2prg_sync_result theedge_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  struct theedge_private_state* state = (struct theedge_private_state*)conf->private_state;
-  uint32_t num_of_pilot_bits_found = 0, old_num_of_pilot_bits_found;
-  uint8_t byte = 0;
+  uint8_t byte;
   uint32_t i;
   uint8_t bit;
   enum wav2prg_sync_result res;

@@ -1,7 +1,6 @@
 #include "wav2prg_api.h"
 
 static uint16_t connection_thresholds[]={263};
-static uint16_t connection_ideal_pulse_lengths[]={224, 336};
 static uint8_t connection_pilot_sequence[]={16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
 
 static const struct wav2prg_plugin_conf connection =
@@ -11,7 +10,7 @@ static const struct wav2prg_plugin_conf connection =
   wav2prg_compute_and_check_checksum,
   2,
   connection_thresholds,
-  connection_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   2,
   sizeof(connection_pilot_sequence),

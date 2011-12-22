@@ -53,7 +53,6 @@ static struct wav2prg_generate_private_state audiogenic_specialagent_generate_pr
 };
 
 static uint16_t audiogenic_thresholds[]={319};
-static uint16_t audiogenic_ideal_pulse_lengths[]={208, 384};
 static uint8_t audiogenic_pilot_sequence[]={170};
 
 static const struct wav2prg_plugin_conf audiogenic =
@@ -63,7 +62,7 @@ static const struct wav2prg_plugin_conf audiogenic =
   wav2prg_compute_checksum_but_do_not_check_it_at_end,
   2,
   audiogenic_thresholds,
-  audiogenic_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   240,
   sizeof(audiogenic_pilot_sequence),
@@ -74,7 +73,6 @@ static const struct wav2prg_plugin_conf audiogenic =
 };
 
 static uint16_t specialagent_thresholds[]={594,1151};
-static uint16_t specialagent_ideal_pulse_lengths[]={368,816, 1448};
 
 static const struct wav2prg_plugin_conf specialagent =
 {
@@ -83,7 +81,7 @@ static const struct wav2prg_plugin_conf specialagent =
   wav2prg_compute_checksum_but_do_not_check_it_at_end,
   3,
   specialagent_thresholds,
-  specialagent_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   0,                              /*ignored, default get_sync unused*/
   0,

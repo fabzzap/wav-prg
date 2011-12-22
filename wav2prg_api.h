@@ -117,7 +117,7 @@ struct wav2prg_plugin_conf {
   enum wav2prg_checksum_computation checksum_computation;
   uint8_t num_pulse_lengths;
   uint16_t *thresholds;
-  uint16_t *ideal_pulse_lengths;
+  int16_t *pulse_length_deviations;
   enum wav2prg_findpilot_type findpilot_type;
   uint8_t pilot_byte;
   uint8_t len_of_sync_sequence;

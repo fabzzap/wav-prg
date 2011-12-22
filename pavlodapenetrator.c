@@ -19,7 +19,6 @@ static struct wav2prg_generate_private_state pavlodapenetrator_generate_private_
 };
 
 static uint16_t pavlodapenetrator_thresholds[]={422,600};
-static uint16_t pavlodapenetrator_ideal_pulse_lengths[]={352, 520, 696};
 static uint8_t pavlodapenetrator_pilot_sequence[]={0x55};
 
 static const struct wav2prg_plugin_conf pavlodapenetrator =
@@ -29,7 +28,7 @@ static const struct wav2prg_plugin_conf pavlodapenetrator =
   wav2prg_compute_and_check_checksum,
   3,
   pavlodapenetrator_thresholds,
-  pavlodapenetrator_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,/*ignored, get_sync overridden*/
   0x08,
   sizeof(pavlodapenetrator_pilot_sequence),

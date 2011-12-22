@@ -21,7 +21,6 @@ static struct wav2prg_generate_private_state pavloda_generate_private_state = {
 };
 
 static uint16_t pavloda_thresholds[]={422,600};
-static uint16_t pavloda_ideal_pulse_lengths[]={368, 552, 736};
 static uint8_t pavloda_pilot_sequence[]={0x66, 0x1B};
 
 static const struct wav2prg_plugin_conf pavloda =
@@ -31,7 +30,7 @@ static const struct wav2prg_plugin_conf pavloda =
   wav2prg_compute_and_check_checksum,
   3,
   pavloda_thresholds,
-  pavloda_ideal_pulse_lengths,
+  NULL,
   wav2prg_custom_pilot_tone,
   0x01,
   sizeof(pavloda_pilot_sequence),

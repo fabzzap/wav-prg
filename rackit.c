@@ -17,7 +17,6 @@ static struct wav2prg_generate_private_state rackit_generate_private_state = {
 };
 
 static uint16_t rackit_thresholds[]={352};
-static uint16_t rackit_ideal_pulse_lengths[]={232, 488};
 static uint8_t rackit_pilot_sequence[]={0x3D};
 
 static const struct wav2prg_plugin_conf rackit =
@@ -27,7 +26,7 @@ static const struct wav2prg_plugin_conf rackit =
   wav2prg_compute_and_check_checksum,
   2,
   rackit_thresholds,
-  rackit_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   0x25,
   sizeof(rackit_pilot_sequence),

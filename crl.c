@@ -1,7 +1,6 @@
 #include "wav2prg_api.h"
 
 static uint16_t crl_thresholds[]={500, 776, 1536};
-static uint16_t crl_ideal_pulse_lengths[]={280, 680, 1280, 1968};
 
 struct crl_private_state {
   enum {
@@ -29,7 +28,7 @@ static const struct wav2prg_plugin_conf crl =
   wav2prg_do_not_compute_checksum,
   4,
   crl_thresholds,
-  crl_ideal_pulse_lengths,
+  NULL,
   wav2prg_custom_pilot_tone,
   0x55,/*ignored*/
   0,
@@ -124,8 +123,8 @@ static enum wav2prg_bool recognize_crl_hc(struct wav2prg_plugin_conf* conf, cons
 static enum wav2prg_bool recognize_crl_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
   uint16_t i;
   struct crl_private_state *state = (struct crl_private_state*)conf->private_state;
-  enum wav2prg_bool a_initialised = wav2prg_false, low_found = wav2prg_false, high_found = wav2prg_false, len_found = wav2prg_false;
-  uint8_t a_value, low_value, high_value, len_value;
+  enum wav2prg_bool a_initialised = wav2prg_false, low_found = wav2prg_false, high_found = wav2prg_false;
+  uint8_t a_value, low_value, high_value;
 
   if (*where_to_search_in_block == 0){
     for(i = 0; i + 13 < block->info.end - block->info.start; i++){

@@ -24,6 +24,7 @@ struct block_list_element {
   enum wav2prg_checksum_state state;
   uint8_t num_pulse_lengths;
   uint16_t *thresholds;
+  int16_t *pulse_length_deviations;
   uint32_t num_of_syncs;
   struct block_syncs* syncs;
   uint32_t end_of_info;

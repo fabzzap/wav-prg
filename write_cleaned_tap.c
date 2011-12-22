@@ -17,6 +17,8 @@ void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_o
   const struct tolerances *tolerance = NULL;
   enum wav2prg_bool need_new_tolerances = wav2prg_true;
   uint32_t accumulated_pulses = 0;
+  uint8_t num_pulse_lengths;
+  int16_t *deviations = NULL;
 
   functions->set_pos(object, 0);
   tapfile_init_write(filename, &handle, 1, 0);
@@ -43,6 +45,8 @@ void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_o
     && current_block != NULL
     && pos >= current_block->syncs[sync].start_sync){
       tolerance = get_existing_tolerances(current_block->num_pulse_lengths, current_block->thresholds);
+	  num_pulse_lengths = current_block->num_pulse_lengths;
+	  deviations = current_block->pulse_length_deviations;
       need_new_tolerances = wav2prg_false;
     }
     accumulate_this_pulse = wav2prg_false;
@@ -51,11 +55,14 @@ void write_cleaned_tap(struct block_list_element* blocks, struct wav2prg_input_o
 
       if (!get_pulse_in_measured_ranges(raw_pulse,
                                 tolerance,
-                                current_block->num_pulse_lengths,
+                                num_pulse_lengths,
                                 &pulse))
         tolerance = NULL;
-      else if (pulse < current_block->num_pulse_lengths)
-        raw_pulse = get_average(tolerance, pulse) + 24;
+      else if (pulse < num_pulse_lengths){
+        raw_pulse = get_average(tolerance, pulse);
+        if (deviations)
+		  raw_pulse += deviations[pulse];
+      }
     }
     if (tolerance == NULL &&
          (raw_pulse < min_length_non_noise_pulse

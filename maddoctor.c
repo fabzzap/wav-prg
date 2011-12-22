@@ -1,7 +1,7 @@
 #include "wav2prg_api.h"
 
 static uint16_t maddoctor_thresholds[]={384};
-static uint16_t maddoctor_ideal_pulse_lengths[]={264, 440};
+static int16_t maddoctor_pulse_length_deviations[]={24, 24};
 static uint8_t maddoctor_sync_sequence[]={0xAA, 0xFF};
 
 static const struct wav2prg_plugin_conf maddoctor =
@@ -11,7 +11,7 @@ static const struct wav2prg_plugin_conf maddoctor =
   wav2prg_compute_and_check_checksum,
   2,
   maddoctor_thresholds,
-  maddoctor_ideal_pulse_lengths,
+  maddoctor_pulse_length_deviations,
   wav2prg_custom_pilot_tone,
   0x55,/*ignored*/
   2,
@@ -27,7 +27,6 @@ static const struct wav2prg_plugin_conf* maddoctor_get_new_state(void) {
 
 static enum wav2prg_sync_result maddoctor_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
-  uint32_t num_of_pilot_bits_found = 0, old_num_of_pilot_bits_found;
   uint8_t byte = 0;
   enum wav2prg_bool res;
   uint32_t i;

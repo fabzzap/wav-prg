@@ -10,7 +10,6 @@ static enum wav2prg_bool freeload_get_block_info(struct wav2prg_context* context
 }
 
 static uint16_t freeload_thresholds[]={248};
-static uint16_t freeload_ideal_pulse_lengths[]={176, 296};
 static uint8_t freeload_pilot_sequence[]={90};
 
 static const struct wav2prg_plugin_conf freeload =
@@ -20,7 +19,7 @@ static const struct wav2prg_plugin_conf freeload =
   wav2prg_compute_and_check_checksum,
   2,
   freeload_thresholds,
-  freeload_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   64,
   sizeof(freeload_pilot_sequence),

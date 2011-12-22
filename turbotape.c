@@ -26,7 +26,6 @@ static enum wav2prg_bool turbotape_get_block_info(struct wav2prg_context* contex
 }
 
 static uint16_t turbotape_thresholds[]={263};
-static uint16_t turbotape_ideal_pulse_lengths[]={224, 336};
 static uint8_t turbotape_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
 static const struct wav2prg_plugin_conf turbotape =
@@ -36,7 +35,7 @@ static const struct wav2prg_plugin_conf turbotape =
   wav2prg_compute_and_check_checksum,
   2,
   turbotape_thresholds,
-  turbotape_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   2,
   sizeof(turbotape_pilot_sequence),

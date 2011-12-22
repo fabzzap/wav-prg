@@ -10,7 +10,6 @@ static enum wav2prg_bool detective_get_block_info(struct wav2prg_context* contex
 }
 
 static uint16_t detective_thresholds[]={248};
-static uint16_t detective_ideal_pulse_lengths[]={192, 336};
 static uint8_t detective_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
 static const struct wav2prg_plugin_conf detective =
@@ -20,7 +19,7 @@ static const struct wav2prg_plugin_conf detective =
   wav2prg_compute_and_check_checksum,
   2,
   detective_thresholds,
-  detective_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   2,
   sizeof(detective_pilot_sequence),

@@ -1,8 +1,6 @@
 #include "wav2prg_api.h"
 
 static uint16_t pavlodaold_thresholds[]={0x14A};
-static uint16_t pavlodaold_ideal_pulse_lengths[]={248, 504};
-static uint8_t pavlodaold_pilot_sequence[]={0x55};
 
 struct pavlodaold_private_state {
   enum{
@@ -27,7 +25,7 @@ static const struct wav2prg_plugin_conf pavlodaold =
   wav2prg_compute_and_check_checksum,
   2,
   pavlodaold_thresholds,
-  pavlodaold_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
   0,/*ignored, no sync sequence*/
   0,

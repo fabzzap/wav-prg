@@ -13,7 +13,6 @@ static enum wav2prg_bool turbo220_get_block_info(struct wav2prg_context* context
 }
 
 static uint16_t turbo220_thresholds[]={263};
-static uint16_t turbo220_ideal_pulse_lengths[]={224, 336};
 static uint8_t turbo220_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
 static const struct wav2prg_plugin_conf turbo220 =
@@ -23,7 +22,7 @@ static const struct wav2prg_plugin_conf turbo220 =
   wav2prg_do_not_compute_checksum,
   2,
   turbo220_thresholds,
-  turbo220_ideal_pulse_lengths,
+  NULL,
   wav2prg_pilot_tone_with_shift_register,
   2,
   sizeof(turbo220_pilot_sequence),

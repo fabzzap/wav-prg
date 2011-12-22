@@ -394,8 +394,10 @@ static struct wav2prg_plugin_conf* copy_conf(const struct wav2prg_plugin_conf *m
   conf->num_pulse_lengths = model_conf->num_pulse_lengths;
   conf->thresholds = malloc((conf->num_pulse_lengths - 1) * sizeof(uint16_t));
   memcpy(conf->thresholds, model_conf->thresholds, (conf->num_pulse_lengths - 1) * sizeof(uint16_t));
-  conf->ideal_pulse_lengths = malloc(conf->num_pulse_lengths * sizeof(uint16_t));
-  memcpy(conf->ideal_pulse_lengths, model_conf->ideal_pulse_lengths, conf->num_pulse_lengths * sizeof(uint16_t));
+  if (model_conf->pulse_length_deviations != NULL){
+    conf->pulse_length_deviations = malloc(conf->num_pulse_lengths * sizeof(uint16_t));
+    memcpy(conf->pulse_length_deviations, model_conf->pulse_length_deviations, conf->num_pulse_lengths * sizeof(uint16_t));
+  }
   conf->findpilot_type = model_conf->findpilot_type;
   conf->pilot_byte            =  model_conf->pilot_byte;
   conf->len_of_sync_sequence =  model_conf->len_of_sync_sequence;
@@ -426,7 +428,7 @@ static struct wav2prg_plugin_conf* get_new_state(const struct wav2prg_plugin_con
 
 static void delete_state(struct wav2prg_plugin_conf* conf)
 {
-  free(conf->ideal_pulse_lengths);
+  free(conf->pulse_length_deviations);
   free(conf->thresholds);
   free(conf->sync_sequence);
   free(conf->private_state);
@@ -649,6 +651,10 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       block->num_pulse_lengths = conf->num_pulse_lengths;
       block->thresholds = malloc(sizeof(uint16_t) * (conf->num_pulse_lengths - 1));
       memcpy(block->thresholds, conf->thresholds, sizeof(uint16_t) * (conf->num_pulse_lengths - 1));
+	  if (conf->pulse_length_deviations){
+        block->pulse_length_deviations = malloc(sizeof(uint16_t) * conf->num_pulse_lengths);
+        memcpy(block->pulse_length_deviations, conf->pulse_length_deviations, sizeof(uint16_t) * (conf->num_pulse_lengths));
+	  }
       block->block_status = block_sync_no_info;
       reset_checksum(&context);
 
