@@ -1,7 +1,7 @@
 #include "wav2prg_api.h"
 
 static uint16_t maddoctor_thresholds[]={384};
-static int16_t maddoctor_pulse_length_deviations[]={24, 24};
+static int16_t maddoctor_pulse_length_deviations[]={0, 16};
 static uint8_t maddoctor_sync_sequence[]={0xAA, 0xFF};
 
 static const struct wav2prg_plugin_conf maddoctor =
