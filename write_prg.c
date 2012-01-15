@@ -31,7 +31,7 @@ void write_prg(struct block_list_element *blocks, const char *dirname){
   int fildes, i;
 
   while(blocks){
-    fullpathname = malloc(strlen(dirname) + sizeof(name_nospaces));
+    fullpathname = malloc(strlen(dirname) + sizeof(name_nospaces) + 5);
 
     sprintf(fullpathname, "%s/", dirname);
     filename = fullpathname + strlen(fullpathname);
