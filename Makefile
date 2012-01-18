@@ -24,7 +24,8 @@ wav2prg: wav2prg_core.o \
          theedge.o \
          maddoctor.o \
          mikrogen.o \
-         crl.o
+         crl.o \
+         snakeload.o
 
 	$(CC) -o $@ $^
 
