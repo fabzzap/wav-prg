@@ -40,7 +40,7 @@ static enum wav2prg_sync_result mikrogen_get_sync(struct wav2prg_context* contex
     : wav2prg_sync_failure;
 }
 
-static uint8_t mikrogen_compute_checksum_step(struct wav2prg_plugin_conf *conf, uint8_t old_checksum, uint8_t byte)
+static uint8_t mikrogen_compute_checksum_step(struct wav2prg_plugin_conf *conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte)
 {
   return old_checksum - byte;
 }

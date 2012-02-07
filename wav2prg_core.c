@@ -73,7 +73,7 @@ static void reset_checksum(struct wav2prg_context* context)
   reset_checksum_to(context, 0);
 }
 
-static uint8_t compute_checksum_step_default(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte) {
+static uint8_t compute_checksum_step_default(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
   if(conf->checksum_type == wav2prg_xor_checksum)
     return old_checksum ^ byte;
   return old_checksum + byte;
@@ -97,7 +97,7 @@ static void postprocess_and_update_checksum(struct wav2prg_context *context, str
   if (context->postprocess_data_byte_func)
     *byte = context->postprocess_data_byte_func(conf, *byte, location);
   if (conf->checksum_computation != wav2prg_do_not_compute_checksum)
-    context->checksum = context->compute_checksum_step(conf, context->checksum, *byte);
+    context->checksum = context->compute_checksum_step(conf, context->checksum, *byte, location);
 }
 
 static enum wav2prg_bool get_data_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte, uint16_t location)

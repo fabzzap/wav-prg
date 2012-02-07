@@ -65,6 +65,7 @@ void maddoctor_get_plugin(wav2prg_register_loader register_loader_func);
 void mikrogen_get_plugin(wav2prg_register_loader register_loader_func);
 void crl_get_plugin(wav2prg_register_loader register_loader_func);
 void snakeload_get_plugin(wav2prg_register_loader register_loader_func);
+void snake_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -87,6 +88,7 @@ void register_loaders(void) {
   mikrogen_get_plugin(register_loader);
   crl_get_plugin(register_loader);
   snakeload_get_plugin(register_loader);
+  snake_get_plugin(register_loader);
 #endif
 }
 

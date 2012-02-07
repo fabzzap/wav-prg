@@ -35,7 +35,7 @@ static const struct wav2prg_plugin_conf pavlodaold =
   &pavloda_generate_private_state
 };
 
-static uint8_t pavlodaold_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte) {
+static uint8_t pavlodaold_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
   return old_checksum + byte + 1;
 }
 
