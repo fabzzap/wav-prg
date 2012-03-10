@@ -167,8 +167,7 @@ static enum wav2prg_bool pavloda_get_block(struct wav2prg_context* context, cons
     }
     else{
       bytes_now = 256;
-      res = pavloda_get_sync(context, functions, conf);
-      if(res != wav2prg_true)
+      if(pavloda_get_sync(context, functions, conf) != wav2prg_sync_success)
         break;
       res = functions->get_data_byte_func(context, functions, conf, &subblocks, 0);
       if(res != wav2prg_true)

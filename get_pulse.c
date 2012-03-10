@@ -8,7 +8,7 @@
 
 enum wav2prg_bool get_pulse_tolerant(uint32_t raw_pulse, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
 {
-  for (*pulse = 0; *pulse < conf->num_pulse_lengths - 1; *pulse++) {
+  for (*pulse = 0; *pulse < conf->num_pulse_lengths - 1; (*pulse)++) {
     if (raw_pulse < conf->thresholds[*pulse])
       return wav2prg_true;
   }

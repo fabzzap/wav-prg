@@ -114,7 +114,7 @@ static char** add_string_to_list(char **old_list, const char *new_string, uint32
 
 char** get_loaders(enum wav2prg_bool with_dependencies) {
   struct loader *loader;
-  int found_loaders = 0;
+  uint32_t found_loaders = 0;
   char** valid_loader_names = malloc(sizeof (char*));
 
   valid_loader_names[0] = NULL;
