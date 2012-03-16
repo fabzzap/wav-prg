@@ -490,7 +490,7 @@ static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
   struct wav2prg_plugin_conf *old_conf = *conf;
 
   for(current_observer = observers; current_observer && current_observer->loader != NULL; current_observer++){
-    enum wav2prg_bool result, try_further_recognitions_using_same_block;
+    enum wav2prg_bool result;
     uint16_t where_to_search_in_block = 0;
 
     if(strcmp(current_loader, current_observer->loader))
@@ -594,7 +594,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
   struct wav2prg_plugin_conf* conf = NULL;
   enum wav2prg_bool no_gaps_allowed = wav2prg_false;
   struct wav2prg_block_info *recognized_info = NULL;
-  struct further_recognition further_recognition = {{},0,NULL};
+  struct further_recognition further_recognition = {{{0}},0,NULL};
   enum wav2prg_bool found_dependent_plugin;
   enum wav2prg_bool keep_broken_blocks = wav2prg_false;
 
