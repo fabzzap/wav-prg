@@ -26,7 +26,8 @@ wav2prg: wav2prg_core.o \
          mikrogen.o \
          crl.o \
          snakeload.o \
-         snake.o
+         snake.o \
+         nobby.o
 
 	$(CC) -o $@ $^
 
