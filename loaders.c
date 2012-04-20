@@ -68,6 +68,7 @@ void snakeload_get_plugin(wav2prg_register_loader register_loader_func);
 void snake_get_plugin(wav2prg_register_loader register_loader_func);
 void nobby_get_plugin(wav2prg_register_loader register_loader_func);
 void microload_get_plugin(wav2prg_register_loader register_loader_func);
+void atlantis_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -93,6 +94,7 @@ void register_loaders(void) {
   snake_get_plugin(register_loader);
   nobby_get_plugin(register_loader);
   microload_get_plugin(register_loader);
+  atlantis_get_plugin(register_loader);
 #endif
 }
 
