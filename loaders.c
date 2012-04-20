@@ -71,6 +71,7 @@ void microload_get_plugin(wav2prg_register_loader register_loader_func);
 void atlantis_get_plugin(wav2prg_register_loader register_loader_func);
 void wizarddev_get_plugin(wav2prg_register_loader register_loader_func);
 void jetload_get_plugin(wav2prg_register_loader register_loader_func);
+void novaload_special_get_plugin(wav2prg_register_loader register_loader_func);
 #endif
 
 void register_loaders(void) {
@@ -99,6 +100,7 @@ void register_loaders(void) {
   atlantis_get_plugin(register_loader);
   wizarddev_get_plugin(register_loader);
   jetload_get_plugin(register_loader);
+  novaload_special_get_plugin(register_loader);
 #endif
 }
 
