@@ -35,10 +35,7 @@ static const struct wav2prg_plugin_conf* nobby_get_new_state(void) {
 static enum wav2prg_sync_result nobby_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t byte = 0;
-  uint32_t i;
   uint8_t bit;
-  enum wav2prg_sync_result res;
-
   uint32_t min_pilots;
 
   do{
@@ -79,7 +76,7 @@ static enum wav2prg_bool nobby_get_block_info(struct wav2prg_context *context, c
   for(i = 0; i < 3; i++)
     if(functions->get_byte_func(context, functions, conf, state->checksum + i) == wav2prg_false)
       return wav2prg_false;
-  if(functions->get_byte_func(context, functions, conf, state->checksum + i) == wav2prg_false)
+  if(functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
     return wav2prg_false;
   /*last byte ignored*/
   return wav2prg_true;
