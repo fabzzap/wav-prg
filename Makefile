@@ -27,7 +27,12 @@ wav2prg: wav2prg_core.o \
          crl.o \
          snakeload.o \
          snake.o \
-         nobby.o
+         nobby.o \
+         atlantis.c \
+         jetload.c \
+         microload.c \
+         novaload_special.c \
+         wizarddev.c
 
 	$(CC) -o $@ $^
 
