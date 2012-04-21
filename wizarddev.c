@@ -7,7 +7,7 @@ static enum wav2prg_bool wizarddev_get_block_info(struct wav2prg_context* contex
 
   if (functions->get_byte_func(context, functions, conf, &id) == wav2prg_false)
     return wav2prg_false;
-  functions->number_to_name_func(id, &info->name);
+  functions->number_to_name_func(id, info->name);
   if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
       return wav2prg_false;
   if (functions->get_word_func(context, functions, conf, &info->end) == wav2prg_false)

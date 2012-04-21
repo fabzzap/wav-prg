@@ -40,7 +40,7 @@ static const struct wav2prg_plugin_conf* snakeload_get_state(void)
 }
 
 static enum wav2prg_bool recognize_snakeload(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
-  uint16_t offset, i, blocklen = block->info.end - block->info.start;
+  uint16_t i, blocklen = block->info.end - block->info.start;
 
   if (block->info.start != 0x801)
     return wav2prg_false;

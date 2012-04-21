@@ -761,7 +761,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       /* got the block */
       if(try_recognition){
         const char *new_loader;
-        wav2prg_recognize_block new_recognize_func = NULL;
         /* find out if a new loader should be loaded,
            or if the same loader can be kept,
            or if the loader at the root of the dependency tree has to be used */
