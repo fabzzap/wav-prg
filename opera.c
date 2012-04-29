@@ -1,7 +1,6 @@
 #include "wav2prg_api.h"
 
 static uint16_t opera_thresholds[]={692};
-static int16_t opera_pulse_length_deviations[]={0, 16};
 
 static const struct wav2prg_plugin_conf opera =
 {
@@ -10,7 +9,7 @@ static const struct wav2prg_plugin_conf opera =
   wav2prg_do_not_compute_checksum,
   2,
   opera_thresholds,
-  opera_pulse_length_deviations,
+  NULL,
   wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
   0x55,/*ignored*/
   0,
