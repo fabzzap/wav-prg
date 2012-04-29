@@ -23,7 +23,7 @@ static const struct wav2prg_plugin_conf* opera_get_new_state(void) {
   return &opera;
 }
 
-static enum wav2prg_bool recognize_opera_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_opera_dc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
   if (block->info.start == 0x801
    && block->info.end == 0x9ff) {
     for(;*where_to_search_in_block + 19 < block->info.end - block->info.start;(*where_to_search_in_block)++) {
@@ -54,38 +54,8 @@ static enum wav2prg_bool recognize_opera_hc(struct wav2prg_plugin_conf* conf, co
   return wav2prg_false;
 }
 
-static enum wav2prg_bool recognize_opera_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
-  uint16_t i;
-
-  if(*where_to_search_in_block == 0)
-    for (i = 0; i < 144 && i + 2 < block->info.end - block->info.start; i++){
-      if(block->data[i] == 0xCE
-     && (block->data[i + 1] - 3) % 256 == (i + 1 + block->info.start) % 256
-     &&  block->data[i + 2] == (block->info.start >> 8)
-        ){
-        *where_to_search_in_block = i + 3;
-        break;
-      }
-    }
-  if(*where_to_search_in_block == 0)
-    return wav2prg_false;
-  for (i = *where_to_search_in_block; i < *where_to_search_in_block + 10 && i + 5 < block->info.end - block->info.start; i++){
-    if(block->data[i    ] == 0xA9
-    && block->data[i + 2] == 0xA2
-    && block->data[i + 4] == 0xA0
-    ){
-      info->start = block->data[i + 3] + (block->data[i + 5] << 8);
-      info->end = info->start + (block->data[i + 1] << 8);
-      *where_to_search_in_block = i + 6;
-      return wav2prg_true;
-    }
-  }
-  return wav2prg_false;
-}
-
 static const struct wav2prg_observed_loaders opera_observed_loaders[] = {
-  {"kdc", recognize_opera_hc},
-  {"Mad Doctor", recognize_opera_self},
+  {"kdc", recognize_opera_dc},
   {NULL,NULL}
 };
 
