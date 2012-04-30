@@ -81,7 +81,7 @@ static const struct wav2prg_plugin_conf* novaload_special_get_new_state(void) {
   return &novaload_special;
 }
 
-static enum wav2prg_bool keep_doing_novaload_special(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool keep_doing_novaload_special(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   struct novaload_special_private_state *state = (struct novaload_special_private_state *)conf->private_state;
   return state->start_of_block != 0;
 }

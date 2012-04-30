@@ -202,10 +202,11 @@ static enum wav2prg_bool get_sync_byte_using_shift_register(struct wav2prg_conte
 
   *byte = 0;
   do{
+    min_pilots = 0;
     do{
       if(evolve_byte(context, functions, conf, byte) == wav2prg_false)
         return wav2prg_false;
-    }while(*byte != conf->pilot_byte);
+    }while(*byte != conf->pilot_byte || ++min_pilots < 8);
     min_pilots = 0;
     do{
       min_pilots++;
@@ -457,6 +458,12 @@ struct further_recognition {
   wav2prg_recognize_block recognize_func;
 };
 
+static void change_sync_sequence_length(struct wav2prg_plugin_conf *conf, uint8_t len)
+{
+  conf->sync_sequence = realloc(conf->sync_sequence, len);
+  conf->len_of_sync_sequence = len;
+}
+
 static enum wav2prg_bool allocate_info_and_recognize(struct wav2prg_plugin_conf* conf,
                                                     struct wav2prg_block *block,
                                                     enum wav2prg_bool *no_gaps_allowed,
@@ -469,7 +476,7 @@ static enum wav2prg_bool allocate_info_and_recognize(struct wav2prg_plugin_conf*
   (*info)->start = (*info)->end = 0xFFFF;
   memcpy(&(*info)->name, block->info.name, sizeof(block->info.name));
   *no_gaps_allowed = wav2prg_false;
-  result = recognize_func(conf, block, *info, no_gaps_allowed, where_to_resume_search);
+  result = recognize_func(conf, block, *info, no_gaps_allowed, where_to_resume_search, change_sync_sequence_length);
   if (!result || ((*info)->end > 0 && (*info)->end <= (*info)->start)){
     free(*info);
     *info = NULL;

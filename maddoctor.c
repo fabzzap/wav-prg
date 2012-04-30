@@ -67,7 +67,7 @@ static enum wav2prg_bool maddoctor_get_block(struct wav2prg_context* context, co
   }
 }
 
-static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   if (block->info.start == 828
    && block->info.end == 1020
    && block->data[0] == 1
@@ -92,7 +92,7 @@ static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_plugin_conf* conf
   return wav2prg_false;
 }
 
-static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   uint16_t i;
 
   if(*where_to_search_in_block == 0)

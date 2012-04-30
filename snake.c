@@ -109,7 +109,7 @@ static uint16_t snake_encrypted(const struct wav2prg_block* block, uint16_t *off
   return 0;
 }
 
-static enum wav2prg_bool recognize_snake(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_snake(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   uint16_t offset, i, blocklen;
   uint8_t snakeblock[1024];
 

@@ -50,17 +50,59 @@ static const struct wav2prg_plugin_conf* turbotape_get_state(void)
   return &turbotape;
 }
 
+static enum wav2prg_bool recognize_turrican(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+  if (block->info.start == 0x801
+   && block->info.end >= 0xb34
+   && block->info.end <= 0xb37) {
+    int i;
+
+    for(i = 0; i + 12 < block->info.end - block->info.start; i++) {
+      if(block->data[i     ] == 0xA5
+      && block->data[i +  1] == 0xA5
+      && block->data[i +  2] == 0xC9
+      && block->data[i +  3] == 0x02
+      && block->data[i +  4] == 0xD0
+      && block->data[i +  5] == 0xF5
+      && block->data[i +  6] == 0xA0
+      && block->data[i +  8] == 0x20
+      && block->data[i + 11] == 0xC9
+      && block->data[i + 12] == 0x02
+     ){
+        uint8_t new_sync_len = block->data[i +  7];
+        int j, sbyte;
+        change_sync_sequence_length_func(conf, new_sync_len);
+        for(j = 0, sbyte = new_sync_len; j < new_sync_len; j++, sbyte--)
+          conf->sync_sequence[j] = sbyte;
+        
+        return wav2prg_true;
+      }
+    }
+  }
+  return wav2prg_false;
+}
+
+
+static const struct wav2prg_observed_loaders turbotape_observed_loaders[] = {
+  {"kdc", recognize_turrican},
+  {NULL,NULL}
+};
+
+static const struct wav2prg_observed_loaders* turbotape_get_observed_loaders(void){
+  return turbotape_observed_loaders;
+}
+
 static const struct wav2prg_plugin_functions turbotape_functions = {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    turbotape_get_block_info,
-    NULL,
-    turbotape_get_state,
-    NULL,
-    NULL,
-    NULL
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  turbotape_get_block_info,
+  NULL,
+  turbotape_get_state,
+  NULL,
+  NULL,
+  turbotape_get_observed_loaders,
+  NULL
 };
 
 

@@ -25,7 +25,7 @@ static const struct wav2prg_plugin_conf* connection_get_state(void)
   return &connection;
 }
 
-static enum wav2prg_bool is_connection(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* datachunk_block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block)
+static enum wav2prg_bool is_connection(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* datachunk_block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func)
 {
   if(datachunk_block->info.start != 698 || datachunk_block->info.end != 812)
     return wav2prg_false;

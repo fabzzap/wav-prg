@@ -23,7 +23,7 @@ static const struct wav2prg_plugin_conf* opera_get_new_state(void) {
   return &opera;
 }
 
-static enum wav2prg_bool recognize_opera_dc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_opera_dc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   if (block->info.start == 0x801
    && block->info.end == 0x9ff) {
     for(;*where_to_search_in_block + 19 < block->info.end - block->info.start;(*where_to_search_in_block)++) {

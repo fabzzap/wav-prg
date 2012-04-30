@@ -63,7 +63,7 @@ static enum wav2prg_sync_result crl_get_sync(struct wav2prg_context* context, co
   return wav2prg_sync_success;
 }
 
-static enum wav2prg_bool recognize_crl_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_crl_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   uint16_t i, length_of_base_entry;
   uint8_t where_is_start_of_base;
 
@@ -120,7 +120,7 @@ static enum wav2prg_bool recognize_crl_hc(struct wav2prg_plugin_conf* conf, cons
   return wav2prg_true;
 }
 
-static enum wav2prg_bool recognize_crl_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_crl_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   uint16_t i;
   struct crl_private_state *state = (struct crl_private_state*)conf->private_state;
   enum wav2prg_bool a_initialised = wav2prg_false, low_found = wav2prg_false, high_found = wav2prg_false;

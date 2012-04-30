@@ -45,7 +45,7 @@ static uint8_t mikrogen_compute_checksum_step(struct wav2prg_plugin_conf *conf, 
   return old_checksum - byte;
 }
 
-static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   uint16_t i;
 
   for (i = 0; i + 15 < block->info.end - block->info.start; i++)
@@ -81,7 +81,7 @@ static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_plugin_conf* conf
   return wav2prg_true;
 }
 
-static enum wav2prg_bool recognize_mikrogen_new(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block){
+static enum wav2prg_bool recognize_mikrogen_new(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   uint16_t i;
 
   for (i = *where_to_search_in_block; i + 17 < block->info.end - block->info.start; i++){
