@@ -1,6 +1,19 @@
 #include "wav2prg_api.h"
 
+struct kernal_private_state {
+  enum
+  {
+    byte_found,
+    eof_marker_found,
+    could_not_sync
+  } result_of_last_byte;
+};
+static struct wav2prg_generate_private_state kernal_generate_private_state = {
+  sizeof(struct kernal_private_state),
+  NULL
+};
 struct headerchunk_private_state {
+  struct kernal_private_state kernal_state;
   uint8_t headerchunk_necessary_bytes[21];
 };
 static struct wav2prg_generate_private_state headerchunk_generate_private_state = {
@@ -61,7 +74,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_first_copy =
   kernal_1stcopy_pilot_sequence,
   0,
   first_to_last,
-  NULL
+  &kernal_generate_private_state
 };
 
 static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
@@ -78,7 +91,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
   kernal_2ndcopy_pilot_sequence,
   0,
   first_to_last,
-  NULL
+  &kernal_generate_private_state
 };
 
 static const struct wav2prg_plugin_conf kernal_headerchunk_16_first_copy =
@@ -95,7 +108,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_16_first_copy =
   kernal_1stcopy_pilot_sequence,
   0,
   first_to_last,
-  NULL
+  &kernal_generate_private_state
 };
 
 static const struct wav2prg_plugin_conf kernal_headerchunk_16_second_copy =
@@ -112,7 +125,7 @@ static const struct wav2prg_plugin_conf kernal_headerchunk_16_second_copy =
   kernal_2ndcopy_pilot_sequence,
   0,
   first_to_last,
-  NULL
+  &kernal_generate_private_state
 };
 
 static const struct wav2prg_plugin_conf kernal_datachunk_16_first_copy =
@@ -129,7 +142,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_16_first_copy =
   kernal_1stcopy_pilot_sequence,
   0,
   first_to_last,
-  NULL
+  &kernal_generate_private_state
 };
 
 static const struct wav2prg_plugin_conf kernal_datachunk_16_second_copy =
@@ -146,7 +159,7 @@ static const struct wav2prg_plugin_conf kernal_datachunk_16_second_copy =
   kernal_2ndcopy_pilot_sequence,
   0,
   first_to_last,
-  NULL
+  &kernal_generate_private_state
 };
 
 static enum wav2prg_bool kernal_get_bit_func(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit)
@@ -167,52 +180,60 @@ static enum wav2prg_bool kernal_get_bit_func(struct wav2prg_context* context, co
   return wav2prg_false;
 }
 
-static enum
-{
-  byte_found,
-  eof_marker_found,
-  could_not_sync
-}sync_with_byte_and_get_it(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte, uint8_t allow_short_pulses_at_first)
+static enum wav2prg_bool sync_with_byte_and_get_it(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte, uint8_t allow_short_pulses_at_first)
 {
   uint8_t pulse;
   uint8_t parity;
   uint8_t test;
+  struct kernal_private_state *state = (struct kernal_private_state*)conf->private_state;
 
   while(1){
-    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
-      return could_not_sync;
+    if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false) {
+      state->result_of_last_byte = could_not_sync;
+      return wav2prg_false;
+    }
     if(pulse==2)
       break;
-    if(pulse!=0 || !allow_short_pulses_at_first)
-      return could_not_sync;
+    if(pulse!=0 || !allow_short_pulses_at_first) {
+      state->result_of_last_byte = could_not_sync;
+      return wav2prg_false;
+    }
   }
-  if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false)
-    return could_not_sync;
+  if (functions->get_pulse_func(context, conf, &pulse) == wav2prg_false) {
+    state->result_of_last_byte = could_not_sync;
+    return wav2prg_false;
+  }
   switch(pulse){
   case 1:
     break;
   case 0:
-    return eof_marker_found;
+    state->result_of_last_byte = eof_marker_found;
+    return wav2prg_false;
   default:
     return could_not_sync;
   }
-  if(functions->get_byte_func(context, functions, conf, byte) == wav2prg_false)
-    return could_not_sync;
-  if(kernal_get_bit_func(context, functions, conf, &parity) == wav2prg_false)
-    return could_not_sync;
+  if(functions->get_byte_func(context, functions, conf, byte) == wav2prg_false) {
+    state->result_of_last_byte = could_not_sync;
+    return wav2prg_false;
+  }
+  if(kernal_get_bit_func(context, functions, conf, &parity) == wav2prg_false) {
+    state->result_of_last_byte = could_not_sync;
+    return wav2prg_false;
+  }
   for(test=1; test; test<<=1)
     parity^=(*byte & test)?1:0;
-  return parity?byte_found:could_not_sync;
+  state->result_of_last_byte = byte_found;
+  return parity == 1;
 }
 
 enum wav2prg_bool kernal_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
-  return sync_with_byte_and_get_it(context, functions, conf, byte, 1)==byte_found?wav2prg_true:wav2prg_false;
+  return sync_with_byte_and_get_it(context, functions, conf, byte, 1);
 }
 
 enum wav2prg_bool kernal_get_byte(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
-  return sync_with_byte_and_get_it(context, functions, conf, byte, 0)==byte_found?wav2prg_true:wav2prg_false;
+  return sync_with_byte_and_get_it(context, functions, conf, byte, 0);
 }
 
 enum wav2prg_bool kernal_headerchunk_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
@@ -243,26 +264,12 @@ enum wav2prg_bool kernal_headerchunk_get_block_info(struct wav2prg_context* cont
 static enum wav2prg_bool kernal_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block *raw_block, uint16_t numbytes)
 {
   uint16_t bytes_received = 0;
-  enum wav2prg_bool marker_found = wav2prg_false;
+  struct kernal_private_state *state = (struct kernal_private_state*)conf->private_state;
 
-  do{
-    uint8_t byte;
-
-    switch(sync_with_byte_and_get_it(context, functions, conf, &byte, 0)){
-    case byte_found:
-      functions->postprocess_and_update_checksum_func(context, conf, &byte, 0);
-      if (bytes_received++ < numbytes)
-        functions->add_byte_to_block_func(context, raw_block, byte);
-      break;
-    case could_not_sync:
-      return wav2prg_false;
-    case eof_marker_found:
-      marker_found = wav2prg_true;
-      break;
-    }
-  }while (!marker_found);
-
-  return wav2prg_true;
+  while(1){
+    if(!functions->get_block_func(context, functions, conf, raw_block, 1))
+      return (state->result_of_last_byte == eof_marker_found);
+  }
 }
 
 static enum wav2prg_bool kernal_headerchunk_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block *raw_block, uint16_t numbytes)

@@ -80,7 +80,7 @@ static enum wav2prg_bool theedge_get_block_info(struct wav2prg_context *context,
     return wav2prg_false;
   if(functions->get_word_func(context, functions, conf, &info->end) == wav2prg_false)
     return wav2prg_false;
-  return functions->get_sync(context, functions, conf);
+  return functions->get_sync(context, functions, conf, wav2prg_false);
 }
 
 static const struct wav2prg_plugin_functions theedge_functions =

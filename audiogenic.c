@@ -138,7 +138,7 @@ static enum wav2prg_bool audiogenic_specialagent_get_block(struct wav2prg_contex
       break;
     if (!check_if_block_valid(state->last_block_loaded, state))
       break;
-    if (!functions->get_sync_insist(context, functions, conf))
+    if (!functions->get_sync(context, functions, conf, wav2prg_true))
       return wav2prg_false;
     if (!functions->get_byte_func(context, functions, conf, &new_block))
       return wav2prg_false;
