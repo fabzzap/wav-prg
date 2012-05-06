@@ -33,18 +33,12 @@ static const struct wav2prg_plugin_conf atlantis =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* atlantis_get_state(void)
-{
-  return &atlantis;
-}
 static const struct wav2prg_plugin_functions atlantis_functions = {
     NULL,
     NULL,
     NULL,
     NULL,
     atlantis_get_block_info,
-    NULL,
-    atlantis_get_state,
     NULL,
     NULL,
     NULL,
@@ -53,5 +47,5 @@ static const struct wav2prg_plugin_functions atlantis_functions = {
 
 PLUGIN_ENTRY(atlantis)
 {
-  register_loader_func(&atlantis_functions, "Atlantis");
+  register_loader_func("Atlantis", &atlantis_functions, &atlantis, NULL);
 }

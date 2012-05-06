@@ -34,11 +34,6 @@ static const struct wav2prg_plugin_conf snakeload =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* snakeload_get_state(void)
-{
-  return &snakeload;
-}
-
 static enum wav2prg_bool recognize_snakeload(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   uint16_t i, blocklen = block->info.end - block->info.start;
 
@@ -77,26 +72,20 @@ static const struct wav2prg_observed_loaders snakeload_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* snakeload_get_observed_loaders(void){
-  return snakeload_observed_loaders;
-}
-
 static const struct wav2prg_plugin_functions snakeload_functions = {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    snakeload_get_block_info,
-    NULL,
-    snakeload_get_state,
-    NULL,
-    NULL,
-    snakeload_get_observed_loaders,
-    NULL
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  snakeload_get_block_info,
+  NULL,
+  NULL,
+  NULL,
+  NULL
 };
 
 PLUGIN_ENTRY(snakeload)
 {
-  register_loader_func(&snakeload_functions, "Snakeload");
+  register_loader_func("Snakeload", &snakeload_functions, &snakeload, snakeload_observed_loaders);
 }
 

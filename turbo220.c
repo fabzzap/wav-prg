@@ -32,11 +32,6 @@ static const struct wav2prg_plugin_conf turbo220 =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* turbo220_get_state(void)
-{
-  return &turbo220;
-}
-
 static const struct wav2prg_plugin_functions turbo220_functions = {
     NULL,
     NULL,
@@ -44,7 +39,6 @@ static const struct wav2prg_plugin_functions turbo220_functions = {
     NULL,
     turbo220_get_block_info,
     NULL,
-    turbo220_get_state,
     NULL,
     NULL,
     NULL
@@ -53,6 +47,6 @@ static const struct wav2prg_plugin_functions turbo220_functions = {
 
 PLUGIN_ENTRY(turbo220)
 {
-  register_loader_func(&turbo220_functions, "Turbo 220");
+  register_loader_func("Turbo 220", &turbo220_functions, &turbo220, NULL);
 }
 

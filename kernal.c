@@ -281,38 +281,6 @@ enum wav2prg_bool kernal_get_loaded_checksum(struct wav2prg_context* context, co
   return wav2prg_true;
 }
 
-static const struct wav2prg_plugin_conf* kernal_headerchunk_firstcopy_get_new_state(void) {
-  return &kernal_headerchunk_first_copy;
-}
-
-static const struct wav2prg_plugin_conf* kernal_headerchunk_secondcopy_get_new_state(void) {
-  return &kernal_headerchunk_second_copy;
-}
-
-static const struct wav2prg_plugin_conf* kernal_datachunk_firstcopy_get_new_state(void) {
-  return &kernal_datachunk_first_copy;
-}
-
-static const struct wav2prg_plugin_conf* kernal_datachunk_secondcopy_get_new_state(void) {
-  return &kernal_datachunk_second_copy;
-}
-
-static const struct wav2prg_plugin_conf* kernal_headerchunk_16_firstcopy_get_new_state(void) {
-  return &kernal_headerchunk_16_first_copy;
-}
-
-static const struct wav2prg_plugin_conf* kernal_headerchunk_16_secondcopy_get_new_state(void) {
-  return &kernal_headerchunk_16_second_copy;
-}
-
-static const struct wav2prg_plugin_conf* kernal_datachunk_16_firstcopy_get_new_state(void) {
-  return &kernal_datachunk_16_first_copy;
-}
-
-static const struct wav2prg_plugin_conf* kernal_datachunk_16_secondcopy_get_new_state(void) {
-  return &kernal_datachunk_16_second_copy;
-}
-
 static enum wav2prg_bool is_headerchunk(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func)
 {
   if(block->info.start == 828
@@ -344,18 +312,10 @@ static struct wav2prg_observed_loaders headerchunk_2nd_dependency[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* headerchunk_2nd_get_observed_loaders(void){
-  return headerchunk_2nd_dependency;
-}
-
 static struct wav2prg_observed_loaders datachunk_1st_dependency[] = {
   {"khc",is_headerchunk},
   {NULL,NULL}
 };
-
-static const struct wav2prg_observed_loaders* datachunk_1st_get_observed_loaders(void){
-  return datachunk_1st_dependency;
-}
 
 static struct wav2prg_observed_loaders datachunk_2nd_dependency[] = {
   {"Kernal header chunk 2nd copy",is_headerchunk},
@@ -363,11 +323,7 @@ static struct wav2prg_observed_loaders datachunk_2nd_dependency[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* datachunk_2nd_get_observed_loaders(void){
-  return datachunk_2nd_dependency;
-}
-
-static const struct wav2prg_plugin_functions kernal_headerchunk_firstcopy_functions =
+static const struct wav2prg_plugin_functions kernal_headerchunk_functions =
 {
   kernal_get_bit_func,
   kernal_get_byte,
@@ -375,29 +331,12 @@ static const struct wav2prg_plugin_functions kernal_headerchunk_firstcopy_functi
   kernal_get_first_sync,
   kernal_headerchunk_get_block_info,
   kernal_headerchunk_get_block,
-  kernal_headerchunk_firstcopy_get_new_state,
   NULL,
   kernal_get_loaded_checksum,
-  NULL,
   NULL
 };
 
-static const struct wav2prg_plugin_functions kernal_headerchunk_secondcopy_functions =
-{
-  kernal_get_bit_func,
-  kernal_get_byte,
-  NULL,
-  kernal_get_first_sync,
-  kernal_headerchunk_get_block_info,
-  kernal_headerchunk_get_block,
-  kernal_headerchunk_secondcopy_get_new_state,
-  NULL,
-  kernal_get_loaded_checksum,
-  headerchunk_2nd_get_observed_loaders,
-  NULL
-};
-
-static const struct wav2prg_plugin_functions kernal_datachunk_firstcopy_functions =
+static const struct wav2prg_plugin_functions kernal_datachunk_functions =
 {
   kernal_get_bit_func,
   kernal_get_byte,
@@ -405,10 +344,8 @@ static const struct wav2prg_plugin_functions kernal_datachunk_firstcopy_function
   kernal_get_first_sync,
   NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
   kernal_get_block,
-  kernal_datachunk_firstcopy_get_new_state,
   NULL,
   kernal_get_loaded_checksum,
-  datachunk_1st_get_observed_loaders,
   NULL
 };
 
@@ -420,10 +357,8 @@ static const struct wav2prg_plugin_functions kernal_datachunk_secondcopy_functio
   kernal_get_first_sync,
   NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
   kernal_get_block,
-  kernal_datachunk_secondcopy_get_new_state,
   NULL,
   kernal_get_loaded_checksum,
-  datachunk_2nd_get_observed_loaders,
   NULL
 };
 
@@ -460,18 +395,10 @@ static struct wav2prg_observed_loaders headerchunk_16_2nd_dependency[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* headerchunk_16_2nd_get_observed_loaders(void){
-  return headerchunk_16_2nd_dependency;
-}
-
 static struct wav2prg_observed_loaders datachunk_16_1st_dependency[] = {
   {"khc16", is_c16_headerchunk},
   {NULL,NULL}
 };
-
-static const struct wav2prg_observed_loaders* datachunk_16_1st_get_observed_loaders(void){
-  return datachunk_16_1st_dependency;
-}
 
 static struct wav2prg_observed_loaders datachunk_16_2nd_dependency[] = {
   {"Kernal header chunk 2nd copy C16", is_c16_headerchunk},
@@ -479,11 +406,7 @@ static struct wav2prg_observed_loaders datachunk_16_2nd_dependency[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* datachunk_16_2nd_get_observed_loaders(void){
-  return datachunk_16_2nd_dependency;
-}
-
-static const struct wav2prg_plugin_functions kernal_headerchunk_16_firstcopy_functions =
+static const struct wav2prg_plugin_functions kernal_headerchunk_16_functions =
 {
   kernal_get_bit_func,
   kernal_get_byte,
@@ -491,29 +414,12 @@ static const struct wav2prg_plugin_functions kernal_headerchunk_16_firstcopy_fun
   kernal_get_first_sync,
   kernal_headerchunk_16_get_block_info,
   NULL,
-  kernal_headerchunk_16_firstcopy_get_new_state,
-  NULL,
   NULL,
   NULL,
   NULL
 };
 
-static const struct wav2prg_plugin_functions kernal_headerchunk_16_secondcopy_functions =
-{
-  kernal_get_bit_func,
-  kernal_get_byte,
-  NULL,
-  kernal_get_first_sync,
-  kernal_headerchunk_16_get_block_info,
-  NULL,
-  kernal_headerchunk_16_secondcopy_get_new_state,
-  NULL,
-  NULL,
-  headerchunk_16_2nd_get_observed_loaders,
-  NULL
-};
-
-static const struct wav2prg_plugin_functions kernal_datachunk_16_firstcopy_functions =
+static const struct wav2prg_plugin_functions kernal_datachunk_16_functions =
 {
   kernal_get_bit_func,
   kernal_get_byte,
@@ -521,36 +427,19 @@ static const struct wav2prg_plugin_functions kernal_datachunk_16_firstcopy_funct
   kernal_get_first_sync,
   NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
   NULL,
-  kernal_datachunk_16_firstcopy_get_new_state,
   NULL,
   NULL,
-  datachunk_16_1st_get_observed_loaders,
-  NULL
-};
-
-static const struct wav2prg_plugin_functions kernal_datachunk_16_secondcopy_functions =
-{
-  kernal_get_bit_func,
-  kernal_get_byte,
-  NULL,
-  kernal_get_first_sync,
-  NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
-  NULL,
-  kernal_datachunk_16_secondcopy_get_new_state,
-  NULL,
-  NULL,
-  datachunk_16_2nd_get_observed_loaders,
   NULL
 };
 
 PLUGIN_ENTRY(kernal)
 {
-  register_loader_func(&kernal_headerchunk_firstcopy_functions, "Kernal header chunk 1st copy");
-  register_loader_func(&kernal_headerchunk_secondcopy_functions, "Kernal header chunk 2nd copy");
-  register_loader_func(&kernal_datachunk_firstcopy_functions, "Kernal data chunk 1st copy");
-  register_loader_func(&kernal_datachunk_secondcopy_functions, "Kernal data chunk 2nd copy");
-  register_loader_func(&kernal_headerchunk_16_firstcopy_functions, "Kernal header chunk 1st copy C16");
-  register_loader_func(&kernal_headerchunk_16_secondcopy_functions, "Kernal header chunk 2nd copy C16");
-  register_loader_func(&kernal_datachunk_16_firstcopy_functions, "Kernal data chunk 1st copy C16");
-  register_loader_func(&kernal_datachunk_16_secondcopy_functions, "Kernal data chunk 2nd copy C16");
+  register_loader_func("Kernal header chunk 1st copy", &kernal_headerchunk_functions, &kernal_headerchunk_first_copy, NULL);
+  register_loader_func("Kernal header chunk 2nd copy", &kernal_headerchunk_functions, &kernal_headerchunk_second_copy, headerchunk_2nd_dependency);
+  register_loader_func("Kernal data chunk 1st copy", &kernal_datachunk_functions, &kernal_datachunk_first_copy, datachunk_1st_dependency);
+  register_loader_func("Kernal data chunk 2nd copy", &kernal_datachunk_functions, &kernal_datachunk_second_copy, datachunk_2nd_dependency);
+  register_loader_func("Kernal header chunk 1st copy C16", &kernal_headerchunk_16_functions, &kernal_headerchunk_16_first_copy, NULL);
+  register_loader_func("Kernal header chunk 2nd copy C16", &kernal_headerchunk_16_functions, &kernal_headerchunk_16_second_copy, headerchunk_16_2nd_dependency);
+  register_loader_func("Kernal data chunk 1st copy C16", &kernal_datachunk_16_functions, &kernal_datachunk_16_first_copy, datachunk_16_1st_dependency);
+  register_loader_func("Kernal data chunk 2nd copy C16", &kernal_datachunk_16_functions, &kernal_datachunk_16_second_copy, datachunk_16_2nd_dependency);
 }

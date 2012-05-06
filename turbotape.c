@@ -25,6 +25,18 @@ static enum wav2prg_bool turbotape_get_block_info(struct wav2prg_context* contex
   return wav2prg_true;
 }
 
+static const struct wav2prg_plugin_functions turbotape_functions = {
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  turbotape_get_block_info,
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
 static uint16_t turbotape_thresholds[]={263};
 static uint8_t turbotape_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
@@ -44,11 +56,6 @@ static const struct wav2prg_plugin_conf turbotape =
   first_to_last,
   NULL
 };
-
-static const struct wav2prg_plugin_conf* turbotape_get_state(void)
-{
-  return &turbotape;
-}
 
 static enum wav2prg_bool recognize_turrican(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   if (block->info.start == 0x801
@@ -87,26 +94,8 @@ static const struct wav2prg_observed_loaders turbotape_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* turbotape_get_observed_loaders(void){
-  return turbotape_observed_loaders;
-}
-
-static const struct wav2prg_plugin_functions turbotape_functions = {
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  turbotape_get_block_info,
-  NULL,
-  turbotape_get_state,
-  NULL,
-  NULL,
-  turbotape_get_observed_loaders,
-  NULL
-};
-
-
 PLUGIN_ENTRY(turbotape)
 {
-  register_loader_func(&turbotape_functions, "Turbo Tape 64");
+  register_loader_func("Turbo Tape 64", &turbotape_functions, &turbotape, turbotape_observed_loaders);
 }
+

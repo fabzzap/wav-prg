@@ -34,11 +34,6 @@ static const struct wav2prg_plugin_conf snake =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* snake_get_state(void)
-{
-  return &snake;
-}
-
 static uint16_t snake_unencrypted(const struct wav2prg_block* block, uint16_t *offset, uint8_t *snakeblock)
 {
   uint16_t i;
@@ -172,10 +167,6 @@ static const struct wav2prg_observed_loaders snake_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* snake_get_observed_loaders(void){
-  return snake_observed_loaders;
-}
-
 static uint8_t snake_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
   uint8_t new_checksum = old_checksum ^ byte;
   if ((location_of_byte & 0xff) == 0xff)
@@ -190,15 +181,13 @@ static const struct wav2prg_plugin_functions snake_functions = {
     NULL,
     snake_get_block_info,
     NULL,
-    snake_get_state,
     snake_compute_checksum_step,
     NULL,
-    snake_get_observed_loaders,
     NULL
 };
 
 PLUGIN_ENTRY(snake)
 {
-  register_loader_func(&snake_functions, "Snake");
+  register_loader_func("Snake", &snake_functions, &snake, snake_observed_loaders);
 }
 

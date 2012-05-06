@@ -135,7 +135,7 @@ static struct display_interface text_based_display = {
 
 struct wav2prg_selected_loader {
   const char *loader_name;
-  struct wav2prg_plugin_conf* conf;
+  const struct wav2prg_loader* loader;
 };
 
 static enum wav2prg_bool check_single_loader(const char* loader_name, void* sel)
@@ -145,7 +145,7 @@ static enum wav2prg_bool check_single_loader(const char* loader_name, void* sel)
     printf("Cannot choose more than one loader\n");
     return wav2prg_false;
   }
-  selected->conf = wav2prg_get_loader(loader_name);
+  selected->loader = get_loader_by_name(loader_name);
   selected->loader_name = strdup(loader_name);
   return wav2prg_true;
 }
@@ -184,7 +184,7 @@ static enum wav2prg_bool add_to_dump_list(const char* filename, void* dumps)
 
 static enum wav2prg_bool display_list_of_loaders(const char* ununsed1, void* unused2)
 {
-  char **all_loaders = get_loaders(wav2prg_false);
+  char **all_loaders = get_loaders();
   char **one_loader;
 
   for(one_loader = all_loaders; *one_loader != NULL; one_loader++){
@@ -197,17 +197,20 @@ static enum wav2prg_bool display_list_of_loaders(const char* ununsed1, void* unu
 
 static enum wav2prg_bool display_list_of_loaders_with_dependencies(const char* ununsed1, void* unused2)
 {
-  char **all_loaders = get_loaders(wav2prg_true);
+  char **all_loaders = get_loaders();
   char **one_loader;
 
   printf("\nThese loaders cannot be used as argument of -s. For each, the loaders they depend on are listed.\n");
   for(one_loader = all_loaders; *one_loader != NULL; one_loader++){
-    const struct wav2prg_observed_loaders *dep;
-    const struct wav2prg_plugin_functions *plugin_functions = get_loader_by_name(*one_loader);
+    const struct wav2prg_loader *plugin_functions = get_loader_by_name(*one_loader);
 
-    printf("%s\n", *one_loader);
-    for(dep = plugin_functions->get_observed_loaders_func(); dep && dep->loader != NULL; dep++)
-      printf("\t%s\n", dep->loader);
+    if(plugin_functions->functions->get_block_info == NULL) {
+      const struct wav2prg_observed_loaders *dep;
+
+      printf("%s\n", *one_loader);
+      for(dep = get_observed_loaders(*one_loader); dep && dep->loader != NULL; dep++)
+        printf("\t%s\n", dep->loader);
+    }
     free(*one_loader);
   }
 

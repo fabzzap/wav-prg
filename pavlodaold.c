@@ -48,10 +48,6 @@ static enum wav2prg_bool pavlodaold_get_block_info(struct wav2prg_context* conte
   return wav2prg_true;
 }
 
-static const struct wav2prg_plugin_conf* pavlodaold_get_new_state(void) {
-  return &pavlodaold;
-}
-
 static enum wav2prg_bool pavlodaold_get_bit(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit) {
   uint8_t pulse;
   struct pavlodaold_private_state *state = (struct pavlodaold_private_state *)conf->private_state;
@@ -100,12 +96,11 @@ static const struct wav2prg_plugin_functions pavlodaold_functions =
   NULL,
   pavlodaold_get_block_info,
   pavlodaold_get_block_func,
-  pavlodaold_get_new_state,
   pavlodaold_compute_checksum_step,
   NULL
 };
 
 PLUGIN_ENTRY(pavlodaold)
 {
-  register_loader_func(&pavlodaold_functions, "Pavloda Old");
+  register_loader_func("Pavloda Old", &pavlodaold_functions, &pavlodaold, NULL);
 }

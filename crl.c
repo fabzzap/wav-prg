@@ -20,7 +20,6 @@ static struct wav2prg_generate_private_state crl_generate_private_state = {
   &crl_model_state
 };
 
-
 static const struct wav2prg_plugin_conf crl =
 {
   lsbf,
@@ -37,10 +36,6 @@ static const struct wav2prg_plugin_conf crl =
   first_to_last,
   &crl_generate_private_state
 };
-
-static const struct wav2prg_plugin_conf* crl_get_new_state(void) {
-  return &crl;
-}
 
 static enum wav2prg_sync_result crl_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
@@ -192,11 +187,6 @@ static const struct wav2prg_observed_loaders crl_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* crl_get_observed_loaders(void){
-  return crl_observed_loaders;
-}
-
-
 static enum wav2prg_bool crl_get_block(struct wav2prg_context *context, const struct wav2prg_functions *functions, struct wav2prg_plugin_conf *conf, struct wav2prg_raw_block *block, uint16_t size)
 {
   struct crl_private_state *state = (struct crl_private_state*)conf->private_state;
@@ -234,15 +224,13 @@ static const struct wav2prg_plugin_functions crl_functions =
   NULL,
   NULL,
   crl_get_block,
-  crl_get_new_state,
   NULL,
   NULL,
-  crl_get_observed_loaders,
   NULL
 };
 
 PLUGIN_ENTRY(crl)
 {
-  register_loader_func(&crl_functions, "CRL");
+  register_loader_func("CRL", &crl_functions, &crl, crl_observed_loaders);
 }
 

@@ -28,10 +28,6 @@ static const struct wav2prg_plugin_conf nobby =
   &nobby_generate_private_state
 };
 
-static const struct wav2prg_plugin_conf* nobby_get_new_state(void) {
-  return &nobby;
-}
-
 static enum wav2prg_sync_result nobby_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t byte = 0;
@@ -98,15 +94,13 @@ static const struct wav2prg_plugin_functions nobby_functions =
   NULL,
   nobby_get_block_info,
   NULL,
-  nobby_get_new_state,
   NULL,
   nobby_get_loaded_checksum,
-  NULL,
   NULL
 };
 
 PLUGIN_ENTRY(nobby)
 {
-  register_loader_func(&nobby_functions, "Nobby");
+  register_loader_func("Nobby", &nobby_functions, &nobby, NULL);
 }
 

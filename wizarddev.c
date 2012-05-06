@@ -37,18 +37,12 @@ static const struct wav2prg_plugin_conf wizarddev =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* wizarddev_get_state(void)
-{
-  return &wizarddev;
-}
 static const struct wav2prg_plugin_functions wizarddev_functions = {
     NULL,
     NULL,
     NULL,
     NULL,
     wizarddev_get_block_info,
-    NULL,
-    wizarddev_get_state,
     NULL,
     NULL,
     NULL,
@@ -57,5 +51,5 @@ static const struct wav2prg_plugin_functions wizarddev_functions = {
 
 PLUGIN_ENTRY(wizarddev)
 {
-  register_loader_func(&wizarddev_functions, "Wizard Development");
+  register_loader_func("Wizard Development", &wizarddev_functions, &wizarddev, NULL);
 }

@@ -32,18 +32,12 @@ static const struct wav2prg_plugin_conf microload =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* microload_get_state(void)
-{
-  return &microload;
-}
 static const struct wav2prg_plugin_functions microload_functions = {
     NULL,
     NULL,
     NULL,
     NULL,
     microload_get_block_info,
-    NULL,
-    microload_get_state,
     NULL,
     NULL,
     NULL,
@@ -52,5 +46,5 @@ static const struct wav2prg_plugin_functions microload_functions = {
 
 PLUGIN_ENTRY(microload)
 {
-  register_loader_func(&microload_functions, "Microload");
+  register_loader_func("Microload", &microload_functions, &microload, NULL);
 }

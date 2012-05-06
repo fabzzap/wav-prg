@@ -7,30 +7,34 @@
 #include "observers.h"
 
 struct loader {
-  const struct wav2prg_plugin_functions* functions;
-  const char* name;
+  const char *name;
+  struct wav2prg_loader *loader;
+  const struct wav2prg_observed_loaders *observed;
   struct loader *next;
 };
 
 static struct loader *loader_list = NULL;
 
-static enum wav2prg_bool register_loader(const struct wav2prg_plugin_functions* functions, const char* name) {
-  struct loader *new_loader = malloc(sizeof(struct loader));
+static enum wav2prg_bool register_loader(const char *name,
+                                         const struct wav2prg_plugin_functions *functions,
+                                         const struct wav2prg_plugin_conf *conf,
+                                         const struct wav2prg_observed_loaders *observed_loaders
+                                         ) {
   struct loader **last_loader;
 
   if (get_loader_by_name(name))
     return wav2prg_false;/*duplicate name*/
 
-  if (functions->get_new_plugin_state == NULL)
-    return wav2prg_false;/*missing mandatory function*/
-
   for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
-  new_loader->functions=functions;
-  new_loader->name=name;
-  new_loader->next=NULL;
-  *last_loader=new_loader;
-  if (functions->get_observed_loaders_func)
-    add_observed(name, functions->get_observed_loaders_func());
+  *last_loader = malloc(sizeof(struct loader));
+  (*last_loader)->loader = malloc(sizeof(struct wav2prg_loader));
+  (*last_loader)->loader->functions = functions;
+  (*last_loader)->loader->conf = conf;
+  (*last_loader)->name=name;
+  (*last_loader)->next=NULL;
+  (*last_loader)->observed = observed_loaders;
+  if (observed_loaders)
+    add_observed(name, (*last_loader)->observed);
 
   return wav2prg_true;
 }
@@ -106,16 +110,27 @@ void register_loaders(void) {
 #endif
 }
 
-const struct wav2prg_plugin_functions* get_loader_by_name(const char* name) {
+static const struct loader* get_a_loader(const char* name) {
   struct loader *loader;
 
   for(loader = loader_list; loader != NULL; loader = loader->next)
   {
     if(!strcmp(loader->name, name))
-      return loader->functions;
+      return loader;
   }
   return NULL;
 }
+
+const struct wav2prg_loader* get_loader_by_name(const char* name) {
+  const struct loader *loader = get_a_loader(name);
+  return loader ? loader->loader : NULL;
+}
+
+const struct wav2prg_observed_loaders* get_observed_loaders(const char* name) {
+  const struct loader *loader = get_a_loader(name);
+  return loader ? loader->observed : NULL;
+}
+
 
 static char** add_string_to_list(char **old_list, const char *new_string, uint32_t *old_size)
 {
@@ -126,16 +141,14 @@ static char** add_string_to_list(char **old_list, const char *new_string, uint32
   return new_list;
 }
 
-char** get_loaders(enum wav2prg_bool with_dependencies) {
+char** get_loaders() {
   struct loader *loader;
   uint32_t found_loaders = 0;
   char** valid_loader_names = malloc(sizeof (char*));
 
   valid_loader_names[0] = NULL;
   for(loader = loader_list; loader != NULL; loader = loader->next){
-    if ( (with_dependencies && !loader->functions->get_block_info)
-      ||(!with_dependencies &&  loader->functions->get_block_info))
-      valid_loader_names = add_string_to_list(valid_loader_names, loader->name, &found_loaders);
+    valid_loader_names = add_string_to_list(valid_loader_names, loader->name, &found_loaders);
   }
 
   return valid_loader_names;

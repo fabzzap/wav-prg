@@ -20,10 +20,6 @@ static const struct wav2prg_plugin_conf theedge =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* theedge_get_new_state(void) {
-  return &theedge;
-}
-
 static enum wav2prg_sync_result theedge_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t byte;
@@ -95,8 +91,6 @@ static const struct wav2prg_plugin_functions theedge_functions =
   NULL,
   theedge_get_block_info,
   NULL,
-  theedge_get_new_state,
-  NULL,
   NULL,
   NULL,
   NULL
@@ -104,6 +98,6 @@ static const struct wav2prg_plugin_functions theedge_functions =
 
 PLUGIN_ENTRY(theedge)
 {
-  register_loader_func(&theedge_functions, "The Edge");
+  register_loader_func("The Edge", &theedge_functions, &theedge, NULL);
 }
 

@@ -153,15 +153,7 @@ static enum wav2prg_bool audiogenic_specialagent_get_block(struct wav2prg_contex
   return wav2prg_true;
 }
 
-static const struct wav2prg_plugin_conf* audiogenic_get_new_state(void) {
-  return &audiogenic;
-}
-
-static const struct wav2prg_plugin_conf* specialagent_get_new_state(void) {
-  return &specialagent;
-}
-
-static enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
 
   return state->state == audiogenic_synced
@@ -242,19 +234,11 @@ static const struct wav2prg_observed_loaders audiogenic_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* audiogenic_get_observed_loaders(void){
-  return audiogenic_observed_loaders;
-}
-
 static const struct wav2prg_observed_loaders specialagent_observed_loaders[] = {
   {"Special Agent/Strike Force Cobra", recognize_itself},
   {"khc",recognize_hc},
   {NULL,NULL}
 };
-
-static const struct wav2prg_observed_loaders* specialagent_get_observed_loaders(void){
-  return specialagent_observed_loaders;
-}
 
 static const struct wav2prg_plugin_functions audiogenic_functions =
 {
@@ -264,10 +248,8 @@ static const struct wav2prg_plugin_functions audiogenic_functions =
   NULL,
   audiogenic_specialagent_get_block_info,
   audiogenic_specialagent_get_block,
-  audiogenic_get_new_state,
   NULL,
   NULL,
-  audiogenic_get_observed_loaders,
   NULL
 };
 
@@ -279,16 +261,14 @@ static const struct wav2prg_plugin_functions specialagent_functions =
   NULL,/*ignored, overwriting get_sync */
   audiogenic_specialagent_get_block_info,
   audiogenic_specialagent_get_block,
-  specialagent_get_new_state,
   NULL,
   NULL,
-  specialagent_get_observed_loaders,
   NULL
 };
 
 PLUGIN_ENTRY(audiogenic)
 {
-  register_loader_func(&audiogenic_functions, "Audiogenic");
-  register_loader_func(&specialagent_functions, "Special Agent/Strike Force Cobra");
+  register_loader_func("Audiogenic", &audiogenic_functions, &audiogenic, audiogenic_observed_loaders);
+  register_loader_func("Special Agent/Strike Force Cobra", &specialagent_functions, &specialagent ,specialagent_observed_loaders);
 }
 

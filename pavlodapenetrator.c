@@ -51,10 +51,6 @@ static enum wav2prg_bool pavlodapenetrator_get_block_info(struct wav2prg_context
   return wav2prg_true;
 }
 
-static const struct wav2prg_plugin_conf* pavlodapenetrator_get_new_state(void) {
-  return &pavlodapenetrator;
-}
-
 static enum wav2prg_bool pavlodapenetrator_get_bit(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit) {
   uint8_t pulse;
   struct pavlodapenetrator_private_state* state = (struct pavlodapenetrator_private_state*)conf->private_state;
@@ -137,7 +133,6 @@ static const struct wav2prg_plugin_functions pavlodapenetrator_functions =
   pavlodapenetrator_get_sync_byte,
   pavlodapenetrator_get_block_info,
   NULL,
-  pavlodapenetrator_get_new_state,
   pavlodapenetrator_compute_checksum_step,
   NULL,
   NULL
@@ -145,5 +140,5 @@ static const struct wav2prg_plugin_functions pavlodapenetrator_functions =
 
 PLUGIN_ENTRY(pavlodapenetrator)
 {
-  register_loader_func(&pavlodapenetrator_functions, "Pavloda Penetrator");
+  register_loader_func("Pavloda Penetrator", &pavlodapenetrator_functions, &pavlodapenetrator, NULL);
 }

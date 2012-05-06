@@ -77,10 +77,6 @@ static enum wav2prg_bool novaload_special_get_block_func(struct wav2prg_context*
   return wav2prg_true;
 }
 
-static const struct wav2prg_plugin_conf* novaload_special_get_new_state(void) {
-  return &novaload_special;
-}
-
 static enum wav2prg_bool keep_doing_novaload_special(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   struct novaload_special_private_state *state = (struct novaload_special_private_state *)conf->private_state;
   return state->start_of_block != 0;
@@ -91,10 +87,6 @@ static const struct wav2prg_observed_loaders novaload_special_observed_loaders[]
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* novaload_special_get_observed_loaders(void){
-  return novaload_special_observed_loaders;
-}
-
 static const struct wav2prg_plugin_functions novaload_special_functions =
 {
   NULL,
@@ -103,14 +95,12 @@ static const struct wav2prg_plugin_functions novaload_special_functions =
   NULL,
   novaload_special_get_block_info,
   novaload_special_get_block_func,
-  novaload_special_get_new_state,
   NULL,
   NULL,
-  novaload_special_get_observed_loaders,
   NULL
 };
 
 PLUGIN_ENTRY(novaload_special)
 {
-  register_loader_func(&novaload_special_functions, "Novaload Special");
+  register_loader_func("Novaload Special", &novaload_special_functions, &novaload_special, novaload_special_observed_loaders);
 }

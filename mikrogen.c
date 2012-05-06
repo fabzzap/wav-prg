@@ -19,10 +19,6 @@ static const struct wav2prg_plugin_conf mikrogen =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* mikrogen_get_new_state(void) {
-  return &mikrogen;
-}
-
 static enum wav2prg_sync_result mikrogen_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint32_t num_of_pilot_bits_found = -1;
@@ -119,14 +115,6 @@ static const struct wav2prg_observed_loaders mikrogen_new_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* mikrogen_old_get_observed_loaders(void){
-  return mikrogen_old_observed_loaders;
-}
-
-static const struct wav2prg_observed_loaders* mikrogen_new_get_observed_loaders(void){
-  return mikrogen_new_observed_loaders;
-}
-
 static const struct wav2prg_plugin_functions mikrogen_old_functions =
 {
   NULL,
@@ -135,10 +123,8 @@ static const struct wav2prg_plugin_functions mikrogen_old_functions =
   NULL,
   NULL,
   NULL,
-  mikrogen_get_new_state,
   mikrogen_compute_checksum_step,
   NULL,
-  mikrogen_old_get_observed_loaders,
   NULL
 };
 
@@ -150,16 +136,14 @@ static const struct wav2prg_plugin_functions mikrogen_new_functions =
   NULL,
   NULL,
   NULL,
-  mikrogen_get_new_state,
   mikrogen_compute_checksum_step,
   NULL,
-  mikrogen_new_get_observed_loaders,
   NULL
 };
 
 PLUGIN_ENTRY(mikrogen)
 {
-  register_loader_func(&mikrogen_old_functions, "Mikro-Gen (old)");
-  register_loader_func(&mikrogen_new_functions, "Mikro-Gen (new)");
+  register_loader_func("Mikro-Gen (old)", &mikrogen_old_functions, &mikrogen, mikrogen_old_observed_loaders);
+  register_loader_func("Mikro-Gen (new)", &mikrogen_new_functions, &mikrogen, mikrogen_new_observed_loaders);
 }
 

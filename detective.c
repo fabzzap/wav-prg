@@ -29,11 +29,6 @@ static const struct wav2prg_plugin_conf detective =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* detective_get_state(void)
-{
-  return &detective;
-}
-
 static const struct wav2prg_plugin_functions detective_functions = {
     NULL,
     NULL,
@@ -41,7 +36,6 @@ static const struct wav2prg_plugin_functions detective_functions = {
     NULL,
     detective_get_block_info,
     NULL,
-    detective_get_state,
     NULL,
     NULL,
     NULL
@@ -50,5 +44,5 @@ static const struct wav2prg_plugin_functions detective_functions = {
 
 PLUGIN_ENTRY(detective)
 {
-  register_loader_func(&detective_functions, "Detective");
+  register_loader_func("Detective", &detective_functions, &detective, NULL);
 }

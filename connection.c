@@ -20,11 +20,6 @@ static const struct wav2prg_plugin_conf connection =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* connection_get_state(void)
-{
-  return &connection;
-}
-
 static enum wav2prg_bool is_connection(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* datachunk_block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func)
 {
   if(datachunk_block->info.start != 698 || datachunk_block->info.end != 812)
@@ -49,10 +44,6 @@ static const struct wav2prg_observed_loaders connection_dependency[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* connection_get_observed_loaders(void){
-  return connection_dependency;
-}
-
 static const struct wav2prg_plugin_functions connection_functions = {
   NULL,
   NULL,
@@ -60,13 +51,12 @@ static const struct wav2prg_plugin_functions connection_functions = {
   NULL,
   NULL,
   NULL,
-  connection_get_state,
   NULL,
   NULL,
-  connection_get_observed_loaders
+  NULL
 };
 
 PLUGIN_ENTRY(connection)
 {
-  register_loader_func(&connection_functions, "Connection");
+  register_loader_func("Connection", &connection_functions, &connection, connection_dependency);
 }

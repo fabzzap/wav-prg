@@ -58,9 +58,6 @@ static enum wav2prg_bool wildsave_get_block_info(struct wav2prg_context* context
   info->start = ++info->end - size;
   return wav2prg_true;
 }
-static const struct wav2prg_plugin_conf* wildsave_get_new_state(void) {
-  return &wildsave;
-}
 
 static uint8_t wildsave_postprocess_data_byte(struct wav2prg_plugin_conf *conf, uint8_t byte, uint16_t location)
 {
@@ -76,11 +73,6 @@ static const struct wav2prg_observed_loaders wildsave_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* wildsave_get_observed_loaders(void){
-  return wildsave_observed_loaders;
-}
-
-
 static const struct wav2prg_plugin_functions wildsave_functions =
 {
   NULL,
@@ -89,15 +81,13 @@ static const struct wav2prg_plugin_functions wildsave_functions =
   NULL,
   wildsave_get_block_info,
   NULL,
-  wildsave_get_new_state,
   NULL,
   NULL,
-  wildsave_get_observed_loaders,
   wildsave_postprocess_data_byte
 };
 
 PLUGIN_ENTRY(wildsave)
 {
-  register_loader_func(&wildsave_functions, "Wild Save");
+  register_loader_func("Wild Save", &wildsave_functions, &wildsave, wildsave_observed_loaders);
 }
 

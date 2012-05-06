@@ -21,10 +21,6 @@ static const struct wav2prg_plugin_conf maddoctor =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* maddoctor_get_new_state(void) {
-  return &maddoctor;
-}
-
 static enum wav2prg_sync_result maddoctor_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t byte = 0;
@@ -127,10 +123,6 @@ static const struct wav2prg_observed_loaders maddoctor_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* maddoctor_get_observed_loaders(void){
-  return maddoctor_observed_loaders;
-}
-
 static const struct wav2prg_plugin_functions maddoctor_functions =
 {
   NULL,
@@ -139,14 +131,12 @@ static const struct wav2prg_plugin_functions maddoctor_functions =
   NULL,
   NULL,
   maddoctor_get_block,
-  maddoctor_get_new_state,
   NULL,
   NULL,
-  maddoctor_get_observed_loaders,
   NULL
 };
 
 PLUGIN_ENTRY(maddoctor)
 {
-  register_loader_func(&maddoctor_functions, "Mad Doctor");
+  register_loader_func("Mad Doctor", &maddoctor_functions, &maddoctor, maddoctor_observed_loaders);
 }

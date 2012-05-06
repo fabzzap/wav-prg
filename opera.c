@@ -19,10 +19,6 @@ static const struct wav2prg_plugin_conf opera =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* opera_get_new_state(void) {
-  return &opera;
-}
-
 static enum wav2prg_bool recognize_opera_dc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   if (block->info.start == 0x801
    && block->info.end == 0x9ff) {
@@ -59,10 +55,6 @@ static const struct wav2prg_observed_loaders opera_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* opera_get_observed_loaders(void){
-  return opera_observed_loaders;
-}
-
 static const struct wav2prg_plugin_functions opera_functions =
 {
   NULL,
@@ -71,15 +63,13 @@ static const struct wav2prg_plugin_functions opera_functions =
   NULL,
   NULL,
   NULL,
-  opera_get_new_state,
   NULL,
   NULL,
-  opera_get_observed_loaders,
   NULL
 };
 
 PLUGIN_ENTRY(opera)
 {
-  register_loader_func(&opera_functions, "Opera Soft");
+  register_loader_func("Opera Soft", &opera_functions, &opera, opera_observed_loaders);
 }
 

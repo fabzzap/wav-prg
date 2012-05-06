@@ -29,11 +29,6 @@ static const struct wav2prg_plugin_conf freeload =
   NULL
 };
 
-static const struct wav2prg_plugin_conf* freeload_get_state(void)
-{
-  return &freeload;
-}
-
 static enum wav2prg_bool recognize_fast_freeload(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   if (block->info.start == 0x33c
    && block->info.end == 0x3fc
@@ -64,10 +59,6 @@ static const struct wav2prg_observed_loaders freeload_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_observed_loaders* freeload_get_observed_loaders(void){
-  return freeload_observed_loaders;
-}
-
 static const struct wav2prg_plugin_functions freeload_functions = {
     NULL,
     NULL,
@@ -75,16 +66,13 @@ static const struct wav2prg_plugin_functions freeload_functions = {
     NULL,
     freeload_get_block_info,
     NULL,
-    freeload_get_state,
     NULL,
     NULL,
-    freeload_get_observed_loaders,
     NULL
 };
 
-
 PLUGIN_ENTRY(freeload)
 {
-  register_loader_func(&freeload_functions, "Freeload");
+  register_loader_func("Freeload", &freeload_functions, &freeload, freeload_observed_loaders);
 }
 
