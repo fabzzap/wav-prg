@@ -23,23 +23,6 @@ static struct wav2prg_generate_private_state pavloda_generate_private_state = {
 static uint16_t pavloda_thresholds[]={422,600};
 static uint8_t pavloda_pilot_sequence[]={0x66, 0x1B};
 
-static const struct wav2prg_plugin_conf pavloda =
-{
-  msbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  pavloda_thresholds,
-  NULL,
-  wav2prg_custom_pilot_tone,
-  0x01,
-  sizeof(pavloda_pilot_sequence),
-  pavloda_pilot_sequence,
-  1000,
-  first_to_last,
-  &pavloda_generate_private_state
-};
-
 static uint8_t pavloda_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
   return old_checksum + byte + 1;
 }
@@ -185,20 +168,38 @@ static enum wav2prg_bool pavloda_get_block(struct wav2prg_context* context, cons
   return res;
 }
 
-static const struct wav2prg_plugin_functions pavloda_functions =
-{
-  pavloda_get_bit,
-  NULL,
-  pavloda_get_sync,
-  NULL,
-  pavloda_get_block_info,
-  pavloda_get_block,
-  pavloda_compute_checksum_step,
-  NULL,
-  NULL
+static const struct wav2prg_loaders pavloda_functions[] ={
+  {
+    "Pavloda",
+    {
+      pavloda_get_bit,
+      NULL,
+      pavloda_get_sync,
+      NULL,
+      pavloda_get_block_info,
+      pavloda_get_block,
+      pavloda_compute_checksum_step,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      pavloda_thresholds,
+      NULL,
+      wav2prg_custom_pilot_tone,
+      0x01,
+      sizeof(pavloda_pilot_sequence),
+      pavloda_pilot_sequence,
+      1000,
+      first_to_last,
+      &pavloda_generate_private_state
+    },
+    NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(pavloda)
-{
-  register_loader_func("Pavloda", &pavloda_functions, &pavloda, NULL);
-}
+LOADER2(pavloda, 1, 0, "Pavloda (version used e.g. in Exploding Fist, sometimes referredd to as Super Pavloda", pavloda_functions)

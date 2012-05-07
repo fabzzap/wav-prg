@@ -18,23 +18,6 @@ static struct wav2prg_generate_private_state pavloda_generate_private_state = {
   &pavloda_private_state_model
 };
 
-static const struct wav2prg_plugin_conf pavlodaold =
-{
-  msbf,
-  wav2prg_xor_checksum,/*ignored, compute_checksum_step overridden*/
-  wav2prg_compute_and_check_checksum,
-  2,
-  pavlodaold_thresholds,
-  NULL,
-  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
-  0,/*ignored, no sync sequence*/
-  0,
-  NULL,
-  514,
-  first_to_last,
-  &pavloda_generate_private_state
-};
-
 static uint8_t pavlodaold_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
   return old_checksum + byte + 1;
 }
@@ -88,19 +71,37 @@ static enum wav2prg_bool pavlodaold_get_block_func(struct wav2prg_context *conte
   return result;
 }
 
-static const struct wav2prg_plugin_functions pavlodaold_functions =
-{
-  pavlodaold_get_bit,
-  NULL,
-  NULL,
-  NULL,
-  pavlodaold_get_block_info,
-  pavlodaold_get_block_func,
-  pavlodaold_compute_checksum_step,
-  NULL
+static const struct wav2prg_loaders pavlodaold_functions[] ={
+  {
+    "Pavloda Old",
+    {
+      pavlodaold_get_bit,
+      NULL,
+      NULL,
+      NULL,
+      pavlodaold_get_block_info,
+      pavlodaold_get_block_func,
+      pavlodaold_compute_checksum_step,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,/*ignored, compute_checksum_step overridden*/
+      wav2prg_compute_and_check_checksum,
+      2,
+      pavlodaold_thresholds,
+      NULL,
+      wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
+      0,/*ignored, no sync sequence*/
+      0,
+      NULL,
+      514,
+      first_to_last,
+      &pavloda_generate_private_state
+    },
+    NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(pavlodaold)
-{
-  register_loader_func("Pavloda Old", &pavlodaold_functions, &pavlodaold, NULL);
-}
+LOADER2(pavlodaold, 1, 0, "Pavloda (earliest version)", pavlodaold_functions)

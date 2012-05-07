@@ -17,23 +17,6 @@ static enum wav2prg_bool snake_get_block_info(struct wav2prg_context* context, c
 static uint16_t snake_thresholds[]={0x1be};
 static uint8_t snake_pilot_sequence[]={0xc8, 0xc3, 0xd4, 0xc9, 0xd2, 0xc4, 0xcc, 0xc5};
 
-static const struct wav2prg_plugin_conf snake =
-{
-  msbf,
-  wav2prg_add_checksum,
-  wav2prg_compute_and_check_checksum,
-  2,
-  snake_thresholds,
-  NULL,
-  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
-  64 /*ignored*/,
-  sizeof(snake_pilot_sequence),
-  snake_pilot_sequence,
-  0,
-  first_to_last,
-  NULL
-};
-
 static uint16_t snake_unencrypted(const struct wav2prg_block* block, uint16_t *offset, uint8_t *snakeblock)
 {
   uint16_t i;
@@ -174,20 +157,38 @@ static uint8_t snake_compute_checksum_step(struct wav2prg_plugin_conf* conf, uin
   return new_checksum;
 }
 
-static const struct wav2prg_plugin_functions snake_functions = {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    snake_get_block_info,
-    NULL,
-    snake_compute_checksum_step,
-    NULL,
-    NULL
+static const struct wav2prg_loaders snake_functions[] = {
+  {
+    "Snake",
+    {
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      snake_get_block_info,
+      NULL,
+      snake_compute_checksum_step,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_add_checksum,
+      wav2prg_compute_and_check_checksum,
+      2,
+      snake_thresholds,
+      NULL,
+      wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
+      64 /*ignored*/,
+      sizeof(snake_pilot_sequence),
+      snake_pilot_sequence,
+      0,
+      first_to_last,
+      NULL
+    },
+    snake_observed_loaders
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(snake)
-{
-  register_loader_func("Snake", &snake_functions, &snake, snake_observed_loaders);
-}
-
+LOADER2(snake, 1, 0, "Steve Snake loader with 8-byte sync sequence", snake_functions)

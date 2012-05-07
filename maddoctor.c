@@ -4,23 +4,6 @@ static uint16_t maddoctor_thresholds[]={384};
 static int16_t maddoctor_pulse_length_deviations[]={0, 16};
 static uint8_t maddoctor_sync_sequence[]={0xAA, 0xFF};
 
-static const struct wav2prg_plugin_conf maddoctor =
-{
-  msbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  2,
-  maddoctor_thresholds,
-  maddoctor_pulse_length_deviations,
-  wav2prg_custom_pilot_tone,
-  0x55,/*ignored*/
-  2,
-  maddoctor_sync_sequence,
-  15,
-  first_to_last,
-  NULL
-};
-
 static enum wav2prg_sync_result maddoctor_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t byte = 0;
@@ -123,20 +106,38 @@ static const struct wav2prg_observed_loaders maddoctor_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions maddoctor_functions =
-{
-  NULL,
-  NULL,
-  maddoctor_get_sync,
-  NULL,
-  NULL,
-  maddoctor_get_block,
-  NULL,
-  NULL,
-  NULL
+static const struct wav2prg_loaders maddoctor_functions[] ={
+  {
+    "Mad Doctor",
+    {
+      NULL,
+      NULL,
+      maddoctor_get_sync,
+      NULL,
+      NULL,
+      maddoctor_get_block,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      2,
+      maddoctor_thresholds,
+      maddoctor_pulse_length_deviations,
+      wav2prg_custom_pilot_tone,
+      0x55,/*ignored*/
+      2,
+      maddoctor_sync_sequence,
+      15,
+      first_to_last,
+      NULL
+    },
+    maddoctor_observed_loaders
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(maddoctor)
-{
-  register_loader_func("Mad Doctor", &maddoctor_functions, &maddoctor, maddoctor_observed_loaders);
-}
+LOADER2(maddoctor, 1, 0, "Mad Doctor loader", maddoctor_functions)

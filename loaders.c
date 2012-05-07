@@ -15,26 +15,35 @@ struct loader {
 
 static struct loader *loader_list = NULL;
 
-static enum wav2prg_bool register_loader(const char *name,
-                                         const struct wav2prg_plugin_functions *functions,
-                                         const struct wav2prg_plugin_conf *conf,
-                                         const struct wav2prg_observed_loaders *observed_loaders
-                                         ) {
+static enum wav2prg_bool register_loader(struct wav2prg_all_loaders *loader) {
   struct loader **last_loader;
+  const struct wav2prg_loaders *one_loader;
 
-  if (get_loader_by_name(name))
-    return wav2prg_false;/*duplicate name*/
+  if (loader->api_version[0] != 'W'
+  ||  loader->api_version[1] != 'P'
+  ||  loader->api_version[2] != '4'
+  ||  loader->api_version[3] != '0'
+  )
+  {
+    return wav2prg_false;/*bad structure*/
+  }
 
-  for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
-  *last_loader = malloc(sizeof(struct loader));
-  (*last_loader)->loader = malloc(sizeof(struct wav2prg_loader));
-  (*last_loader)->loader->functions = functions;
-  (*last_loader)->loader->conf = conf;
-  (*last_loader)->name=name;
-  (*last_loader)->next=NULL;
-  (*last_loader)->observed = observed_loaders;
-  if (observed_loaders)
-    add_observed(name, (*last_loader)->observed);
+  for(one_loader = loader->loaders; one_loader->name; one_loader++)
+  {
+    if (get_loader_by_name(one_loader->name))
+      return wav2prg_false;/*duplicate name*/
+      
+    for(last_loader = &loader_list; *last_loader != NULL; last_loader = &(*last_loader)->next);
+    *last_loader = malloc(sizeof(struct loader));
+    (*last_loader)->loader = malloc(sizeof(struct wav2prg_loader));
+    (*last_loader)->loader->functions = &one_loader->functions;
+    (*last_loader)->loader->conf = &one_loader->conf;
+    (*last_loader)->name = one_loader->name;
+    (*last_loader)->next=NULL;
+    (*last_loader)->observed = one_loader->observed;
+    if (one_loader->observed)
+      add_observed(one_loader->name, (*last_loader)->observed);
+  }
 
   return wav2prg_true;
 }
@@ -50,63 +59,39 @@ static void unregister_first_loader(void) {
   loader_list = new_first_loader;
 }
 
-#if 1
-void turbotape_get_plugin(wav2prg_register_loader register_loader_func);
-void kernal_get_plugin(wav2prg_register_loader register_loader_func);
-void novaload_get_plugin(wav2prg_register_loader register_loader_func);
-void audiogenic_get_plugin(wav2prg_register_loader register_loader_func);
-void pavlodapenetrator_get_plugin(wav2prg_register_loader register_loader_func);
-void pavlodaold_get_plugin(wav2prg_register_loader register_loader_func);
-void pavloda_get_plugin(wav2prg_register_loader register_loader_func);
-void connection_get_plugin(wav2prg_register_loader register_loader_func);
-void rackit_get_plugin(wav2prg_register_loader register_loader_func);
-void detective_get_plugin(wav2prg_register_loader register_loader_func);
-void turbo220_get_plugin(wav2prg_register_loader register_loader_func);
-void freeload_get_plugin(wav2prg_register_loader register_loader_func);
-void wildsave_get_plugin(wav2prg_register_loader register_loader_func);
-void theedge_get_plugin(wav2prg_register_loader register_loader_func);
-void maddoctor_get_plugin(wav2prg_register_loader register_loader_func);
-void mikrogen_get_plugin(wav2prg_register_loader register_loader_func);
-void crl_get_plugin(wav2prg_register_loader register_loader_func);
-void snakeload_get_plugin(wav2prg_register_loader register_loader_func);
-void snake_get_plugin(wav2prg_register_loader register_loader_func);
-void nobby_get_plugin(wav2prg_register_loader register_loader_func);
-void microload_get_plugin(wav2prg_register_loader register_loader_func);
-void atlantis_get_plugin(wav2prg_register_loader register_loader_func);
-void wizarddev_get_plugin(wav2prg_register_loader register_loader_func);
-void jetload_get_plugin(wav2prg_register_loader register_loader_func);
-void novaload_special_get_plugin(wav2prg_register_loader register_loader_func);
-void opera_get_plugin(wav2prg_register_loader register_loader_func);
-#endif
-
 void register_loaders(void) {
 #if 1
-  turbotape_get_plugin(register_loader);
-  kernal_get_plugin(register_loader);
-  novaload_get_plugin(register_loader);
-  audiogenic_get_plugin(register_loader);
-  pavlodapenetrator_get_plugin(register_loader);
-  pavlodaold_get_plugin(register_loader);
-  pavloda_get_plugin(register_loader);
-  connection_get_plugin(register_loader);
-  rackit_get_plugin(register_loader);
-  detective_get_plugin(register_loader);
-  turbo220_get_plugin(register_loader);
-  freeload_get_plugin(register_loader);
-  wildsave_get_plugin(register_loader);
-  theedge_get_plugin(register_loader);
-  maddoctor_get_plugin(register_loader);
-  mikrogen_get_plugin(register_loader);
-  crl_get_plugin(register_loader);
-  snakeload_get_plugin(register_loader);
-  snake_get_plugin(register_loader);
-  nobby_get_plugin(register_loader);
-  microload_get_plugin(register_loader);
-  atlantis_get_plugin(register_loader);
-  wizarddev_get_plugin(register_loader);
-  jetload_get_plugin(register_loader);
-  novaload_special_get_plugin(register_loader);
-  opera_get_plugin(register_loader);
+#define STATIC_REGISTER(x) \
+{ \
+  extern struct wav2prg_all_loaders x##_loader; \
+  register_loader(&x##_loader); \
+}
+  STATIC_REGISTER(turbotape)
+  STATIC_REGISTER(kernal)
+  STATIC_REGISTER(novaload)
+  STATIC_REGISTER(audiogenic)
+  STATIC_REGISTER(pavlodapenetrator)
+  STATIC_REGISTER(pavlodaold)
+  STATIC_REGISTER(pavloda)
+  STATIC_REGISTER(connection)
+  STATIC_REGISTER(rackit)
+  STATIC_REGISTER(detective)
+  STATIC_REGISTER(turbo220)
+  STATIC_REGISTER(freeload)
+  STATIC_REGISTER(wildsave)
+  STATIC_REGISTER(theedge)
+  STATIC_REGISTER(maddoctor)
+  STATIC_REGISTER(mikrogen)
+  STATIC_REGISTER(crl)
+  STATIC_REGISTER(snakeload)
+  STATIC_REGISTER(snake)
+  STATIC_REGISTER(nobby)
+  STATIC_REGISTER(microload)
+  STATIC_REGISTER(atlantis)
+  STATIC_REGISTER(wizarddev)
+  STATIC_REGISTER(jetload)
+  STATIC_REGISTER(novaload_special)
+  STATIC_REGISTER(opera)
 #endif
 }
 

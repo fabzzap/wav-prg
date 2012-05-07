@@ -55,41 +55,7 @@ static struct wav2prg_generate_private_state audiogenic_specialagent_generate_pr
 static uint16_t audiogenic_thresholds[]={319};
 static uint8_t audiogenic_pilot_sequence[]={170};
 
-static const struct wav2prg_plugin_conf audiogenic =
-{
-  msbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_checksum_but_do_not_check_it_at_end,
-  2,
-  audiogenic_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,
-  240,
-  sizeof(audiogenic_pilot_sequence),
-  audiogenic_pilot_sequence,
-  0,
-  first_to_last,
-  &audiogenic_specialagent_generate_private_state
-};
-
 static uint16_t specialagent_thresholds[]={594,1151};
-
-static const struct wav2prg_plugin_conf specialagent =
-{
-  msbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_checksum_but_do_not_check_it_at_end,
-  3,
-  specialagent_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,
-  0,                              /*ignored, default get_sync unused*/
-  0,
-  NULL,
-  0,                                /*ignored, default get_sync unused*/
-  first_to_last,
-  &audiogenic_specialagent_generate_private_state
-};
 
 static enum wav2prg_sync_result audiogenic_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
@@ -240,35 +206,69 @@ static const struct wav2prg_observed_loaders specialagent_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions audiogenic_functions =
+static const struct wav2prg_loaders audiogenic[] =
 {
-  NULL,
-  NULL,
-  audiogenic_sync,
-  NULL,
-  audiogenic_specialagent_get_block_info,
-  audiogenic_specialagent_get_block,
-  NULL,
-  NULL,
-  NULL
+  {
+    "Audiogenic",
+    {
+      NULL,
+      NULL,
+      audiogenic_sync,
+      NULL,
+      audiogenic_specialagent_get_block_info,
+      audiogenic_specialagent_get_block,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_checksum_but_do_not_check_it_at_end,
+      2,
+      audiogenic_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,
+      240,
+      sizeof(audiogenic_pilot_sequence),
+      audiogenic_pilot_sequence,
+      0,
+      first_to_last,
+      &audiogenic_specialagent_generate_private_state
+    },
+    audiogenic_observed_loaders
+  },
+  {
+    "Special Agent/Strike Force Cobra",
+    {
+      NULL,
+      NULL,
+      specialagent_sync,
+      NULL,/*ignored, overwriting get_sync */
+      audiogenic_specialagent_get_block_info,
+      audiogenic_specialagent_get_block,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_checksum_but_do_not_check_it_at_end,
+      3,
+      specialagent_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,
+      0,                              /*ignored, default get_sync unused*/
+      0,
+      NULL,
+      0,                              /*ignored, default get_sync unused*/
+      first_to_last,
+      &audiogenic_specialagent_generate_private_state
+    },
+    specialagent_observed_loaders
+  }
+  ,{NULL}
 };
 
-static const struct wav2prg_plugin_functions specialagent_functions =
-{
-  NULL,
-  NULL,
-  specialagent_sync,
-  NULL,/*ignored, overwriting get_sync */
-  audiogenic_specialagent_get_block_info,
-  audiogenic_specialagent_get_block,
-  NULL,
-  NULL,
-  NULL
-};
-
-PLUGIN_ENTRY(audiogenic)
-{
-  register_loader_func("Audiogenic", &audiogenic_functions, &audiogenic, audiogenic_observed_loaders);
-  register_loader_func("Special Agent/Strike Force Cobra", &specialagent_functions, &specialagent ,specialagent_observed_loaders);
-}
-
+LOADER2(audiogenic,1,0,"Audiogenic desc", audiogenic);

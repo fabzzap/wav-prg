@@ -2,23 +2,6 @@
 
 static uint16_t opera_thresholds[]={692};
 
-static const struct wav2prg_plugin_conf opera =
-{
-  msbf,
-  wav2prg_xor_checksum,/*ignored*/
-  wav2prg_do_not_compute_checksum,
-  2,
-  opera_thresholds,
-  NULL,
-  wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
-  0x55,/*ignored*/
-  0,
-  NULL,
-  128,
-  first_to_last,
-  NULL
-};
-
 static enum wav2prg_bool recognize_opera_dc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   if (block->info.start == 0x801
    && block->info.end == 0x9ff) {
@@ -55,21 +38,39 @@ static const struct wav2prg_observed_loaders opera_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions opera_functions =
+static const struct wav2prg_loaders opera_functions[] =
 {
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+  {
+    "Opera Turbo Load",
+    {
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,/*ignored*/
+      wav2prg_do_not_compute_checksum,
+      2,
+      opera_thresholds,
+      NULL,
+      wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
+      0x55,/*ignored*/
+      0,
+      NULL,
+      128,
+      first_to_last,
+      NULL
+    },
+    opera_observed_loaders
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(opera)
-{
-  register_loader_func("Opera Soft", &opera_functions, &opera, opera_observed_loaders);
-}
-
+LOADER2(opera, 1, 0, "Opera Turbo Load, used by some Opera Soft programs", opera_functions)

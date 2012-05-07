@@ -123,11 +123,33 @@ struct wav2prg_observed_loaders {
 
 struct wav2prg_context;
 
-typedef enum wav2prg_bool (*wav2prg_register_loader)(const char*, const struct wav2prg_plugin_functions*, const struct wav2prg_plugin_conf*, const struct wav2prg_observed_loaders*);
+#define WAVPRG_LOADER_API {'W','P','4','0'}
+
+struct wav2prg_all_loaders {
+  char api_version[4];
+  struct {
+    const char version[2];
+    const char *desc;
+  } loader_version;
+  const struct wav2prg_loaders {
+    const char *name;
+    struct wav2prg_plugin_functions functions;
+    struct wav2prg_plugin_conf conf;
+    const struct wav2prg_observed_loaders* observed;
+  } *loaders;
+};
 
 #if 0 //defined _WIN32
 #elif defined DSDS
 #else
-#define PLUGIN_ENTRY(x) \
-  void x##_get_plugin(wav2prg_register_loader register_loader_func)
+#define LOADER2(x, major,minor,desc, loaders) \
+const struct wav2prg_all_loaders x##_loader = \
+{ \
+ WAVPRG_LOADER_API, \
+ { \
+ {major,minor}, \
+ desc \
+ }, \
+ loaders \
+};
 #endif

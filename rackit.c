@@ -19,23 +19,6 @@ static struct wav2prg_generate_private_state rackit_generate_private_state = {
 static uint16_t rackit_thresholds[]={352};
 static uint8_t rackit_pilot_sequence[]={0x3D};
 
-static const struct wav2prg_plugin_conf rackit =
-{
-  msbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  2,
-  rackit_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,
-  0x25,
-  sizeof(rackit_pilot_sequence),
-  rackit_pilot_sequence,
-  0,
-  first_to_last,
-  &rackit_generate_private_state
-};
-
 static enum wav2prg_bool rackit_get_loaded_checksum(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* loaded_checksum)
 {
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
@@ -175,26 +158,46 @@ static enum wav2prg_bool keep_doing_rackit(struct wav2prg_plugin_conf* conf, con
   return (block->info.start != 0xfffc || block->info.end != 0xfffe);
 }
 
-static const struct wav2prg_observed_loaders rackit_observed_loaders[] = {
+static const struct wav2prg_observed_loaders rackit_observed_loaders[] = 
+{
   {"kdc",is_rackit},
   {"Rack-It",keep_doing_rackit},
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions rackit_functions =
+static const struct wav2prg_loaders rackit_functions[] =
 {
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  rackit_get_block_info,
-  NULL,
-  NULL,
-  rackit_get_loaded_checksum,
-  rackit_postprocess_data_byte
+  {
+    "Rack-It",
+    {
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      rackit_get_block_info,
+      NULL,
+      NULL,
+      rackit_get_loaded_checksum,
+      rackit_postprocess_data_byte
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      2,
+      rackit_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,
+      0x25,
+      sizeof(rackit_pilot_sequence),
+      rackit_pilot_sequence,
+      0,
+      first_to_last,
+      &rackit_generate_private_state
+    },
+    rackit_observed_loaders
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(rackit)
-{
-  register_loader_func("Rack-It", &rackit_functions, &rackit, rackit_observed_loaders);
-}
+LOADER2(rackit, 1, 0, "Rack-It loader", rackit_functions)

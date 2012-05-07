@@ -15,36 +15,38 @@ static enum wav2prg_bool microload_get_block_info(struct wav2prg_context* contex
 static uint16_t microload_thresholds[]={0x14d};
 static uint8_t microload_pilot_sequence[]={10,9,8,7,6,5,4,3,2,1};
 
-static const struct wav2prg_plugin_conf microload =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  2,
-  microload_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,
-  160,
-  sizeof(microload_pilot_sequence),
-  microload_pilot_sequence,
-  0,
-  first_to_last,
-  NULL
-};
-
-static const struct wav2prg_plugin_functions microload_functions = {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    microload_get_block_info,
-    NULL,
-    NULL,
-    NULL,
+static const struct wav2prg_loaders microload_functions[] = {
+  {
+    "Microload",
+    {
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      microload_get_block_info,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      2,
+      microload_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,
+      160,
+      sizeof(microload_pilot_sequence),
+      microload_pilot_sequence,
+      0,
+      first_to_last,
+      NULL
+    },
     NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(microload)
-{
-  register_loader_func("Microload", &microload_functions, &microload, NULL);
-}
+LOADER2(microload, 1, 0, "Microload loader", microload_functions)

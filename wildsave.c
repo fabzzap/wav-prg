@@ -15,23 +15,6 @@ static struct wav2prg_generate_private_state wildsave_generate_private_state = {
 static uint16_t wildsave_thresholds[]={480};
 static uint8_t wildsave_pilot_sequence[]={10,9,8,7,6,5,4,3,2,1};
 
-static const struct wav2prg_plugin_conf wildsave =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  2,
-  wildsave_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,
-  160,
-  sizeof(wildsave_pilot_sequence),
-  wildsave_pilot_sequence,
-  0,
-  last_to_first,
-  &wildsave_generate_private_state
-};
-
 static enum wav2prg_sync_result wildsave_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct wildsave_private_state *state = (struct wildsave_private_state *)conf->private_state;
@@ -73,21 +56,38 @@ static const struct wav2prg_observed_loaders wildsave_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions wildsave_functions =
-{
-  NULL,
-  NULL,
-  wildsave_sync,
-  NULL,
-  wildsave_get_block_info,
-  NULL,
-  NULL,
-  NULL,
-  wildsave_postprocess_data_byte
+static const struct wav2prg_loaders wildsave_functions[] = {
+  {
+    "Wild Save",
+    {
+      NULL,
+      NULL,
+      wildsave_sync,
+      NULL,
+      wildsave_get_block_info,
+      NULL,
+      NULL,
+      NULL,
+      wildsave_postprocess_data_byte
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      2,
+      wildsave_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,
+      160,
+      sizeof(wildsave_pilot_sequence),
+      wildsave_pilot_sequence,
+      0,
+      last_to_first,
+      &wildsave_generate_private_state
+    },
+    wildsave_observed_loaders
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(wildsave)
-{
-  register_loader_func("Wild Save", &wildsave_functions, &wildsave, wildsave_observed_loaders);
-}
-
+LOADER2(wildsave, 1, 0, "Wild Save loader", wildsave_functions)

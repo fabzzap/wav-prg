@@ -11,23 +11,6 @@ static enum wav2prg_bool jetload_get_block_info(struct wav2prg_context* context,
 
 static uint16_t jetload_thresholds[]={0x1e0};
 
-static const struct wav2prg_plugin_conf jetload =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_do_not_compute_checksum,
-  2,
-  jetload_thresholds,
-  NULL,
-  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
-  2,
-  0,
-  NULL,
-  8,
-  first_to_last,
-  NULL
-};
-
 static enum wav2prg_sync_result jetload_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t byte;
@@ -70,19 +53,38 @@ static enum wav2prg_sync_result jetload_get_sync(struct wav2prg_context* context
   return byte == 0x2e ? wav2prg_sync_success : wav2prg_sync_failure;
 }
 
-static const struct wav2prg_plugin_functions jetload_functions = {
-    NULL,
-    NULL,
-    jetload_get_sync,
-    NULL,
-    jetload_get_block_info,
-    NULL,
-    NULL,
-    NULL,
+static const struct wav2prg_loaders jetload_functions[] = {
+  {
+    "Jetload",
+    {
+      NULL,
+      NULL,
+      jetload_get_sync,
+      NULL,
+      jetload_get_block_info,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_do_not_compute_checksum,
+      2,
+      jetload_thresholds,
+      NULL,
+      wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
+      2,
+      0,
+      NULL,
+      8,
+      first_to_last,
+      NULL
+    },
     NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(jetload)
-{
-  register_loader_func("Jetload", &jetload_functions, &jetload, NULL);
-}
+LOADER2(jetload, 1, 0, "Jetload plug-in", jetload_functions)

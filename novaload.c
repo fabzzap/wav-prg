@@ -3,23 +3,6 @@
 static uint16_t novaload_thresholds[]={500};
 static uint8_t novaload_pilot_sequence[]={0xAA};
 
-const struct wav2prg_plugin_conf novaload_conf =
-{
-  lsbf,
-  wav2prg_add_checksum,
-  wav2prg_compute_and_check_checksum,
-  sizeof(novaload_thresholds)/sizeof(*novaload_thresholds) + 1,
-  novaload_thresholds,
-  NULL,
-  wav2prg_custom_pilot_tone,
-  0,/*ignored, using wav2prg_custom_pilot_tone*/
-  sizeof(novaload_pilot_sequence),
-  novaload_pilot_sequence,
-  0,
-  first_to_last,
-  NULL
-};
-
 enum wav2prg_sync_result novaload_get_first_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t shift_reg = 0xFF;
@@ -88,21 +71,39 @@ static enum wav2prg_bool novaload_get_loaded_checksum(struct wav2prg_context *co
   return functions->get_data_byte_func(context, functions, conf, byte, 0);
 }
 
-static const struct wav2prg_plugin_functions novaload_functions =
+static const struct wav2prg_loaders novaload_functions[] =
 {
-  NULL,
-  NULL,
-  novaload_get_first_sync,
-  NULL,
-  novaload_get_block_info,
-  novaload_get_block,
-  NULL,
-  novaload_get_loaded_checksum,
-  NULL
+  {
+    "Novaload Normal",
+    {
+      NULL,
+      NULL,
+      novaload_get_first_sync,
+      NULL,
+      novaload_get_block_info,
+      novaload_get_block,
+      NULL,
+      novaload_get_loaded_checksum,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_add_checksum,
+      wav2prg_compute_and_check_checksum,
+      sizeof(novaload_thresholds)/sizeof(*novaload_thresholds) + 1,
+      novaload_thresholds,
+      NULL,
+      wav2prg_custom_pilot_tone,
+      0,/*ignored, using wav2prg_custom_pilot_tone*/
+      sizeof(novaload_pilot_sequence),
+      novaload_pilot_sequence,
+      0,
+      first_to_last,
+      NULL
+    },
+    NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(novaload)
-{
-  register_loader_func("Novaload Normal", &novaload_functions, &novaload_conf, NULL);
-}
-
+LOADER2(novaload, 1, 0, "Novaload (only normal blocks) loader", novaload_functions)

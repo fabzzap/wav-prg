@@ -16,23 +16,6 @@ static struct wav2prg_generate_private_state novaload_special_generate_private_s
 static uint16_t novaload_special_thresholds[]={0x1f4};
 static uint8_t novaload_special_pilot_sequence[]={0xaa,0x55};
 
-static const struct wav2prg_plugin_conf novaload_special =
-{
-  lsbf,
-  wav2prg_add_checksum,
-  wav2prg_compute_checksum_but_do_not_check_it_at_end,
-  2,
-  novaload_special_thresholds,
-  NULL,
-  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
-  160,
-  sizeof(novaload_special_pilot_sequence),
-  novaload_special_pilot_sequence,
-  1000,
-  first_to_last,
-  &novaload_special_generate_private_state
-};
-
 static enum wav2prg_sync_result novaload_special_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct novaload_special_private_state *state = (struct novaload_special_private_state *)conf->private_state;
@@ -87,20 +70,39 @@ static const struct wav2prg_observed_loaders novaload_special_observed_loaders[]
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions novaload_special_functions =
+static const struct wav2prg_loaders novaload_special_functions[] =
 {
-  NULL,
-  NULL,
-  novaload_special_sync,
-  NULL,
-  novaload_special_get_block_info,
-  novaload_special_get_block_func,
-  NULL,
-  NULL,
-  NULL
+  {
+    "Novaload Special",
+    {
+      NULL,
+      NULL,
+      novaload_special_sync,
+      NULL,
+      novaload_special_get_block_info,
+      novaload_special_get_block_func,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_add_checksum,
+      wav2prg_compute_checksum_but_do_not_check_it_at_end,
+      2,
+      novaload_special_thresholds,
+      NULL,
+      wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
+      160,
+      sizeof(novaload_special_pilot_sequence),
+      novaload_special_pilot_sequence,
+      1000,
+      first_to_last,
+      &novaload_special_generate_private_state
+    },
+    novaload_special_observed_loaders
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(novaload_special)
-{
-  register_loader_func("Novaload Special", &novaload_special_functions, &novaload_special, novaload_special_observed_loaders);
-}
+LOADER2(novaload_special, 1, 0, "Novaload (only special blocks)", novaload_special_functions)

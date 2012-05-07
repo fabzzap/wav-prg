@@ -17,23 +17,6 @@ static enum wav2prg_bool snakeload_get_block_info(struct wav2prg_context* contex
 static uint16_t snakeload_thresholds[]={0x3ff};
 static uint8_t snakeload_pilot_sequence[]={'e','i','l','y','K'};
 
-static const struct wav2prg_plugin_conf snakeload =
-{
-  msbf,
-  wav2prg_add_checksum,
-  wav2prg_compute_and_check_checksum,
-  2,
-  snakeload_thresholds,
-  NULL,
-  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
-  64 /*ignored*/,
-  sizeof(snakeload_pilot_sequence),
-  snakeload_pilot_sequence,
-  0,
-  first_to_last,
-  NULL
-};
-
 static enum wav2prg_bool recognize_snakeload(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   uint16_t i, blocklen = block->info.end - block->info.start;
 
@@ -72,20 +55,38 @@ static const struct wav2prg_observed_loaders snakeload_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions snakeload_functions = {
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  snakeload_get_block_info,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static const struct wav2prg_loaders snakeload_functions[] = {
+  {
+    "Snakeload",
+    {
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      snakeload_get_block_info,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_add_checksum,
+      wav2prg_compute_and_check_checksum,
+      2,
+      snakeload_thresholds,
+      NULL,
+      wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
+      64 /*ignored*/,
+      sizeof(snakeload_pilot_sequence),
+      snakeload_pilot_sequence,
+      0,
+      first_to_last,
+      NULL
+    },
+    snakeload_observed_loaders
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(snakeload)
-{
-  register_loader_func("Snakeload", &snakeload_functions, &snakeload, snakeload_observed_loaders);
-}
-
+LOADER2(snakeload, 1, 0, "Steve Snake loader with 5-byte sync sequence (called Snakeload v5.0 in Ninja Warriors code)", snakeload_functions)

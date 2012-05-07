@@ -20,36 +20,37 @@ static enum wav2prg_bool wizarddev_get_block_info(struct wav2prg_context* contex
 
 static uint16_t wizarddev_thresholds[]={0x180};
 
-static const struct wav2prg_plugin_conf wizarddev =
-{
-  msbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  2,
-  wizarddev_thresholds,
-  NULL,
-  wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
-  2,
-  0,
-  NULL,
-  2000,
-  first_to_last,
-  NULL
-};
-
-static const struct wav2prg_plugin_functions wizarddev_functions = {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    wizarddev_get_block_info,
-    NULL,
-    NULL,
-    NULL,
+static const struct wav2prg_loaders wizarddev_functions[] = {
+  {
+    "Wizard Development",{
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      wizarddev_get_block_info,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      2,
+      wizarddev_thresholds,
+      NULL,
+      wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
+      2,
+      0,
+      NULL,
+      2000,
+      first_to_last,
+      NULL
+    },
     NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(wizarddev)
-{
-  register_loader_func("Wizard Development", &wizarddev_functions, &wizarddev, NULL);
-}
+LOADER2(wizarddev, 1, 0, "Wizard Development loader", wizarddev_functions)

@@ -11,23 +11,6 @@ static struct wav2prg_generate_private_state nobby_generate_private_state = {
   NULL
 };
 
-static const struct wav2prg_plugin_conf nobby =
-{
-  msbf,
-  wav2prg_add_checksum,
-  wav2prg_compute_and_check_checksum,
-  2,
-  nobby_thresholds,
-  NULL,
-  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,/*ignored*/
-  0x40,
-  1,
-  nobby_sync_sequence,
-  30,
-  first_to_last,
-  &nobby_generate_private_state
-};
-
 static enum wav2prg_sync_result nobby_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t byte = 0;
@@ -86,21 +69,38 @@ static enum wav2prg_bool nobby_get_loaded_checksum(struct wav2prg_context* conte
   return wav2prg_true;
 }
 
-static const struct wav2prg_plugin_functions nobby_functions =
-{
-  NULL,
-  NULL,
-  nobby_get_sync,
-  NULL,
-  nobby_get_block_info,
-  NULL,
-  NULL,
-  nobby_get_loaded_checksum,
-  NULL
+static const struct wav2prg_loaders nobby_functions[] = {
+  {
+    "Nobby",
+    {
+      NULL,
+      NULL,
+      nobby_get_sync,
+      NULL,
+      nobby_get_block_info,
+      NULL,
+      NULL,
+      nobby_get_loaded_checksum,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_add_checksum,
+      wav2prg_compute_and_check_checksum,
+      2,
+      nobby_thresholds,
+      NULL,
+      wav2prg_pilot_tone_made_of_0_bits_followed_by_1,/*ignored*/
+      0x40,
+      1,
+      nobby_sync_sequence,
+      30,
+      first_to_last,
+      &nobby_generate_private_state
+    },
+    NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(nobby)
-{
-  register_loader_func("Nobby", &nobby_functions, &nobby, NULL);
-}
-
+LOADER2(nobby, 1, 0, "Nobby the Aardvark loader", nobby_functions)

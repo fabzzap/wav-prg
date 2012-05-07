@@ -21,23 +21,6 @@ static struct wav2prg_generate_private_state pavlodapenetrator_generate_private_
 static uint16_t pavlodapenetrator_thresholds[]={422,600};
 static uint8_t pavlodapenetrator_pilot_sequence[]={0x55};
 
-static const struct wav2prg_plugin_conf pavlodapenetrator =
-{
-  msbf,
-  wav2prg_xor_checksum,/*ignored, compute_checksum_step overridden*/
-  wav2prg_compute_and_check_checksum,
-  3,
-  pavlodapenetrator_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, get_sync overridden*/
-  0x08,
-  sizeof(pavlodapenetrator_pilot_sequence),
-  pavlodapenetrator_pilot_sequence,
-  256,
-  first_to_last,
-  &pavlodapenetrator_generate_private_state
-};
-
 static uint8_t pavlodapenetrator_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
   return old_checksum + byte + 1;
 }
@@ -125,20 +108,38 @@ static enum wav2prg_bool pavlodapenetrator_get_sync_byte(struct wav2prg_context*
   return wav2prg_true;
 };
 
-static const struct wav2prg_plugin_functions pavlodapenetrator_functions =
-{
-  pavlodapenetrator_get_bit,
-  NULL,
-  NULL,
-  pavlodapenetrator_get_sync_byte,
-  pavlodapenetrator_get_block_info,
-  NULL,
-  pavlodapenetrator_compute_checksum_step,
-  NULL,
-  NULL
+static const struct wav2prg_loaders pavlodapenetrator_functions[] ={
+  {
+    "Pavloda Penetrator",
+    {
+      pavlodapenetrator_get_bit,
+      NULL,
+      NULL,
+      pavlodapenetrator_get_sync_byte,
+      pavlodapenetrator_get_block_info,
+      NULL,
+      pavlodapenetrator_compute_checksum_step,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,/*ignored, compute_checksum_step overridden*/
+      wav2prg_compute_and_check_checksum,
+      3,
+      pavlodapenetrator_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, get_sync overridden*/
+      0x08,
+      sizeof(pavlodapenetrator_pilot_sequence),
+      pavlodapenetrator_pilot_sequence,
+      256,
+      first_to_last,
+      &pavlodapenetrator_generate_private_state
+    },
+    NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(pavlodapenetrator)
-{
-  register_loader_func("Pavloda Penetrator", &pavlodapenetrator_functions, &pavlodapenetrator, NULL);
-}
+LOADER2(pavlodapenetrator, 1, 0, "Pavloda (version found in Penetrator)", pavlodapenetrator_functions)

@@ -3,23 +3,6 @@
 static uint16_t theedge_thresholds[]={469};
 static int16_t theedge_pulse_length_deviations[]={24, 0};
 
-static const struct wav2prg_plugin_conf theedge =
-{
-  msbf,
-  wav2prg_xor_checksum,/*ignored*/
-  wav2prg_do_not_compute_checksum,
-  2,
-  theedge_thresholds,
-  theedge_pulse_length_deviations,
-  wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
-  0x55,
-  0,/*ignored*/
-  NULL,/*ignored*/
-  1000,
-  first_to_last,
-  NULL
-};
-
 static enum wav2prg_sync_result theedge_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint8_t byte;
@@ -83,21 +66,38 @@ static enum wav2prg_bool theedge_get_block_info(struct wav2prg_context *context,
   return functions->get_sync(context, functions, conf, wav2prg_false);
 }
 
-static const struct wav2prg_plugin_functions theedge_functions =
-{
-  NULL,
-  NULL,
-  theedge_get_sync,
-  NULL,
-  theedge_get_block_info,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static const struct wav2prg_loaders theedge_functions[] = {
+  {
+    "The Edge",
+    {
+      NULL,
+      NULL,
+      theedge_get_sync,
+      NULL,
+      theedge_get_block_info,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      msbf,
+      wav2prg_xor_checksum,/*ignored*/
+      wav2prg_do_not_compute_checksum,
+      2,
+      theedge_thresholds,
+      theedge_pulse_length_deviations,
+      wav2prg_pilot_tone_made_of_0_bits_followed_by_1,
+      0x55,
+      0,/*ignored*/
+      NULL,/*ignored*/
+      1000,
+      first_to_last,
+      NULL
+    },
+    NULL
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(theedge)
-{
-  register_loader_func("The Edge", &theedge_functions, &theedge, NULL);
-}
-
+LOADER2(theedge, 1, 0, "Loader used in some The Edge games, maybe should be called Booster", theedge_functions)

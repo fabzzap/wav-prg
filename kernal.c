@@ -26,142 +26,6 @@ static uint16_t kernal_c16_thresholds[]={640, 1260};
 static uint8_t kernal_1stcopy_pilot_sequence[]={137,136,135,134,133,132,131,130,129};
 static uint8_t kernal_2ndcopy_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
-static const struct wav2prg_plugin_conf kernal_headerchunk_first_copy =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  kernal_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
-  0,/*ignored, overriding get_sync_byte*/
-  9,
-  kernal_1stcopy_pilot_sequence,
-  0,
-  first_to_last,
-  &headerchunk_generate_private_state
-};
-
-static const struct wav2prg_plugin_conf kernal_headerchunk_second_copy =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  kernal_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
-  0,/*ignored, overriding get_sync_byte*/
-  9,
-  kernal_2ndcopy_pilot_sequence,
-  0,
-  first_to_last,
-  &headerchunk_generate_private_state
-};
-
-static const struct wav2prg_plugin_conf kernal_datachunk_first_copy =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  kernal_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
-  0,/*ignored, overriding get_sync_byte*/
-  9,
-  kernal_1stcopy_pilot_sequence,
-  0,
-  first_to_last,
-  &kernal_generate_private_state
-};
-
-static const struct wav2prg_plugin_conf kernal_datachunk_second_copy =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  kernal_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
-  0,/*ignored, overriding get_sync_byte*/
-  9,
-  kernal_2ndcopy_pilot_sequence,
-  0,
-  first_to_last,
-  &kernal_generate_private_state
-};
-
-static const struct wav2prg_plugin_conf kernal_headerchunk_16_first_copy =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  kernal_c16_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
-  0,/*ignored, overriding get_sync_byte*/
-  9,
-  kernal_1stcopy_pilot_sequence,
-  0,
-  first_to_last,
-  &kernal_generate_private_state
-};
-
-static const struct wav2prg_plugin_conf kernal_headerchunk_16_second_copy =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  kernal_c16_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
-  0,/*ignored, overriding get_sync_byte*/
-  9,
-  kernal_2ndcopy_pilot_sequence,
-  0,
-  first_to_last,
-  &kernal_generate_private_state
-};
-
-static const struct wav2prg_plugin_conf kernal_datachunk_16_first_copy =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  kernal_c16_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
-  0,/*ignored, overriding get_sync_byte*/
-  9,
-  kernal_1stcopy_pilot_sequence,
-  0,
-  first_to_last,
-  &kernal_generate_private_state
-};
-
-static const struct wav2prg_plugin_conf kernal_datachunk_16_second_copy =
-{
-  lsbf,
-  wav2prg_xor_checksum,
-  wav2prg_compute_and_check_checksum,
-  3,
-  kernal_c16_thresholds,
-  NULL,
-  wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
-  0,/*ignored, overriding get_sync_byte*/
-  9,
-  kernal_2ndcopy_pilot_sequence,
-  0,
-  first_to_last,
-  &kernal_generate_private_state
-};
-
 static enum wav2prg_bool kernal_get_bit_func(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit)
 {
   uint8_t pulse1, pulse2;
@@ -330,45 +194,6 @@ static struct wav2prg_observed_loaders datachunk_2nd_dependency[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions kernal_headerchunk_functions =
-{
-  kernal_get_bit_func,
-  kernal_get_byte,
-  NULL,
-  kernal_get_first_sync,
-  kernal_headerchunk_get_block_info,
-  kernal_headerchunk_get_block,
-  NULL,
-  kernal_get_loaded_checksum,
-  NULL
-};
-
-static const struct wav2prg_plugin_functions kernal_datachunk_functions =
-{
-  kernal_get_bit_func,
-  kernal_get_byte,
-  NULL,
-  kernal_get_first_sync,
-  NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
-  kernal_get_block,
-  NULL,
-  kernal_get_loaded_checksum,
-  NULL
-};
-
-static const struct wav2prg_plugin_functions kernal_datachunk_secondcopy_functions =
-{
-  kernal_get_bit_func,
-  kernal_get_byte,
-  NULL,
-  kernal_get_first_sync,
-  NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
-  kernal_get_block,
-  NULL,
-  kernal_get_loaded_checksum,
-  NULL
-};
-
 enum wav2prg_bool kernal_headerchunk_16_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
 {
   uint8_t byte;
@@ -413,40 +238,249 @@ static struct wav2prg_observed_loaders datachunk_16_2nd_dependency[] = {
   {NULL,NULL}
 };
 
-static const struct wav2prg_plugin_functions kernal_headerchunk_16_functions =
+const struct wav2prg_loaders kernal_one_loader[] =
 {
-  kernal_get_bit_func,
-  kernal_get_byte,
-  NULL,
-  kernal_get_first_sync,
-  kernal_headerchunk_16_get_block_info,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+  {
+    "Kernal header chunk 1st copy",
+    {
+      kernal_get_bit_func,
+      kernal_get_byte,
+      NULL,
+      kernal_get_first_sync,
+      kernal_headerchunk_get_block_info,
+      kernal_headerchunk_get_block,
+      NULL,
+      kernal_get_loaded_checksum,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      kernal_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+      0,/*ignored, overriding get_sync_byte*/
+      9,
+      kernal_1stcopy_pilot_sequence,
+      0,
+      first_to_last,
+      &headerchunk_generate_private_state
+    },
+    NULL
+  },
+  {
+    "Kernal header chunk 2nd copy",
+    {
+      kernal_get_bit_func,
+      kernal_get_byte,
+      NULL,
+      kernal_get_first_sync,
+      kernal_headerchunk_get_block_info,
+      kernal_headerchunk_get_block,
+      NULL,
+      kernal_get_loaded_checksum,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      kernal_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+      0,/*ignored, overriding get_sync_byte*/
+      9,
+      kernal_2ndcopy_pilot_sequence,
+      0,
+      first_to_last,
+      &headerchunk_generate_private_state
+    },
+    headerchunk_2nd_dependency
+  },
+  {
+    "Kernal data chunk 1st copy",
+    {
+      kernal_get_bit_func,
+      kernal_get_byte,
+      NULL,
+      kernal_get_first_sync,
+      NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
+      kernal_get_block,
+      NULL,
+      kernal_get_loaded_checksum,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      kernal_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+      0,/*ignored, overriding get_sync_byte*/
+      9,
+      kernal_1stcopy_pilot_sequence,
+      0,
+      first_to_last,
+      &kernal_generate_private_state
+    },
+    datachunk_1st_dependency
+  },
+  {
+    "Kernal data chunk 2nd copy",
+    {
+      kernal_get_bit_func,
+      kernal_get_byte,
+      NULL,
+      kernal_get_first_sync,
+      NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
+      kernal_get_block,
+      NULL,
+      kernal_get_loaded_checksum,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      kernal_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+      0,/*ignored, overriding get_sync_byte*/
+      9,
+      kernal_2ndcopy_pilot_sequence,
+      0,
+      first_to_last,
+      &kernal_generate_private_state
+    },
+    datachunk_2nd_dependency
+  },
+  {
+    "Kernal header chunk 1st copy C16",
+    {
+      kernal_get_bit_func,
+      kernal_get_byte,
+      NULL,
+      kernal_get_first_sync,
+      kernal_headerchunk_16_get_block_info,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      kernal_c16_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+      0,/*ignored, overriding get_sync_byte*/
+      9,
+      kernal_1stcopy_pilot_sequence,
+      0,
+      first_to_last,
+      &kernal_generate_private_state
+    },
+    NULL
+  },
+  {
+    "Kernal header chunk 2nd copy C16",
+    {
+      kernal_get_bit_func,
+      kernal_get_byte,
+      NULL,
+      kernal_get_first_sync,
+      kernal_headerchunk_16_get_block_info,
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      kernal_c16_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+      0,/*ignored, overriding get_sync_byte*/
+      9,
+      kernal_2ndcopy_pilot_sequence,
+      0,
+      first_to_last,
+      &kernal_generate_private_state
+    },
+    headerchunk_16_2nd_dependency
+  },
+  {
+    "Kernal data chunk 1st copy C16",
+    {
+      kernal_get_bit_func,
+      kernal_get_byte,
+      NULL,
+      kernal_get_first_sync,
+      NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      kernal_c16_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+      0,/*ignored, overriding get_sync_byte*/
+      9,
+      kernal_1stcopy_pilot_sequence,
+      0,
+      first_to_last,
+      &kernal_generate_private_state
+    },
+    datachunk_16_1st_dependency
+  },
+  {
+    "Kernal data chunk 2nd copy C16",
+    {
+      kernal_get_bit_func,
+      kernal_get_byte,
+      NULL,
+      kernal_get_first_sync,
+      NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
+      NULL,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,
+      wav2prg_compute_and_check_checksum,
+      3,
+      kernal_c16_thresholds,
+      NULL,
+      wav2prg_pilot_tone_with_shift_register,/*ignored, overriding get_sync_byte*/
+      0,/*ignored, overriding get_sync_byte*/
+      9,
+      kernal_2ndcopy_pilot_sequence,
+      0,
+      first_to_last,
+      &kernal_generate_private_state
+    },
+    datachunk_16_2nd_dependency
+  },
+  {NULL}
 };
 
-static const struct wav2prg_plugin_functions kernal_datachunk_16_functions =
-{
-  kernal_get_bit_func,
-  kernal_get_byte,
-  NULL,
-  kernal_get_first_sync,
-  NULL,/*recognize_block_as_mine_with_start_end_func is not NULL */
-  NULL,
-  NULL,
-  NULL,
-  NULL
-};
-
-PLUGIN_ENTRY(kernal)
-{
-  register_loader_func("Kernal header chunk 1st copy", &kernal_headerchunk_functions, &kernal_headerchunk_first_copy, NULL);
-  register_loader_func("Kernal header chunk 2nd copy", &kernal_headerchunk_functions, &kernal_headerchunk_second_copy, headerchunk_2nd_dependency);
-  register_loader_func("Kernal data chunk 1st copy", &kernal_datachunk_functions, &kernal_datachunk_first_copy, datachunk_1st_dependency);
-  register_loader_func("Kernal data chunk 2nd copy", &kernal_datachunk_functions, &kernal_datachunk_second_copy, datachunk_2nd_dependency);
-  register_loader_func("Kernal header chunk 1st copy C16", &kernal_headerchunk_16_functions, &kernal_headerchunk_16_first_copy, NULL);
-  register_loader_func("Kernal header chunk 2nd copy C16", &kernal_headerchunk_16_functions, &kernal_headerchunk_16_second_copy, headerchunk_16_2nd_dependency);
-  register_loader_func("Kernal data chunk 1st copy C16", &kernal_datachunk_16_functions, &kernal_datachunk_16_first_copy, datachunk_16_1st_dependency);
-  register_loader_func("Kernal data chunk 2nd copy C16", &kernal_datachunk_16_functions, &kernal_datachunk_16_second_copy, datachunk_16_2nd_dependency);
-}
+LOADER2(kernal,1,0,"Kernal plug-in for WAV-PRG 4.0", kernal_one_loader)

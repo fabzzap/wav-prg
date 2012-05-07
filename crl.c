@@ -20,23 +20,6 @@ static struct wav2prg_generate_private_state crl_generate_private_state = {
   &crl_model_state
 };
 
-static const struct wav2prg_plugin_conf crl =
-{
-  lsbf,
-  wav2prg_xor_checksum,/*ignored*/
-  wav2prg_do_not_compute_checksum,
-  4,
-  crl_thresholds,
-  NULL,
-  wav2prg_custom_pilot_tone,
-  0x55,/*ignored*/
-  0,
-  NULL,
-  15,
-  first_to_last,
-  &crl_generate_private_state
-};
-
 static enum wav2prg_sync_result crl_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   uint32_t num_of_pilot_bits_found = 5;
@@ -216,21 +199,39 @@ static enum wav2prg_bool crl_get_bit(struct wav2prg_context *context, const stru
   return res;
 }
 
-static const struct wav2prg_plugin_functions crl_functions =
+static const struct wav2prg_loaders crl_functions[] =
 {
-  crl_get_bit,
-  NULL,
-  crl_get_sync,
-  NULL,
-  NULL,
-  crl_get_block,
-  NULL,
-  NULL,
-  NULL
+  {
+    "CRL",
+    {
+      crl_get_bit,
+      NULL,
+      crl_get_sync,
+      NULL,
+      NULL,
+      crl_get_block,
+      NULL,
+      NULL,
+      NULL
+    },
+    {
+      lsbf,
+      wav2prg_xor_checksum,/*ignored*/
+      wav2prg_do_not_compute_checksum,
+      4,
+      crl_thresholds,
+      NULL,
+      wav2prg_custom_pilot_tone,
+      0x55,/*ignored*/
+      0,
+      NULL,
+      15,
+      first_to_last,
+      &crl_generate_private_state
+    },
+    crl_observed_loaders
+  },
+  {NULL}
 };
 
-PLUGIN_ENTRY(crl)
-{
-  register_loader_func("CRL", &crl_functions, &crl, crl_observed_loaders);
-}
-
+LOADER2(crl,1,0,"CRL plug-in",crl_functions);
