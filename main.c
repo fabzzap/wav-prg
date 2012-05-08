@@ -10,6 +10,7 @@
 #include "write_prg.h"
 #include "yet_another_getopt.h"
 #include "get_pulse.h"
+#include "audiotap.h"
 
 static enum wav2prg_bool getrawpulse(struct wav2prg_input_object* audiotap, uint32_t* pulse)
 {
@@ -49,12 +50,43 @@ static void closefile(struct wav2prg_input_object* audiotap)
   fclose((FILE*)audiotap->object);
 }
 
+int32_t           get_pos_from_audiotap(struct wav2prg_input_object *object)
+{
+  struct audiotap *audiotap = (struct audiotap *)object->object;
+  return (int32_t)audio2tap_get_current_pos(audiotap);
+}
+
+enum wav2prg_bool get_pulse_from_audiotap(struct wav2prg_input_object *object, uint32_t* pulse)
+{
+  struct audiotap *audiotap = (struct audiotap *)object->object;
+  uint32_t raw_pulse;
+  enum audiotap_status status = audio2tap_get_pulses(audiotap, pulse,&raw_pulse);
+  return status == AUDIOTAP_OK;
+}
+
+enum wav2prg_bool get_is_eof_from_audiotap(struct wav2prg_input_object *object)
+{
+  struct audiotap *audiotap = (struct audiotap *)object->object;
+  return audio2tap_is_eof(audiotap) != 0;
+}
+
+void close_audiotap(struct wav2prg_input_object *object)
+{
+  struct audiotap *audiotap = (struct audiotap *)object->object;
+  audio2tap_close(audiotap);
+}
+
 static struct wav2prg_input_functions input_functions = {
-  get_pos,
+  /*get_pos,
   set_pos,
   getrawpulse,
   iseof,
-  closefile
+  closefile*/
+  get_pos_from_audiotap,
+  NULL,
+  get_pulse_from_audiotap,
+  get_is_eof_from_audiotap,
+  close_audiotap
 };
 
 static void try_sync(struct display_interface_internal* internal, const char* loader_name)
@@ -229,6 +261,10 @@ int main(int argc, char** argv)
   struct wav2prg_selected_loader selected_loader = {NULL, NULL};
   struct wav2prg_input_object input_object;
   struct block_list_element *blocks;
+  uint8_t machine = 0, videotype = 0;
+  struct tapenc_params tparams = {
+    0,12,20,0,0};
+  enum audiotap_status open_status;
   struct dump_element *dump = calloc(1, sizeof(struct dump_element)), *current_dump;
   const char *o1names[]={"s", "single", "single-loader", NULL};
   const char *help_names[]={"h", "help", NULL};
@@ -299,7 +335,7 @@ int main(int argc, char** argv)
     },
     {
       max_distance_names,
-      "Maxumum allowed deviation from average of pulse length",
+      "Maximum allowed deviation from average of pulse length",
       set_distance_from_current_average,
       NULL,
       wav2prg_false,
@@ -316,8 +352,9 @@ int main(int argc, char** argv)
   if(argc != 2)
     return 1;
 
-  input_object.object = fopen(argv[1],"rb");
-  if(!input_object.object){
+  audiotap_initialize2();
+  open_status = audio2tap_open_from_file2((struct audiotap**)&input_object.object, argv[1], &tparams, &machine, &videotype, NULL);
+  if(open_status != AUDIOTAP_OK){
     printf("File %s not found\n",argv[1]);
     return 2;
   }
