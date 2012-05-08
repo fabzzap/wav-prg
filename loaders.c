@@ -6,6 +6,10 @@
 #include "loaders.h"
 #include "observers.h"
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 struct loader {
   const char *name;
   struct wav2prg_loader *loader;
@@ -59,8 +63,101 @@ static void unregister_first_loader(void) {
   loader_list = new_first_loader;
 }
 
+static char *dirname = NULL;
+
+void wav2prg_set_plugin_dir(const char *name){
+  free(dirname);
+  if (name == NULL) {
+    dirname = NULL;
+    return;
+  }
+  dirname = strdup(name);
+}
+
+enum{NO_DIRECTORY,NO_MEMORY,DLOPEN_FAILURE,BAD_PLUGIN,INIT_FAILURE,SUCCESS}
+register_dynamic_loader(const char *filename)
+{
+#ifdef WIN32
+  HINSTANCE handle;
+#else
+  void *handle;
+#endif
+  char *plugin_to_load;
+  struct wav2prg_all_loaders *loader;
+
+  if (dirname == NULL)
+    return NO_DIRECTORY;
+  plugin_to_load = malloc(strlen(dirname) + strlen(filename) + 2);
+  if (plugin_to_load == NULL)
+    return NO_MEMORY;
+  sprintf(plugin_to_load, "%s/%s", dirname, filename);
+
+#ifdef WIN32
+  handle = LoadLibraryA(plugin_to_load);
+#else
+  handle = dlopen(plugin_to_load, RTLD_LAZY);
+#endif
+  free(plugin_to_load);
+  if (handle == 0)
+    return DLOPEN_FAILURE;
+#ifdef WIN32
+  loader = (struct wav2prg_all_loaders *)GetProcAddress(handle, "wav2prg_loader");
+#else
+  loader = (struct wav2prg_all_loaders *))dlsym(handle, "wav2prg_plugin_init");
+#endif
+  if (loader == 0) {
+#ifdef WIN32
+    FreeLibrary(handle);
+#else
+    dlclose(handle);
+#endif
+    return BAD_PLUGIN;
+  }
+  if(!register_loader(loader)){
+#ifdef WIN32
+    FreeLibrary(handle);
+#else
+    dlclose(handle);
+#endif
+    return INIT_FAILURE;
+  }
+  return SUCCESS;
+}
+
+static void list_plugins(void){
+  HANDLE dir;
+  WIN32_FIND_DATAA file;
+  int items = 0;
+  BOOL more_files = TRUE;
+  char *search_path;
+  LRESULT filename;
+
+  if (dirname == NULL)
+    return;
+  search_path = (char *)malloc(strlen(dirname) + 7);
+  if (search_path == NULL)
+    return;
+  strcpy(search_path, dirname);
+  strcat(search_path, "\\*.dll");
+  dir = FindFirstFileA(search_path, &file);
+
+  if (dir == INVALID_HANDLE_VALUE)
+    more_files = FALSE;
+
+  while (more_files) {
+    if (register_dynamic_loader(file.cFileName) == SUCCESS) {
+    }
+    more_files = FindNextFileA(dir, &file);
+  }
+  FindClose(dir);
+  free(search_path);
+}
+
 void register_loaders(void) {
-#if 1
+#if 0
+wav2prg_set_plugin_dir("debug\\plugins");
+list_plugins();
+#else
 #define STATIC_REGISTER(x) \
 { \
   extern struct wav2prg_all_loaders x##_loader; \

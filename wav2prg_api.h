@@ -139,7 +139,29 @@ struct wav2prg_all_loaders {
   } *loaders;
 };
 
-#if 0 //defined _WIN32
+#if defined WAVPRG_WINDOWS_DLL
+#ifdef __CYGWIN__
+#define DLL_ENTRY _cygwin_dll_entry
+#elif defined __GNUC__                 /* Mingw */
+#define DLL_ENTRY DllMainCRTStartup
+#else
+#define DLL_ENTRY _DllMainCRTStartup
+#endif
+
+#define LOADER2(x, major,minor,desc, loaders) \
+  __declspec(dllexport) const struct wav2prg_all_loaders wav2prg_loader = \
+{ \
+  WAVPRG_LOADER_API, \
+  { \
+    {major,minor}, \
+     desc \
+  }, \
+  loaders \
+}; \
+int _stdcall DLL_ENTRY(int hInst, unsigned long ul_reason_for_call, void *lpReserved) \
+{ \
+  return 1; \
+}
 #elif defined DSDS
 #else
 #define LOADER2(x, major,minor,desc, loaders) \
