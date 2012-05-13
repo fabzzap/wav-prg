@@ -8,6 +8,9 @@
 
 #ifdef WIN32
 #include <windows.h>
+#else
+#include <dlfcn.h>
+#include <dirent.h>
 #endif
 
 struct loader {
@@ -103,7 +106,7 @@ register_dynamic_loader(const char *filename)
 #ifdef WIN32
   loader = (struct wav2prg_all_loaders *)GetProcAddress(handle, "wav2prg_loader");
 #else
-  loader = (struct wav2prg_all_loaders *))dlsym(handle, "wav2prg_plugin_init");
+  loader = (struct wav2prg_all_loaders *)dlsym(handle, "wav2prg_plugin_init");
 #endif
   if (loader == 0) {
 #ifdef WIN32
@@ -125,6 +128,7 @@ register_dynamic_loader(const char *filename)
 }
 
 static void list_plugins(void){
+#ifdef WIN32
   HANDLE dir;
   WIN32_FIND_DATAA file;
   int items = 0;
@@ -151,6 +155,27 @@ static void list_plugins(void){
   }
   FindClose(dir);
   free(search_path);
+#else
+  DIR *plugindir = opendir(dirname);
+  struct dirent direntry;
+  struct dirent *dirresult;
+  int i;
+
+  if (plugindir == NULL) {
+    return;
+  }
+  do {
+    if (readdir_r(plugindir, &direntry, &dirresult)) {
+      break;
+    }
+
+    if (dirresult == NULL)
+      break;
+
+    register_dynamic_loader(direntry.d_name);
+  } while (1);
+  closedir(plugindir);
+#endif
 }
 
 void register_loaders(void) {

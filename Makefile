@@ -1,5 +1,5 @@
 wav2prg: wav2prg_core.o \
-         main.o \
+         wav2prg.o \
          loaders.o \
          observers.o \
          get_pulse.o \
@@ -35,8 +35,6 @@ wav2prg: wav2prg_core.o \
          wizarddev.o \
          opera.o
 
-	$(CC) -o $@ $^
-
 t.o: wavprg.rc
 	windres $(CPPFLAGS) -o $@ $^
 
@@ -56,3 +54,23 @@ t: gui_main.o \
    pavloda.o \
    connection.o \
    rackit.o
+
+ifdef AUDIOTAP_HDR
+  CFLAGS+=-I $(AUDIOTAP_HDR)
+endif
+ifdef LIBTAP_HDR
+  CFLAGS+=-I $(LIBTAP_HDR)
+endif
+ifdef DEBUG
+  CFLAGS+=-g
+endif
+
+LDLIBS=-ldl -laudiotap
+ifdef AUDIOTAP_LIB
+  LDLIBS+=-L$(AUDIOTAP_LIB)
+  ifdef USE_RPATH
+    LDLIBS+=-Wl,-rpath=$(AUDIOTAP_LIB)
+  endif
+endif
+
+
