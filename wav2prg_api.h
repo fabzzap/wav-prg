@@ -50,7 +50,6 @@ typedef enum wav2prg_bool (*wav2prg_get_bit_func)(struct wav2prg_context*, const
 typedef enum wav2prg_bool (*wav2prg_get_byte_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_data_byte_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*, uint16_t);
 typedef enum wav2prg_bool (*wav2prg_get_word_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
-typedef enum wav2prg_bool (*wav2prg_get_word_bigendian_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint16_t*);
 typedef enum wav2prg_bool (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_raw_block*, uint16_t);
 typedef enum wav2prg_bool (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, enum wav2prg_bool);
 typedef enum wav2prg_sync_result (*wav2prg_get_sync_check)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
@@ -73,7 +72,7 @@ struct wav2prg_functions {
   wav2prg_get_data_byte_func get_data_byte_func;
   wav2prg_get_word_func get_word_func;
   wav2prg_get_word_func get_data_word_func;
-  wav2prg_get_word_bigendian_func get_word_bigendian_func;
+  wav2prg_get_word_func get_word_bigendian_func;
   wav2prg_get_block_func get_block_func;
   wav2prg_check_checksum check_checksum_func;
   wav2prg_reset_checksum_to reset_checksum_to_func;
