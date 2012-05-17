@@ -33,7 +33,8 @@ wav2prg: wav2prg_core.o \
          microload.o \
          novaload_special.o \
          wizarddev.o \
-         opera.o
+         opera.o \
+         create_t64.o
 
 t.o: wavprg.rc
 	windres $(CPPFLAGS) -o $@ $^

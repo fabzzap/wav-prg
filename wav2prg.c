@@ -8,6 +8,7 @@
 #include "wav2prg_api.h"
 #include "write_cleaned_tap.h"
 #include "write_prg.h"
+#include "create_t64.h"
 #include "yet_another_getopt.h"
 #include "get_pulse.h"
 #include "audiotap.h"
@@ -270,12 +271,14 @@ int main(int argc, char** argv)
   const char *help_names[]={"h", "help", NULL};
   const char *option_tap_names[]={"t", "tap", NULL};
   const char *option_prg_names[]={"p", "prg", NULL};
+  const char *option_t64_names[]={"6", "t64", NULL};
   const char *list_names[]={"l", "list", "list-loaders", NULL};
   const char *list_dep_names[]={"list-dependent", NULL};
   const char *increment_names[]={"max-increment", NULL};
   const char *max_distance_names[]={"max-dist", "max-distance", "max-distance-from-avg", NULL};
   struct dump_argument tap_dump = {dump_to_tap, &dump};
   struct dump_argument prg_dump = {dump_to_prg, &dump};
+  struct dump_argument t64_dump = {dump_to_t64, &dump};
   struct get_option options[] ={
     {
       o1names,
@@ -298,6 +301,14 @@ int main(int argc, char** argv)
       "Dump to PRG files",
       add_to_dump_list,
       &prg_dump,
+      wav2prg_true,
+      option_must_have_argument
+    },
+    {
+      option_t64_names,
+      "Dump to a T64 file",
+      add_to_dump_list,
+      &t64_dump,
       wav2prg_true,
       option_must_have_argument
     },
@@ -375,6 +386,9 @@ int main(int argc, char** argv)
       break;
     case dump_to_prg:
       write_prg(blocks, current_dump->name);
+      break;
+    case dump_to_t64:
+      create_t64(blocks, NULL, current_dump->name);
       break;
     default:
       break;
