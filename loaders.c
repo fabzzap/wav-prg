@@ -106,7 +106,7 @@ register_dynamic_loader(const char *filename)
 #ifdef WIN32
   loader = (struct wav2prg_all_loaders *)GetProcAddress(handle, "wav2prg_loader");
 #else
-  loader = (struct wav2prg_all_loaders *)dlsym(handle, "wav2prg_plugin_init");
+  loader = (struct wav2prg_all_loaders *)dlsym(handle, "wav2prg_loader");
 #endif
   if (loader == 0) {
 #ifdef WIN32
@@ -127,7 +127,8 @@ register_dynamic_loader(const char *filename)
   return SUCCESS;
 }
 
-static void list_plugins(void){
+void register_loaders(void) {
+#ifdef DYNAMIC_LOADING
 #ifdef WIN32
   HANDLE dir;
   WIN32_FIND_DATAA file;
@@ -155,7 +156,7 @@ static void list_plugins(void){
   }
   FindClose(dir);
   free(search_path);
-#else
+#else //!WIN32
   DIR *plugindir = opendir(dirname);
   struct dirent direntry;
   struct dirent *dirresult;
@@ -175,14 +176,8 @@ static void list_plugins(void){
     register_dynamic_loader(direntry.d_name);
   } while (1);
   closedir(plugindir);
-#endif
-}
-
-void register_loaders(void) {
-#if 0
-wav2prg_set_plugin_dir("debug\\plugins");
-list_plugins();
-#else
+#endif //WIN32
+#else  //!DYNAMIC_LOADING
 #define STATIC_REGISTER(x) \
 { \
   extern struct wav2prg_all_loaders x##_loader; \
@@ -214,7 +209,7 @@ list_plugins();
   STATIC_REGISTER(jetload)
   STATIC_REGISTER(novaload_special)
   STATIC_REGISTER(opera)
-#endif
+#endif //DYNAMIC_LOADING
 }
 
 static const struct loader* get_a_loader(const char* name) {

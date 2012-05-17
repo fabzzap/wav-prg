@@ -215,20 +215,24 @@ static enum wav2prg_bool add_to_dump_list(const char* filename, void* dumps)
   return wav2prg_true;
 }
 
-static enum wav2prg_bool display_list_of_loaders(const char* ununsed1, void* unused2)
+static enum wav2prg_bool display_list_of_loaders(void)
 {
   char **all_loaders = get_loaders();
   char **one_loader;
 
   for(one_loader = all_loaders; *one_loader != NULL; one_loader++){
-    printf("%s\n", *one_loader);
+    const struct wav2prg_loader *plugin_functions = get_loader_by_name(*one_loader);
+
+    if(plugin_functions->functions->get_block_info != NULL) {
+      printf("%s\n", *one_loader);
+    }
     free(*one_loader);
   }
   free(all_loaders);
   return wav2prg_true;
 }
 
-static enum wav2prg_bool display_list_of_loaders_with_dependencies(const char* ununsed1, void* unused2)
+static enum wav2prg_bool display_list_of_loaders_with_dependencies(void)
 {
   char **all_loaders = get_loaders();
   char **one_loader;
@@ -257,6 +261,17 @@ static enum wav2prg_bool help_callback(const char *arg, void *options)
   return wav2prg_true;
 }
 
+static enum wav2prg_bool set_plugin_dir(const char *arg, void *options)
+{
+  wav2prg_set_plugin_dir(arg);
+  return wav2prg_true;
+}
+
+static enum wav2prg_bool set_true(const char *arg, void *options)
+{
+  *(enum wav2prg_bool*)options = wav2prg_true;
+}
+
 int main(int argc, char** argv)
 {
   struct wav2prg_selected_loader selected_loader = {NULL, NULL};
@@ -267,6 +282,7 @@ int main(int argc, char** argv)
     0,12,20,0,0};
   enum audiotap_status open_status;
   struct dump_element *dump = calloc(1, sizeof(struct dump_element)), *current_dump;
+  enum wav2prg_bool show_list = wav2prg_false, show_list_dependent = wav2prg_false;
   const char *o1names[]={"s", "single", "single-loader", NULL};
   const char *help_names[]={"h", "help", NULL};
   const char *option_tap_names[]={"t", "tap", NULL};
@@ -276,6 +292,7 @@ int main(int argc, char** argv)
   const char *list_dep_names[]={"list-dependent", NULL};
   const char *increment_names[]={"max-increment", NULL};
   const char *max_distance_names[]={"max-dist", "max-distance", "max-distance-from-avg", NULL};
+  const char *loaders_dir_names[]={"P", "plugin-dir", "loaders-dir", NULL};
   struct dump_argument tap_dump = {dump_to_tap, &dump};
   struct dump_argument prg_dump = {dump_to_prg, &dump};
   struct dump_argument t64_dump = {dump_to_t64, &dump};
@@ -323,16 +340,16 @@ int main(int argc, char** argv)
     {
       list_names,
       "List available loaders",
-      display_list_of_loaders,
-      NULL,
+      set_true,
+      &show_list,
       wav2prg_false,
       option_no_argument
     },
     {
       list_dep_names,
       "List loaders with dependencies",
-      display_list_of_loaders_with_dependencies,
-      NULL,
+      set_true,
+      &show_list_dependent,
       wav2prg_false,
       option_no_argument
     },
@@ -352,18 +369,33 @@ int main(int argc, char** argv)
       wav2prg_false,
       option_may_have_argument
     },
+    {
+      loaders_dir_names,
+      "Directory where the plug-ins are",
+      set_plugin_dir,
+      NULL,
+      wav2prg_false,
+      option_must_have_argument
+    },
     {NULL}
   };
 
-  register_loaders();
+  wav2prg_set_plugin_dir("/usr/lib/wav2prg");
 
   if(!yet_another_getopt(options, (uint32_t*)&argc, argv))
     return 1;
+
+  register_loaders();
+  if (show_list)
+    display_list_of_loaders();
+  if (show_list_dependent)
+    display_list_of_loaders_with_dependencies();
 
   if(argc != 2)
     return 1;
 
   audiotap_initialize2();
+
   open_status = audio2tap_open_from_file2((struct audiotap**)&input_object.object, argv[1], &tparams, &machine, &videotype, NULL);
   if(open_status != AUDIOTAP_OK){
     printf("File %s not found\n",argv[1]);

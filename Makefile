@@ -8,32 +8,6 @@ wav2prg: wav2prg_core.o \
          tapfile_write.o \
          yet_another_getopt.o \
          wav2prg_block_list.o \
-         turbotape.o \
-         kernal.o \
-         novaload.o \
-         audiogenic.o \
-         pavlodapenetrator.o \
-         pavlodaold.o \
-         pavloda.o \
-         connection.o \
-         detective.o \
-         turbo220.o \
-         freeload.o \
-         rackit.o \
-         wildsave.o \
-         theedge.o \
-         maddoctor.o \
-         mikrogen.o \
-         crl.o \
-         snakeload.o \
-         snake.o \
-         nobby.o \
-         atlantis.o \
-         jetload.o \
-         microload.o \
-         novaload_special.o \
-         wizarddev.o \
-         opera.o \
          create_t64.o
 
 t.o: wavprg.rc
