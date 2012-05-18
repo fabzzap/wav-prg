@@ -43,7 +43,7 @@ static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_plugin_conf* conf
      && block->data[i + 14] == 0x0e
      && block->data[i + 15] == 0xdc)
        break;
-  if (i + 15 == block->info.end - block->info.start)
+  if (i + 15 >= block->info.end - block->info.start)
     return wav2prg_false;
   info->start = block->data[i +  5] * 256 + block->data[i +  1];
   for (i = i + 15; i + 6 < block->info.end - block->info.start; i++)

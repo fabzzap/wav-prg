@@ -37,8 +37,52 @@ static enum wav2prg_bool recognize_fast_freeload(struct wav2prg_plugin_conf* con
   return wav2prg_false;
 }
 
+static enum wav2prg_bool recognize_freeload_with_turbotape_sync(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+  if (block->info.start == 0x33c
+   && block->info.end == 0x3fc){
+    int i;
+    for (i = 0; i + 19 < block->info.end - block->info.start; i++){
+      if(block->data[i    ] == 0xa9
+      && block->data[i + 2] == 0x8d
+      && block->data[i + 3] == 0x06
+      && block->data[i + 4] == 0xdd
+      && block->data[i + 5] == 0x20
+      && block->data[i + 7] == 0x03
+      && block->data[i + 8] == 0x66
+      && block->data[i + 9] == 0xbd
+      && block->data[i + 10] == 0xa9
+      && block->data[i + 12] == 0xc5
+      && block->data[i + 13] == 0xbd
+      && block->data[i + 14] == 0xd0
+      && block->data[i + 15] == 0xf5
+      && block->data[i + 16] == 0x85
+      && block->data[i + 17] == 0x7b
+      && block->data[i + 18] == 0xa0){
+        uint8_t new_len = block->data[i + 19], j, sbyte;
+        conf->thresholds[0] = block->data[i + 1];
+        conf->pilot_byte =  block->data[i + 11];
+        change_sync_sequence_length_func(conf, new_len);
+        for(j = 0, sbyte = new_len; j < new_len; j++, sbyte--)
+          conf->sync_sequence[j] = sbyte;
+        conf->endianness = lsbf;
+        conf->checksum_type = wav2prg_add_checksum;
+        return wav2prg_true;
+      }
+    }
+  }
+  return wav2prg_false;
+}
+
+static enum wav2prg_bool recognize_freeload_from_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+  if (recognize_fast_freeload(conf, block, info, no_gaps_allowed, where_to_search_in_block, change_sync_sequence_length_func))
+    return wav2prg_true;
+  if (recognize_freeload_with_turbotape_sync(conf, block, info, no_gaps_allowed, where_to_search_in_block, change_sync_sequence_length_func))
+    return wav2prg_true;
+  return wav2prg_false;
+}
+
 static const struct wav2prg_observed_loaders freeload_observed_loaders[] = {
-  {"khc", recognize_fast_freeload},
+  {"khc", recognize_freeload_from_hc},
   {NULL,NULL}
 };
 
