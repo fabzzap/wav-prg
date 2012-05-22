@@ -83,6 +83,7 @@ static const struct wav2prg_loaders wildsave_functions[] = {
       wildsave_pilot_sequence,
       0,
       last_to_first,
+      wav2prg_false,
       &wildsave_generate_private_state
     },
     wildsave_observed_loaders

@@ -81,8 +81,42 @@ static enum wav2prg_bool recognize_freeload_from_hc(struct wav2prg_plugin_conf* 
   return wav2prg_false;
 }
 
+static enum wav2prg_bool recognize_freeload_16(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+  if (block->info.start == 819
+   && block->info.end   == 1010){
+    if(block->data[0x3a1 - 819] == 0x20
+    && block->data[0x3a2 - 819] == 0xC6
+    && block->data[0x3a3 - 819] == 0x03
+    && block->data[0x3a4 - 819] == 0x26
+    && block->data[0x3a5 - 819] == 0xAC
+    && block->data[0x3a6 - 819] == 0xA5
+    && block->data[0x3a7 - 819] == 0xAC
+    && block->data[0x3a8 - 819] == 0xC9
+    && block->data[0x3a9 - 819] == block->data[0x3b0 - 819]
+    && block->data[0x3aa - 819] == 0xD0
+    && block->data[0x3ab - 819] == 0xF5
+    && block->data[0x3ac - 819] == 0x20
+    && block->data[0x3ad - 819] == 0xB8
+    && block->data[0x3ae - 819] == 0x03
+    && block->data[0x3af - 819] == 0xC9
+    && block->data[0x3b1 - 819] == 0xF0
+    && block->data[0x3b2 - 819] == 0xF9
+    && block->data[0x3b3 - 819] == 0xC9
+    && block->data[0x3b5 - 819] == 0xD0
+    && block->data[0x3b6 - 819] == 0xEA){
+      conf->pilot_byte =  block->data[0x3a9 - 819];
+      conf->sync_sequence[0] = block->data[0x3b4 - 819];
+      conf->thresholds[0] = (block->data[0x3d5 - 819] << 8) + block->data[0x3d7 - 819];
+      conf->opposite_waveform = wav2prg_true;
+      return wav2prg_true;
+    }
+  }
+  return wav2prg_false;
+}
+
 static const struct wav2prg_observed_loaders freeload_observed_loaders[] = {
   {"khc", recognize_freeload_from_hc},
+  {"khc16", recognize_freeload_16},
   {NULL,NULL}
 };
 
@@ -113,6 +147,7 @@ static const struct wav2prg_loaders freeload_functions[] = {
       freeload_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     freeload_observed_loaders

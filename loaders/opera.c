@@ -66,6 +66,7 @@ static const struct wav2prg_loaders opera_functions[] =
       NULL,
       128,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     opera_observed_loaders

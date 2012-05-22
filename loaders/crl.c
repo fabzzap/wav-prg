@@ -227,6 +227,7 @@ static const struct wav2prg_loaders crl_functions[] =
       NULL,
       15,
       first_to_last,
+      wav2prg_false,
       &crl_generate_private_state
     },
     crl_observed_loaders

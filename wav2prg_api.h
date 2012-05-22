@@ -112,6 +112,7 @@ struct wav2prg_plugin_conf {
   uint8_t *sync_sequence;
   uint32_t min_pilots;
   enum wav2prg_block_filling filling;
+  enum wav2prg_bool opposite_waveform;
   void* private_state;
 };
 

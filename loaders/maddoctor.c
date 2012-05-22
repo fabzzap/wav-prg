@@ -133,6 +133,7 @@ static const struct wav2prg_loaders maddoctor_functions[] ={
       maddoctor_sync_sequence,
       15,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     maddoctor_observed_loaders

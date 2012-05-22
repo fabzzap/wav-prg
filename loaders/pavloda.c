@@ -195,6 +195,7 @@ static const struct wav2prg_loaders pavloda_functions[] ={
       pavloda_pilot_sequence,
       1000,
       first_to_last,
+      wav2prg_false,
       &pavloda_generate_private_state
     },
     NULL

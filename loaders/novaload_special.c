@@ -98,6 +98,7 @@ static const struct wav2prg_loaders novaload_special_functions[] =
       novaload_special_pilot_sequence,
       1000,
       first_to_last,
+      wav2prg_false,
       &novaload_special_generate_private_state
     },
     novaload_special_observed_loaders

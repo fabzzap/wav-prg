@@ -42,6 +42,7 @@ static const struct wav2prg_loaders turbo220_functions[] = {
       turbo220_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     NULL

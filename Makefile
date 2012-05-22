@@ -8,7 +8,8 @@ wav2prg: wav2prg_core.o \
          tapfile_write.o \
          yet_another_getopt.o \
          wav2prg_block_list.o \
-         create_t64.o
+         create_t64.o \
+         audiotap_interface.o
 
 t.o: wavprg.rc
 	windres $(CPPFLAGS) -o $@ $^

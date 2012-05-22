@@ -92,6 +92,7 @@ const struct wav2prg_loaders turbotape_one_loader[] =
       turbotape_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     turbotape_observed_loaders

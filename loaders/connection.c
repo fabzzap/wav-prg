@@ -54,6 +54,7 @@ static const struct wav2prg_loaders connection_functions[] = {
       connection_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     connection_dependency

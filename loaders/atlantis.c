@@ -43,6 +43,7 @@ static const struct wav2prg_loaders atlantis[] = {
       atlantis_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     NULL

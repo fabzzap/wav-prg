@@ -80,6 +80,7 @@ static const struct wav2prg_loaders jetload_functions[] = {
       NULL,
       8,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     NULL

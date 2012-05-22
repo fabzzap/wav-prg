@@ -46,6 +46,7 @@ static const struct wav2prg_loaders wizarddev_functions[] = {
       NULL,
       2000,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     NULL

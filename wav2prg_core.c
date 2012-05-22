@@ -35,6 +35,7 @@ struct wav2prg_context {
   struct block_list_element **current_block;
   struct display_interface *display_interface;
   struct display_interface_internal *display_interface_internal;
+  enum wav2prg_bool using_opposite_waveform;
 };
 
 static enum wav2prg_bool get_pulse(struct wav2prg_context* context, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
@@ -549,7 +550,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     NULL,
     &context.blocks,
     display_interface,
-    display_interface_internal
+    display_interface_internal,
+    wav2prg_false
   };
   struct wav2prg_functions functions =
   {
@@ -606,6 +608,11 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       conf = get_new_state(
         !strcmp(loader_name, start_loader) ? start_conf : NULL,
         current_loader->conf);
+
+    if (context.using_opposite_waveform != conf->opposite_waveform){
+      context.using_opposite_waveform = conf->opposite_waveform;
+      input->invert(input_object);
+    }
 
     context.display_interface->try_sync(context.display_interface_internal, loader_name);
     *context.current_block = new_block_list_element(conf->num_pulse_lengths, conf->thresholds);

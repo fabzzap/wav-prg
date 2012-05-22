@@ -193,6 +193,7 @@ static const struct wav2prg_loaders rackit_functions[] =
       rackit_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &rackit_generate_private_state
     },
     rackit_observed_loaders

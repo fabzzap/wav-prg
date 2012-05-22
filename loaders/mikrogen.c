@@ -126,6 +126,7 @@ static const struct wav2prg_loaders mikrogen_one_loader[] =
       NULL,
       256,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     mikrogen_old_observed_loaders
@@ -156,6 +157,7 @@ static const struct wav2prg_loaders mikrogen_one_loader[] =
       NULL,
       256,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     mikrogen_new_observed_loaders

@@ -171,11 +171,22 @@ static enum wav2prg_bool header_second_copy_after_first_copy(struct wav2prg_plug
   return wav2prg_true;
 }
 
+static enum wav2prg_bool c16_header_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+  return wav2prg_true;
+}
+
 static enum wav2prg_bool data_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   info->start = block->info.start;
   info->end   = block->info.end;
 
   return header_second_copy_after_first_copy(conf, block, info, no_gaps_allowed, where_to_search_in_block, change_sync_sequence_length_func);
+}
+
+static enum wav2prg_bool c16_data_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+  info->start = block->info.start;
+  info->end   = block->info.end;
+
+  return wav2prg_true;
 }
 
 static struct wav2prg_observed_loaders headerchunk_2nd_dependency[] = {
@@ -223,7 +234,7 @@ static enum wav2prg_bool is_c16_headerchunk(struct wav2prg_plugin_conf* conf, co
 }
 
 static struct wav2prg_observed_loaders headerchunk_16_2nd_dependency[] = {
-  {"Kernal header chunk 1st copy C16", header_second_copy_after_first_copy},
+  {"Kernal header chunk 1st copy C16", c16_header_second_copy_after_first_copy},
   {NULL,NULL}
 };
 
@@ -234,7 +245,7 @@ static struct wav2prg_observed_loaders datachunk_16_1st_dependency[] = {
 
 static struct wav2prg_observed_loaders datachunk_16_2nd_dependency[] = {
   {"Kernal header chunk 2nd copy C16", is_c16_headerchunk},
-  {"Kernal data chunk 1st copy C16", data_second_copy_after_first_copy},
+  {"Kernal data chunk 1st copy C16", c16_data_second_copy_after_first_copy},
   {NULL,NULL}
 };
 
@@ -266,6 +277,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
       kernal_1stcopy_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &headerchunk_generate_private_state
     },
     NULL
@@ -296,6 +308,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
       kernal_2ndcopy_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &headerchunk_generate_private_state
     },
     headerchunk_2nd_dependency
@@ -326,6 +339,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
       kernal_1stcopy_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &kernal_generate_private_state
     },
     datachunk_1st_dependency
@@ -356,6 +370,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
       kernal_2ndcopy_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &kernal_generate_private_state
     },
     datachunk_2nd_dependency
@@ -386,6 +401,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
       kernal_1stcopy_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &kernal_generate_private_state
     },
     NULL
@@ -416,6 +432,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
       kernal_2ndcopy_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &kernal_generate_private_state
     },
     headerchunk_16_2nd_dependency
@@ -446,6 +463,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
       kernal_1stcopy_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &kernal_generate_private_state
     },
     datachunk_16_1st_dependency
@@ -476,6 +494,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
       kernal_2ndcopy_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &kernal_generate_private_state
     },
     datachunk_16_2nd_dependency

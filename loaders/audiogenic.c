@@ -234,6 +234,7 @@ static const struct wav2prg_loaders audiogenic[] =
       audiogenic_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       &audiogenic_specialagent_generate_private_state
     },
     audiogenic_observed_loaders
@@ -264,6 +265,7 @@ static const struct wav2prg_loaders audiogenic[] =
       NULL,
       0,                              /*ignored, default get_sync unused*/
       first_to_last,
+      wav2prg_false,
       &audiogenic_specialagent_generate_private_state
     },
     specialagent_observed_loaders

@@ -135,6 +135,7 @@ static const struct wav2prg_loaders pavlodapenetrator_functions[] ={
       pavlodapenetrator_pilot_sequence,
       256,
       first_to_last,
+      wav2prg_false,
       &pavlodapenetrator_generate_private_state
     },
     NULL

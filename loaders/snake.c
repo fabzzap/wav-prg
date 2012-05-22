@@ -184,6 +184,7 @@ static const struct wav2prg_loaders snake_functions[] = {
       snake_pilot_sequence,
       0,
       first_to_last,
+      wav2prg_false,
       NULL
     },
     snake_observed_loaders

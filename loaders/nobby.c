@@ -96,6 +96,7 @@ static const struct wav2prg_loaders nobby_functions[] = {
       nobby_sync_sequence,
       30,
       first_to_last,
+      wav2prg_false,
       &nobby_generate_private_state
     },
     NULL
