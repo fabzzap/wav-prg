@@ -5,7 +5,6 @@ wav2prg: wav2prg_core.o \
          get_pulse.o \
          write_cleaned_tap.o \
          write_prg.o \
-         tapfile_write.o \
          yet_another_getopt.o \
          wav2prg_block_list.o \
          create_t64.o \

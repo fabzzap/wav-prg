@@ -126,7 +126,7 @@ void add_or_replace_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresh
 
 static enum wav2prg_bool is_this_pulse_right_intolerant(uint32_t raw_pulse, const struct tolerance *tolerance)
 {
-  return raw_pulse >= tolerance->min && raw_pulse <= tolerance->max;
+  return raw_pulse >= tolerance->min - 1 && raw_pulse <= tolerance->max;
 }
 
 static enum {
