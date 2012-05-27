@@ -292,8 +292,8 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
     uint32_t pos = context->input->get_pos(context->input_object);
 
     context->tolerances = old_tolerances ?
-	  new_copy_tolerances(conf->num_pulse_lengths, old_tolerances) :
-	  get_tolerances(conf->num_pulse_lengths, conf->thresholds);
+      new_copy_tolerances(conf->num_pulse_lengths, old_tolerances) :
+      get_tolerances(conf->num_pulse_lengths, conf->thresholds);
 
     res = context->get_sync_check(context, functions, conf);
     if (res == wav2prg_sync_success) {
@@ -386,13 +386,14 @@ static struct wav2prg_plugin_conf* copy_conf(const struct wav2prg_plugin_conf *m
     memcpy(conf->pulse_length_deviations, model_conf->pulse_length_deviations, conf->num_pulse_lengths * sizeof(uint16_t));
   }
   conf->findpilot_type = model_conf->findpilot_type;
-  conf->pilot_byte            =  model_conf->pilot_byte;
+  conf->pilot_byte           =  model_conf->pilot_byte;
   conf->len_of_sync_sequence =  model_conf->len_of_sync_sequence;
   conf->sync_sequence        = malloc(conf->len_of_sync_sequence);
-  memcpy(conf->sync_sequence,   model_conf->sync_sequence, conf->len_of_sync_sequence);
+  memcpy(conf->sync_sequence, model_conf->sync_sequence, conf->len_of_sync_sequence);
 
   conf->min_pilots=model_conf->min_pilots;
   conf->filling=model_conf->filling;
+  conf->opposite_waveform=model_conf->opposite_waveform;
 
   return conf;
 }
@@ -637,10 +638,11 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       block->num_pulse_lengths = conf->num_pulse_lengths;
       block->thresholds = malloc(sizeof(uint16_t) * (conf->num_pulse_lengths - 1));
       memcpy(block->thresholds, conf->thresholds, sizeof(uint16_t) * (conf->num_pulse_lengths - 1));
-	  if (conf->pulse_length_deviations){
+      if (conf->pulse_length_deviations){
         block->pulse_length_deviations = malloc(sizeof(uint16_t) * conf->num_pulse_lengths);
         memcpy(block->pulse_length_deviations, conf->pulse_length_deviations, sizeof(uint16_t) * (conf->num_pulse_lengths));
-	  }
+      }
+      block->opposite_waveform = conf->opposite_waveform;
       block->block_status = block_sync_no_info;
       reset_checksum(&context);
 

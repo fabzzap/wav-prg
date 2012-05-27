@@ -30,6 +30,7 @@ struct block_list_element {
   uint32_t end_of_info;
   uint32_t last_valid_data_byte;
   struct block_list_element* next;
+  enum wav2prg_bool opposite_waveform;
 };
 
 struct block_list_element* new_block_list_element(uint8_t num_pulse_lengths, uint16_t *thresholds);

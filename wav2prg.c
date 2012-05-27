@@ -334,11 +334,13 @@ int main(int argc, char** argv)
     &input_functions,
     &text_based_display, NULL
                           );
+  audio2tap_close(input_object.object);
+
   for(current_dump = dump; current_dump->name != NULL; current_dump++)
   {
     switch(current_dump->dump_type){
     case dump_to_tap:
-      write_cleaned_tap(blocks, &input_object, &input_functions, current_dump->name);
+      write_cleaned_tap(blocks, argv[1], current_dump->name);
       break;
     case dump_to_prg:
       write_prg(blocks, current_dump->name);
