@@ -311,7 +311,7 @@ int main(int argc, char** argv)
 #ifdef WIN32
   {
     CHAR module_name[_MAX_PATH];
-    CHAR subdir[] = "\\loaders";
+    CHAR subdir[] = "loaders";
     char *plugin_dir;
     char drive[_MAX_DRIVE];
     char dir[_MAX_DIR];
@@ -320,12 +320,10 @@ int main(int argc, char** argv)
 
     GetModuleFileNameA(NULL, module_name, sizeof(module_name));
     _splitpath(module_name, drive, dir, fname, ext);
-    plugin_dir = malloc(strlen(drive) + strlen(dir) + strlen(subdir) + 2);
+    plugin_dir = malloc(strlen(drive) + strlen(dir) + strlen(subdir) + 1);
     strcpy(plugin_dir, drive);
-    strcat(plugin_dir, "\\");
     strcat(plugin_dir, dir);
     strcat(plugin_dir, subdir);
-    printf("drive %s dir %s pd %s\n",drive,dir,plugin_dir);
     wav2prg_set_plugin_dir(plugin_dir);
     free(plugin_dir);
   }
