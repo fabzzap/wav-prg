@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "wav2prg_core.h"
 #include "loaders.h"
 #include "display_interface.h"
@@ -304,7 +308,30 @@ int main(int argc, char** argv)
     {NULL}
   };
 
+#ifdef WIN32
+  {
+    CHAR module_name[_MAX_PATH];
+    CHAR subdir[] = "\\loaders";
+    char *plugin_dir;
+    char drive[_MAX_DRIVE];
+    char dir[_MAX_DIR];
+    char fname[_MAX_FNAME];
+    char ext[_MAX_EXT];
+
+    GetModuleFileNameA(NULL, module_name, sizeof(module_name));
+    _splitpath(module_name, drive, dir, fname, ext);
+    plugin_dir = malloc(strlen(drive) + strlen(dir) + strlen(subdir) + 2);
+    strcpy(plugin_dir, drive);
+    strcat(plugin_dir, "\\");
+    strcat(plugin_dir, dir);
+    strcat(plugin_dir, subdir);
+    printf("drive %s dir %s pd %s\n",drive,dir,plugin_dir);
+    wav2prg_set_plugin_dir(plugin_dir);
+    free(plugin_dir);
+  }
+#else
   wav2prg_set_plugin_dir("/usr/lib/wav2prg");
+#endif
 
   if(!yet_another_getopt(options, (uint32_t*)&argc, argv))
     return 1;

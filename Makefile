@@ -10,6 +10,19 @@ wav2prg: wav2prg_core.o \
          create_t64.o \
          audiotap_interface.o
 
+wav2prg.exe: wav2prg_core.o \
+             wav2prg.o \
+             loaders.o \
+             observers.o \
+             get_pulse.o \
+             write_cleaned_tap.o \
+             write_prg.o \
+             yet_another_getopt.o \
+             wav2prg_block_list.o \
+             create_t64.o \
+             audiotap_interface.o
+	$(LINK.o) $^ $(LDLIBS) -o $@
+
 t.o: wavprg.rc
 	windres $(CPPFLAGS) -o $@ $^
 
@@ -40,7 +53,7 @@ ifdef DEBUG
   CFLAGS+=-g
 endif
 
-LDLIBS=-ldl -laudiotap
+LDLIBS=-laudiotap
 ifdef AUDIOTAP_LIB
   LDLIBS+=-L$(AUDIOTAP_LIB)
   ifdef USE_RPATH
@@ -48,4 +61,5 @@ ifdef AUDIOTAP_LIB
   endif
 endif
 
+wav2prg:LDLIBS+=-ldl
 
