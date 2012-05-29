@@ -156,6 +156,7 @@ struct wav2prg_all_loaders {
 #endif
 
 #define LOADER2(x, major,minor,desc, loaders) \
+_declspec(dllexport) \
 const struct wav2prg_all_loaders wav2prg_loader = \
 { \
   WAVPRG_LOADER_API, \
