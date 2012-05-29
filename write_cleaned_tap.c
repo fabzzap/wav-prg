@@ -99,6 +99,7 @@ void write_cleaned_tap(struct block_list_element* blocks, const char* in_filenam
   struct v2_abstraction *abs = NULL;
   struct tapenc_params tparams = {
     0,12,20,0};
+  uint8_t machine = 0, videotype = 0, halfwaves;
 
   for (current_block = blocks; current_block; current_block = current_block->next) {
     if (current_block->opposite_waveform){
@@ -110,22 +111,12 @@ void write_cleaned_tap(struct block_list_element* blocks, const char* in_filenam
   }
   current_block = blocks;
 
-  {
-    /* aargh, why does that function not take const char* as arg? */
-    char* filename2 = strdup(filename);
-    enum audiotap_status st = tap2audio_open_to_tapfile(&output_handle, filename2, need_v2 ? 2 : 1, 0, 0);
-    uint8_t machine = 0, videotype = 0, halfwaves = need_v2 ? 1 : 0;
-    free(filename2);
-    if (st != AUDIOTAP_OK)
-      return;
-    filename2 = strdup(in_filename);
-    st = audio2tap_open_from_file3(&input_handle, filename2, &tparams, &machine, &videotype, &halfwaves);
-    free(filename2);
-    if (st != AUDIOTAP_OK)
-    {
-      tap2audio_close(output_handle);
-      return;
-    }
+  if (tap2audio_open_to_tapfile2(&output_handle, filename, need_v2 ? 2 : 1, 0, 0) != AUDIOTAP_OK)
+    return;
+  halfwaves = need_v2 ? 1 : 0;
+  if (audio2tap_open_from_file3(&input_handle, in_filename, &tparams, &machine, &videotype, &halfwaves) != AUDIOTAP_OK) {
+    tap2audio_close(output_handle);
+    return;
   }
 
   while(!audio2tap_is_eof(input_handle)){
