@@ -46,9 +46,6 @@ t: gui_main.o \
 ifdef AUDIOTAP_HDR
   CFLAGS+=-I $(AUDIOTAP_HDR)
 endif
-ifdef LIBTAP_HDR
-  CFLAGS+=-I $(LIBTAP_HDR)
-endif
 ifdef DEBUG
   CFLAGS+=-g
 endif
