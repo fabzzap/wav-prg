@@ -450,6 +450,7 @@ static enum wav2prg_bool allocate_info_and_recognize(struct wav2prg_plugin_conf*
 
   *info = malloc(sizeof(**info));
   (*info)->start = (*info)->end = 0xFFFF;
+  *no_gaps_allowed = wav2prg_false;
   memcpy(&(*info)->name, block->info.name, sizeof(block->info.name));
   *no_gaps_allowed = wav2prg_false;
   result = recognize_func(conf, block, *info, no_gaps_allowed, where_to_resume_search, change_sync_sequence_length);
@@ -785,6 +786,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       delete_state(conf);
       conf = NULL;
       loader_name = start_loader;
+      no_gaps_allowed = wav2prg_false;
     }
   }
   return context.blocks;
