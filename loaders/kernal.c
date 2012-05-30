@@ -128,11 +128,14 @@ enum wav2prg_bool kernal_headerchunk_get_block_info(struct wav2prg_context* cont
 static enum wav2prg_bool kernal_get_block(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block *raw_block, uint16_t numbytes)
 {
   uint16_t bytes_received = 0;
+  uint8_t byte;
   struct kernal_private_state *state = (struct kernal_private_state*)conf->private_state;
 
   while(1){
-    if(!functions->get_block_func(context, functions, conf, raw_block, 1))
+    if(!functions->get_data_byte_func(context, functions, conf, &byte, 0))
       return (state->result_of_last_byte == eof_marker_found);
+    if (bytes_received++ < numbytes)
+      functions->add_byte_to_block_func(context, raw_block, byte);
   }
 }
 
