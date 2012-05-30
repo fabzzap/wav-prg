@@ -7,4 +7,4 @@ void register_loaders(void);
 const struct wav2prg_loader* get_loader_by_name(const char*);
 const struct wav2prg_observed_loaders* get_observed_loaders(const char*);
 char** get_loaders(void);
-
+void wav2prg_set_plugin_dir(const char *name);

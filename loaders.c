@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <malloc.h>
+#include <stdio.h>
 
 #include "loaders.h"
 #include "observers.h"
@@ -135,7 +136,6 @@ void register_loaders(void) {
   int items = 0;
   BOOL more_files = TRUE;
   char *search_path;
-  LRESULT filename;
 
   if (dirname == NULL)
     return;

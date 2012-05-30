@@ -198,6 +198,7 @@ static enum wav2prg_bool set_plugin_dir(const char *arg, void *options)
 static enum wav2prg_bool set_true(const char *arg, void *options)
 {
   *(enum wav2prg_bool*)options = wav2prg_true;
+  return wav2prg_true;
 }
 
 int main(int argc, char** argv)
