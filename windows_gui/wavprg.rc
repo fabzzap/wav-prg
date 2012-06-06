@@ -1,0 +1,94 @@
+#include "resource.h"
+
+IDD_STATUS DIALOG DISCARDABLE  0, 0, 185, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Conversion status"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,69,162,50,14
+    CONTROL         "Progress1",IDC_FILE_PROGRESS,"msctls_progress32",
+                    WS_BORDER,7,107,171,14
+    CONTROL         "Progress1",IDC_ENTRY_PROGRESS,"msctls_progress32",
+                    WS_BORDER,7,143,171,14
+    LTEXT           "Static",IDC_FILE_TEXT,7,94,171,8
+    LTEXT           "This entry's progress",IDC_ENTRY_TEXT,7,126,171,8
+    CONTROL         "Tree2",IDC_FOUND,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,
+                    10,10,166,81
+END
+
+IDD_T64_NAME DIALOG DISCARDABLE  0, 0, 186, 26
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "T64 internal name",IDC_STATIC,7,7,60,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_T64_NAME,71,7,108,12,ES_AUTOHSCROLL
+END
+
+IDD_WAV2PRG DIALOG DISCARDABLE  0, 0, 229, 244
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Conversion to PRG, P00 or T64"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,221,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,222,50,14
+    COMBOBOX        IDC_PLUGINS,12,26,210,150,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    EDITTEXT        IDC_CONVERSION_DIR,92,195,85,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | WS_GROUP
+    CONTROL         "Include broken and incomplete files",IDC_BROKEN,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,155,151,13
+    CONTROL         "File",IDC_FROM_FILE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,13,57,95,9
+    CONTROL         "Sound card",IDC_FROM_SOUND,"Button",BS_AUTORADIOBUTTON,
+                    121,54,95,9
+    CONTROL         "Inverted waveform",IDC_INVERTED,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,13,88,75,11
+    EDITTEXT        IDC_MIN_HEIGHT,179,88,39,13,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_FREQ,179,104,39,13,ES_AUTOHSCROLL | ES_NUMBER | 
+                    WS_DISABLED | WS_GROUP
+    COMBOBOX        IDC_CLOCK,49,110,59,83,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Use plug-in",IDC_STATIC,7,7,65,9
+    LTEXT           "In folder",IDC_STATIC,64,199,28,10
+    GROUPBOX        "Destination",IDC_STATIC,7,143,214,71
+    GROUPBOX        "Origin",IDC_STATIC,7,44,214,25
+    GROUPBOX        "Advanced options (ignored if origin is a TAP file)",
+                    IDC_STATIC,7,74,215,63
+    LTEXT           "Input frequency (Hz) (only if origin is sound card)",
+                    IDC_STATIC,111,104,57,25
+    LTEXT           "Sensitivity (0-100)",IDC_STATIC,111,88,57,15
+    PUSHBUTTON      "Change",IDC_CHANGE_CONVERSION_DIR,181,195,37,12
+    LTEXT           "Use clock",IDC_STATIC,13,110,36,10
+    CONTROL         "Create clean TAP",IDC_CLEAN_TAP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,171,72,10
+    CONTROL         "Create PRG",IDC_MAKE_PRG,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,9,198,54,10
+    CONTROL         "Create T64",IDC_MAKE_T64,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,183,51,10
+END
+
+IDD_ABOUT DIALOGEX 0, 0, 155, 174
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "About WAV-PRG"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,52,153,50,14
+    CTEXT           "WAV-PRG 3.6",IDC_STATIC,0,7,155,8
+    CTEXT           "Copyright (C) Fabrizio Gennari 1998-2011",IDC_STATIC,0,
+                    18,155,8
+    CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",
+                    IDC_STATIC,0,28,155,21
+    RTEXT           "tapencoder.dll status",IDC_STATIC,4,50,70,19
+    RTEXT           "tapdecoder.dll status",IDC_STATIC,4,76,70,19
+    RTEXT           "portaudio.dll status",IDC_STATIC,3,102,70,19
+    RTEXT           "audiofile.dll status",IDC_STATIC,3,128,70,19
+    LTEXT           "",IDC_TAPENCODER_STATUS,81,50,70,19
+    LTEXT           "",IDC_TAPDECODER_STATUS,81,76,70,19
+    LTEXT           "",IDC_PABLIO_STATUS,81,102,70,19
+    LTEXT           "",IDC_AUDIOFILE_STATUS,81,128,70,19
+END
+
+
+IDI_ICON                ICON    DISCARDABLE     "wavprg.ico"
+
