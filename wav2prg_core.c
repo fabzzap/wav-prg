@@ -42,6 +42,10 @@ static enum wav2prg_bool get_pulse(struct wav2prg_context* context, struct wav2p
 {
   uint32_t raw_pulse;
   enum wav2prg_bool ret = context->input->get_pulse(context->input_object, &raw_pulse);
+  static int ncalls = 0;
+
+  if (((ncalls++) % 4096) == 0)
+    context->display_interface->progress(context->display_interface_internal, context->input->get_pos(context->input_object));
 
   if (ret == wav2prg_false)
     return wav2prg_false;
@@ -166,6 +170,8 @@ static void initialize_raw_block(struct wav2prg_raw_block* block, uint16_t start
 }
 
 static void add_byte_to_block(struct wav2prg_context *context , struct wav2prg_raw_block* block, uint8_t byte) {
+  static int ncalls = 0;
+
   *block->current_byte = byte;
   switch(block->filling){
   case first_to_last:
@@ -178,6 +184,13 @@ static void add_byte_to_block(struct wav2prg_context *context , struct wav2prg_r
     break;
   }
   block->pos_of_last_valid_byte = context->input->get_pos(context->input_object);
+
+  if (((ncalls++)%512)==0){
+    uint16_t pos = block->filling == first_to_last
+      ? block->location_of_current_byte
+      : (*context->current_block)->block.info.start + (*context->current_block)->block.info.end - block->location_of_current_byte;
+    context->display_interface->block_progress(context->display_interface_internal, pos);
+  }
 }
 
 static enum wav2prg_bool get_block_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_raw_block* block, uint16_t numbytes)
@@ -581,6 +594,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
   enum wav2prg_bool found_dependent_plugin;
   enum wav2prg_bool keep_broken_blocks = wav2prg_false;
 
+  reset_tolerances();
+
   while(1){
     enum wav2prg_bool res;
     struct block_list_element *block;
@@ -789,6 +804,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       no_gaps_allowed = wav2prg_false;
     }
   }
+  context.display_interface->progress(context.display_interface_internal, context.input->get_pos(context.input_object));
   return context.blocks;
 }
-

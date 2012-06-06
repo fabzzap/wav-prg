@@ -78,6 +78,34 @@ void wav2prg_set_plugin_dir(const char *name){
   dirname = strdup(name);
 }
 
+void wav2prg_set_default_plugin_dir(void)
+{
+#ifdef WIN32
+  CHAR module_name[_MAX_PATH];
+  CHAR subdir[] = "loaders";
+  char *plugin_dir;
+  char drive[_MAX_DRIVE];
+  char dir[_MAX_DIR];
+  char fname[_MAX_FNAME];
+  char ext[_MAX_EXT];
+
+  GetModuleFileNameA(NULL, module_name, sizeof(module_name));
+  _splitpath(module_name, drive, dir, fname, ext);
+  plugin_dir = malloc(strlen(drive) + strlen(dir) + strlen(subdir) + 1);
+  strcpy(plugin_dir, drive);
+  strcat(plugin_dir, dir);
+  strcat(plugin_dir, subdir);
+  wav2prg_set_plugin_dir(plugin_dir);
+  free(plugin_dir);
+#else
+  wav2prg_set_plugin_dir("/usr/lib/wav2prg");
+#endif
+}
+
+const char* wav2prg_get_plugin_dir(void){
+  return dirname;
+}
+
 enum{NO_DIRECTORY,NO_MEMORY,DLOPEN_FAILURE,BAD_PLUGIN,INIT_FAILURE,SUCCESS}
 register_dynamic_loader(const char *filename)
 {

@@ -37,6 +37,16 @@ static struct {
 } *store = NULL;
 static uint32_t store_size = 0;
 
+void reset_tolerances(void)
+{
+  uint32_t i;
+  for(i = 0; i < store_size; i++)
+    free(store[i].tolerances);
+  free(store);
+  store_size = 0;
+  store = NULL;
+}
+
 static struct tolerances** get_existing_tolerances_and_possibly_modify_them(uint8_t num_pulse_lengths, const uint16_t *thresholds)
 {
   uint32_t i;

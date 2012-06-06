@@ -49,17 +49,17 @@ static void display_checksum(struct display_interface_internal* internal, enum w
   printf("Checked checksum from %u to %u\n", checksum_start, checksum_end);
   printf("computed checksum %u (%02x) ", computed, computed);
   printf("loaded checksum %u (%02x) ", expected, expected);
-    switch(state){
-    case wav2prg_checksum_state_correct:
-      printf("correct\n");
-      break;
-    case wav2prg_checksum_state_load_error:
-      printf("load error\n");
-      break;
-   default:
-      printf("Huh?\n");
-      break;
-   }
+  switch(state){
+  case wav2prg_checksum_state_correct:
+    printf("correct\n");
+    break;
+  case wav2prg_checksum_state_load_error:
+    printf("load error\n");
+    break;
+  default:
+    printf("Huh?\n");
+    break;
+  }
 }
 
 static void end(struct display_interface_internal *internal, unsigned char valid, enum wav2prg_checksum_state state, char loader_has_checksum, uint32_t end_pos, uint32_t last_valid_pos, uint16_t bytes)
@@ -309,28 +309,7 @@ int main(int argc, char** argv)
     {NULL}
   };
 
-#ifdef WIN32
-  {
-    CHAR module_name[_MAX_PATH];
-    CHAR subdir[] = "loaders";
-    char *plugin_dir;
-    char drive[_MAX_DRIVE];
-    char dir[_MAX_DIR];
-    char fname[_MAX_FNAME];
-    char ext[_MAX_EXT];
-
-    GetModuleFileNameA(NULL, module_name, sizeof(module_name));
-    _splitpath(module_name, drive, dir, fname, ext);
-    plugin_dir = malloc(strlen(drive) + strlen(dir) + strlen(subdir) + 1);
-    strcpy(plugin_dir, drive);
-    strcat(plugin_dir, dir);
-    strcat(plugin_dir, subdir);
-    wav2prg_set_plugin_dir(plugin_dir);
-    free(plugin_dir);
-  }
-#else
-  wav2prg_set_plugin_dir("/usr/lib/wav2prg");
-#endif
+  wav2prg_set_default_plugin_dir();
 
   if(!yet_another_getopt(options, (uint32_t*)&argc, argv))
     return 1;

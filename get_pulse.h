@@ -19,3 +19,4 @@ uint16_t get_average(const struct tolerances*, uint8_t);
 enum wav2prg_bool set_distance_from_current_edge(const char* v, void *unused);
 enum wav2prg_bool set_distance_from_current_average(const char* v, void *unused);
 
+void reset_tolerances(void);
