@@ -44,6 +44,10 @@ static void progress(struct display_interface_internal *internal, uint32_t pos)
 {
 }
 
+static void block_progress(struct display_interface_internal *internal, uint16_t pos)
+{
+}
+
 static void display_checksum(struct display_interface_internal* internal, enum wav2prg_checksum_state state, uint32_t checksum_start, uint32_t checksum_end, uint8_t expected, uint8_t computed)
 {
   printf("Checked checksum from %u to %u\n", checksum_start, checksum_end);
@@ -90,6 +94,7 @@ static struct display_interface text_based_display = {
   try_sync,
   sync,
   progress,
+  block_progress,
   display_checksum,
   end
 };
