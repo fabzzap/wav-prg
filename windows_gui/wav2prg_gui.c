@@ -46,6 +46,8 @@ struct thread_params {
   HWND window;
   struct audiotap *clean_file;
   BOOL t64_checked, tap_checked, prg_checked;
+  uint8_t machine, videotype, halfwaves;
+  struct tapenc_params *tapenc_params;
 };
 
 static void list_plugins(HWND combobox){
@@ -200,7 +202,7 @@ static void progress(struct display_interface_internal *internal, uint32_t pos)
   SendMessage(GetDlgItem(internal->window, IDC_FILE_PROGRESS), PBM_SETPOS, pos, 0);
 }
 
-static void block_progress(struct display_interface_internal *internal, uint32_t pos)
+static void block_progress(struct display_interface_internal *internal, uint16_t pos)
 {
   SendMessage(GetDlgItem(internal->window, IDC_ENTRY_PROGRESS), PBM_SETPOS, pos, 0);
 }
@@ -297,14 +299,14 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
     char output_filename[1024];
     char t64_name[25];
 
-    if (p->tap_checked) {
+    if (p->tap_checked && p->input_file && *p->input_file) {
       memset(&file, 0, sizeof(file));
  	    file.lStructSize = sizeof(file);
       file.hwndOwner = p->window;
 	    file.nMaxFile = 1024;
       output_filename[0] = 0;
       file.lpstrFilter = "TAP file (*.tap)\0*.tap\0All files\0*.*\0\0";
-      file.lpstrTitle = "Choose the T64 file to be created";
+      file.lpstrTitle = "Choose the TAP file to be created";
       file.Flags = OFN_EXPLORER | OFN_HIDEREADONLY |
         OFN_OVERWRITEPROMPT | OFN_ENABLEHOOK;
       file.lpstrFile = output_filename;
@@ -312,8 +314,14 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
       file.lpfnHook = tap_save_hook_proc;
       file.lpstrDefExt = "tap";
       file.lCustData = (LPARAM) t64_name;
-      if (GetSaveFileNameA(&file) == TRUE)
-        write_cleaned_tap(blocks, p->input_file, output_filename);
+      if (GetSaveFileNameA(&file) == TRUE){
+        if (audio2tap_open_from_file3(&p->clean_file,p->input_file,p->tapenc_params,&p->machine, &p->videotype,&p->halfwaves)==AUDIOTAP_OK){
+          SetDlgItemTextA(p->window, IDC_FILE_TEXT, "Cleaning progress indicator");
+          write_cleaned_tap(blocks, p->clean_file, p->halfwaves, output_filename, &windows_display, &internal);
+          audio2tap_close(p->clean_file);
+          p->clean_file = NULL;
+        }
+      }
     }
     if (p->t64_checked) {
       memset(&file, 0, sizeof(file));
@@ -520,9 +528,14 @@ static void start_converting(HWND hwnd){
   tparams.tap_checked = IsDlgButtonChecked(hwnd, IDC_CLEAN_TAP) == BST_CHECKED;
   tparams.t64_checked = IsDlgButtonChecked(hwnd, IDC_MAKE_T64) == BST_CHECKED;
   tparams.prg_checked = IsDlgButtonChecked(hwnd, IDC_MAKE_PRG) == BST_CHECKED;
+  tparams.machine = machine;
+  tparams.videotype = videotype;
+  tparams.halfwaves = semiwaves;
+  tparams.tapenc_params = &tapenc_params;
 
   DialogBoxParam(instance, MAKEINTRESOURCE(IDD_STATUS), hwnd, status_proc,
                  (LPARAM) & tparams);
+  audio2tap_close(origin_file);
   free(tparams.loader_name);
 }
 

@@ -3,6 +3,7 @@
 #include "wav2prg_api.h"
 #include "audiotap.h"
 #include "get_pulse.h"
+#include "display_interface.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -86,7 +87,7 @@ static enum wav2prg_bool get_pulse_for_clean_tap(struct audiotap *audiotap, stru
   return wav2prg_true;
 }
 
-void write_cleaned_tap(struct block_list_element* blocks, const char* in_filename, const char* filename){
+void write_cleaned_tap(struct block_list_element* blocks, struct audiotap *input_handle, enum wav2prg_bool need_v2, const char* filename, struct display_interface *display_interface, struct display_interface_internal *display_interface_internal){
   struct block_list_element* current_block;
   uint32_t sync = 0;
   const struct tolerances *tolerance = NULL;
@@ -94,36 +95,27 @@ void write_cleaned_tap(struct block_list_element* blocks, const char* in_filenam
   uint32_t accumulated_pulses = 0, num_accumulated_pulses = 0;
   uint8_t num_pulse_lengths;
   int16_t *deviations = NULL;
-  enum wav2prg_bool need_v2 = wav2prg_false;
-  struct audiotap *input_handle, *output_handle;
+  struct audiotap *output_handle;
   struct v2_abstraction *abs = NULL;
-  struct tapenc_params tparams = {
-    0,12,20,0};
-  uint8_t machine = 0, videotype = 0, halfwaves;
+  uint32_t display_progress = 0xffffffff;
 
-  for (current_block = blocks; current_block; current_block = current_block->next) {
-    if (current_block->opposite_waveform){
-      need_v2 = wav2prg_true;
-      min_length_non_noise_pulse /= 2;
-      max_length_non_pause_pulse /= 2;
-      break;
-    }
-  }
   current_block = blocks;
 
   if (tap2audio_open_to_tapfile2(&output_handle, filename, need_v2 ? 2 : 1, 0, 0) != AUDIOTAP_OK)
     return;
-  halfwaves = need_v2 ? 1 : 0;
-  if (audio2tap_open_from_file3(&input_handle, in_filename, &tparams, &machine, &videotype, &halfwaves) != AUDIOTAP_OK) {
-    tap2audio_close(output_handle);
-    return;
-  }
 
   while(!audio2tap_is_eof(input_handle)){
     int32_t pos = get_pos_for_clean_tap(input_handle, abs);
     uint32_t raw_pulse;
     enum wav2prg_bool accumulate_this_pulse;
 
+    {
+      uint32_t new_display_progress = pos / 8192;
+      if (new_display_progress != display_progress){
+        display_progress = new_display_progress;
+        display_interface->progress(display_interface_internal, pos);
+      }
+    }
     while(current_block != NULL){
       if (sync >= current_block->num_of_syncs){
         current_block = current_block->next;
