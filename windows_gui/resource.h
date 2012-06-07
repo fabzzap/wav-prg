@@ -1,3 +1,4 @@
+#define IDC_STATIC -1
 #define IDD_ABOUT                       101
 #define IDD_STATUS                      102
 #define IDD_T64_NAME                    103

@@ -23,6 +23,25 @@ wav2prg.exe: wav2prg_core.o \
              audiotap_interface.o
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
+wavprg.exe:LDLIBS+=-lcomdlg32
+wavprg.exe: wav2prg_core.o \
+            loaders.o \
+            observers.o \
+            get_pulse.o \
+            write_cleaned_tap.o \
+            write_prg.o \
+            yet_another_getopt.o \
+            wav2prg_block_list.o \
+            create_t64.o \
+            audiotap_interface.o \
+            windows_gui/wav2prg_gui.o \
+            windows_gui/wavprg.o \
+            windows_gui/wavprg-resources.o
+	$(LINK.o) $^ $(LDLIBS) -o $@
+
+windows_gui/wavprg-resources.o: windows_gui/wavprg.rc
+	$(WINDRES) --include=windows_gui -o $@ $^
+
 t.o: wavprg.rc
 	windres $(CPPFLAGS) -o $@ $^
 

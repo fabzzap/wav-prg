@@ -1,4 +1,5 @@
 #include "resource.h"
+#include <windows.h>
 
 IDD_STATUS DIALOG DISCARDABLE  0, 0, 185, 183
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
