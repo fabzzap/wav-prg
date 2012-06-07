@@ -11,9 +11,6 @@
 #define MIN_LENGTH_NON_NOISE_PULSE_DEFAULT 176
 #define MAX_LENGTH_NON_PAUSE_PULSE_DEFAULT 2160
 
-static uint32_t min_length_non_noise_pulse = MIN_LENGTH_NON_NOISE_PULSE_DEFAULT;
-static uint32_t max_length_non_pause_pulse = MAX_LENGTH_NON_PAUSE_PULSE_DEFAULT;
-
 struct v2_abstraction {
   uint32_t pulse1, pulse2;
   uint32_t pos_of_pulse2;
@@ -98,9 +95,14 @@ void write_cleaned_tap(struct block_list_element* blocks, struct audiotap *input
   struct audiotap *output_handle;
   struct v2_abstraction *abs = NULL;
   uint32_t display_progress = 0xffffffff;
+  uint32_t min_length_non_noise_pulse = MIN_LENGTH_NON_NOISE_PULSE_DEFAULT;
+  uint32_t max_length_non_pause_pulse = MAX_LENGTH_NON_PAUSE_PULSE_DEFAULT;
 
   current_block = blocks;
-
+  if (need_v2){
+    min_length_non_noise_pulse /= 2;
+    max_length_non_pause_pulse /= 2;
+  }
   if (tap2audio_open_to_tapfile2(&output_handle, filename, need_v2 ? 2 : 1, 0, 0) != AUDIOTAP_OK)
     return;
 

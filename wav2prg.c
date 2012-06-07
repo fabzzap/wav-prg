@@ -350,7 +350,14 @@ int main(int argc, char** argv)
   {
     switch(current_dump->dump_type){
     case dump_to_tap:
-      write_cleaned_tap(blocks, argv[1], current_dump->name);
+      {
+        struct audiotap *file_to_clean;
+        open_status = audio2tap_open_from_file3(&file_to_clean, argv[1], &tparams, &machine, &videotype, &halfwaves);
+        if(open_status == AUDIOTAP_OK){
+          write_cleaned_tap(blocks, file_to_clean, halfwaves != 0, current_dump->name, &text_based_display, NULL);
+          audio2tap_close(file_to_clean);
+        }
+      }
       break;
     case dump_to_prg:
       write_prg(blocks, current_dump->name);
