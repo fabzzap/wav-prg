@@ -24,6 +24,7 @@ wav2prg.exe: wav2prg_core.o \
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
 wavprg.exe:LDLIBS+=-lcomdlg32
+wavprg.exe:LDFLAGS+=-mwindows
 wavprg.exe: wav2prg_core.o \
             loaders.o \
             observers.o \
