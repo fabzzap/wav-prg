@@ -59,9 +59,9 @@ static enum wav2prg_bool recognize_turrican(struct wav2prg_plugin_conf* conf, co
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders turbotape_observed_loaders[] = {
-  {"kdc", recognize_turrican},
-  {NULL,NULL}
+static const struct wav2prg_observers turbotape_observed_loaders[] = {
+  {"Kernal data chunk", {"Turbo Tape 64", recognize_turrican}},
+  {NULL, {NULL, NULL}}
 };
 
 const struct wav2prg_loaders turbotape_one_loader[] =
@@ -94,10 +94,10 @@ const struct wav2prg_loaders turbotape_one_loader[] =
       first_to_last,
       wav2prg_false,
       NULL
-    },
-    turbotape_observed_loaders
+    }
   },
   {NULL}
 };
 
 LOADER2(turbotape,1,0,"Turbo Tape 64 desc", turbotape_one_loader)
+WAV2PRG_OBSERVER(1,0, turbotape_observed_loaders)

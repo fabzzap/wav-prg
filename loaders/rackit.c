@@ -158,10 +158,10 @@ static enum wav2prg_bool keep_doing_rackit(struct wav2prg_plugin_conf* conf, con
   return (block->info.start != 0xfffc || block->info.end != 0xfffe);
 }
 
-static const struct wav2prg_observed_loaders rackit_observed_loaders[] = 
+static const struct wav2prg_observers rackit_observed_loaders[] = 
 {
-  {"kdc",is_rackit},
-  {"Rack-It",keep_doing_rackit},
+  {"Kernal data chunk", {"Rack-It", is_rackit}},
+  {"Rack-It"          , {"Rack-It", keep_doing_rackit}},
   {NULL,NULL}
 };
 
@@ -195,10 +195,11 @@ static const struct wav2prg_loaders rackit_functions[] =
       first_to_last,
       wav2prg_false,
       &rackit_generate_private_state
-    },
-    rackit_observed_loaders
+    }
   },
   {NULL}
 };
 
 LOADER2(rackit, 1, 0, "Rack-It loader", rackit_functions)
+WAV2PRG_OBSERVER(1,0, rackit_observed_loaders)
+

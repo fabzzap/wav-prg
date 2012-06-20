@@ -100,9 +100,9 @@ static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_plugin_conf* co
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders maddoctor_observed_loaders[] = {
-  {"khc", recognize_maddoctor_hc},
-  {"Mad Doctor", recognize_maddoctor_self},
+static const struct wav2prg_observers maddoctor_observed_loaders[] = {
+  {"Default C64", {"Mad Doctor", recognize_maddoctor_hc}},
+  {"Mad Doctor" , {"Mad Doctor", recognize_maddoctor_self}},
   {NULL,NULL}
 };
 
@@ -135,10 +135,11 @@ static const struct wav2prg_loaders maddoctor_functions[] ={
       first_to_last,
       wav2prg_false,
       NULL
-    },
-    maddoctor_observed_loaders
+    }
   },
   {NULL}
 };
 
 LOADER2(maddoctor, 1, 0, "Mad Doctor loader", maddoctor_functions)
+WAV2PRG_OBSERVER(1,0, maddoctor_observed_loaders)
+

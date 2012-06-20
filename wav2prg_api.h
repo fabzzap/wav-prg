@@ -116,14 +116,15 @@ struct wav2prg_plugin_conf {
   void* private_state;
 };
 
-struct wav2prg_observed_loaders {
+struct wav2prg_observer_loaders {
   const char* loader;
   wav2prg_recognize_block recognize_func;
 };
 
 struct wav2prg_context;
 
-#define WAVPRG_LOADER_API {'W','P','4','0'}
+#define WAVPRG_LOADER_API {'W','L','4','0'}
+#define WAVPRG_OBSERVER_API {'W','O','4','0'}
 
 struct wav2prg_all_loaders {
   char api_version[4];
@@ -135,8 +136,16 @@ struct wav2prg_all_loaders {
     const char *name;
     struct wav2prg_plugin_functions functions;
     struct wav2prg_plugin_conf conf;
-    const struct wav2prg_observed_loaders* observed;
   } *loaders;
+};
+
+struct wav2prg_all_observers {
+  char api_version[4];
+  const char version[2];
+  const struct wav2prg_observers {
+    const char* observed_name;
+    struct wav2prg_observer_loaders observers;
+  } *observers;
 };
 
 #if defined WIN32 || defined __CYGWIN__ || defined linux
@@ -155,6 +164,18 @@ struct wav2prg_all_loaders {
 #define DLL_ENTRY _DllMainCRTStartup
 #endif
 
+#define STANDARD_WINDOWS_DLL_ENTRY_POINT \
+#ifndef ALREADY_DEFINED \
+#define ALREADY_DEFINED \
+int _stdcall \
+DLL_ENTRY(int hInst, \
+                   unsigned long ul_reason_for_call, void *lpReserved) \
+{ \
+  return 1; \
+}\
+#endif \
+#endif
+
 #define LOADER2(x, major,minor,desc, loaders) \
 _declspec(dllexport) \
 const struct wav2prg_all_loaders wav2prg_loader = \
@@ -166,12 +187,17 @@ const struct wav2prg_all_loaders wav2prg_loader = \
   }, \
   loaders \
 }; \
-int _stdcall \
-DLL_ENTRY(int hInst, \
-                   unsigned long ul_reason_for_call, void *lpReserved) \
+STANDARD_WINDOWS_DLL_ENTRY_POINT
+
+#define WAV2PRG_OBSERVER(major,minor, observers) \
+_declspec(dllexport) \
+const struct wav2prg_all_observers wav2prg_observer = \
 { \
-  return 1; \
-}\
+  WAVPRG_OBSERVER_API, \
+  {major,minor}, \
+  observers} \
+}; \
+STANDARD_WINDOWS_DLL_ENTRY_POINT
 
 #else //!defined WIN32 && !defined __CYGWIN__
 
@@ -185,6 +211,14 @@ const struct wav2prg_all_loaders wav2prg_loader = \
   }, \
   loaders \
 }; \
+
+#define WAV2PRG_OBSERVER(major,minor, observers) \
+const struct wav2prg_all_observers wav2prg_observer = \
+{ \
+  WAVPRG_OBSERVER_API, \
+  {major,minor}, \
+  observers \
+};
 
 #endif //defined WIN32 || defined __CYGWIN__
 

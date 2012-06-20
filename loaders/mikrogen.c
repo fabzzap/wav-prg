@@ -88,14 +88,10 @@ static enum wav2prg_bool recognize_mikrogen_new(struct wav2prg_plugin_conf* conf
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders mikrogen_old_observed_loaders[] = {
-  {"kdc", recognize_mikrogen_old},
-  {NULL,NULL}
-};
-
-static const struct wav2prg_observed_loaders mikrogen_new_observed_loaders[] = {
-  {"kdc", recognize_mikrogen_new},
-  {NULL,NULL}
+static const struct wav2prg_observers mikrogen_observed_loaders[] = {
+  {"Kernal data chunk", {"Mikro-Gen (old)", recognize_mikrogen_old}},
+  {"Kernal data chunk", {"Mikro-Gen (new)", recognize_mikrogen_new}},
+  {NULL, {NULL, NULL}}
 };
 
 static const struct wav2prg_loaders mikrogen_one_loader[] = 
@@ -128,8 +124,7 @@ static const struct wav2prg_loaders mikrogen_one_loader[] =
       first_to_last,
       wav2prg_false,
       NULL
-    },
-    mikrogen_old_observed_loaders
+    }
   },
   {
     "Mikro-Gen (new)",
@@ -159,10 +154,11 @@ static const struct wav2prg_loaders mikrogen_one_loader[] =
       first_to_last,
       wav2prg_false,
       NULL
-    },
-    mikrogen_new_observed_loaders
+    }
   },
   {NULL}
 };
 
 LOADER2(mikrogen, 1, 0, "Mikro-Gen loader (old and new)", mikrogen_one_loader)
+WAV2PRG_OBSERVER(1,0, mikrogen_observed_loaders)
+

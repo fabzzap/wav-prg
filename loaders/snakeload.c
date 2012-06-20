@@ -50,9 +50,9 @@ static enum wav2prg_bool recognize_snakeload(struct wav2prg_plugin_conf* conf, c
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders snakeload_observed_loaders[] = {
-  {"kdc", recognize_snakeload},
-  {NULL,NULL}
+static const struct wav2prg_observers snakeload_observed_loaders[] = {
+  {"Kernal data chunk", {"Snakeload", recognize_snakeload}},
+  {NULL, {NULL,NULL}}
 };
 
 static const struct wav2prg_loaders snakeload_functions[] = {
@@ -84,10 +84,11 @@ static const struct wav2prg_loaders snakeload_functions[] = {
       first_to_last,
       wav2prg_false,
       NULL
-    },
-    snakeload_observed_loaders
+    }
   },
   {NULL}
 };
 
 LOADER2(snakeload, 1, 0, "Steve Snake loader with 5-byte sync sequence (called Snakeload v5.0 in Ninja Warriors code)", snakeload_functions)
+WAV2PRG_OBSERVER(1,0, snakeload_observed_loaders)
+

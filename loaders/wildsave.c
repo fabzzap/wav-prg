@@ -51,9 +51,9 @@ static enum wav2prg_bool keep_doing_wildsave(struct wav2prg_plugin_conf* conf, c
   return wav2prg_true;
 }
 
-static const struct wav2prg_observed_loaders wildsave_observed_loaders[] = {
-  {"Wild Save",keep_doing_wildsave},
-  {NULL,NULL}
+static const struct wav2prg_observers wildsave_observed_loaders[] = {
+  {"Wild Save", {"Wild Save", keep_doing_wildsave}},
+  {NULL,{NULL,NULL}}
 };
 
 static const struct wav2prg_loaders wildsave_functions[] = {
@@ -85,10 +85,11 @@ static const struct wav2prg_loaders wildsave_functions[] = {
       last_to_first,
       wav2prg_false,
       &wildsave_generate_private_state
-    },
-    wildsave_observed_loaders
+    }
   },
   {NULL}
 };
 
 LOADER2(wildsave, 1, 0, "Wild Save loader", wildsave_functions)
+WAV2PRG_OBSERVER(1,0, wildsave_observed_loaders)
+

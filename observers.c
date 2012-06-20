@@ -6,34 +6,29 @@
 
 static struct wav2prg_observed {
   const char *name;
-  struct wav2prg_observed_loaders *observers;
+  const struct wav2prg_observer_loaders **observers;
 } *observed_list = NULL;
 
-static void add_observer_to_list(struct wav2prg_observed_loaders **observers, const char* observer_name, wav2prg_recognize_block recognize_func){
-  struct wav2prg_observed_loaders *current_observers;
-  int number_of_observers = 0;
+static void add_observer_to_list(const struct wav2prg_observer_loaders ***observers, const struct wav2prg_observer_loaders *new_observer){
+  int number_of_observers;
 
-  for(current_observers = *observers; current_observers->loader != NULL; current_observers++, number_of_observers++);
+  for(number_of_observers = 0; (*observers)[number_of_observers] != NULL; number_of_observers++);
   *observers = realloc(*observers, sizeof(**observers) * (2 + number_of_observers));
-  (*observers)[number_of_observers + 1].loader = NULL;
-  (*observers)[number_of_observers + 1].recognize_func = NULL;
+  (*observers)[number_of_observers + 1] = NULL;
   /* recognition of Kernal loaders is added at end,
      recognition of anything else is added at beginning */
-  if (strcmp(observer_name, "Kernal header chunk 2nd copy")
-   && strcmp(observer_name, "Kernal data chunk 1st copy")
-   && strcmp(observer_name, "Kernal data chunk 2nd copy")
-   && strcmp(observer_name, "Kernal header chunk 2nd copy C16")
-   && strcmp(observer_name, "Kernal data chunk 1st copy C16")
-   && strcmp(observer_name, "Kernal data chunk 2nd copy C16")
+  if (strcmp(new_observer->loader, "Default C64")
+   && strcmp(new_observer->loader, "Default C16")
+   && strcmp(new_observer->loader, "Kernal data chunk")
+   && strcmp(new_observer->loader, "Kernal data chunk C16")
    ){
     memmove((*observers) + 1, *observers, sizeof(**observers) * number_of_observers);
     number_of_observers = 0;
   }
-  (*observers)[number_of_observers].loader = observer_name;
-  (*observers)[number_of_observers].recognize_func = recognize_func;
+  (*observers)[number_of_observers] = new_observer;
 }
 
-static struct wav2prg_observed_loaders** get_list_of_observers_maybe_adding_observed(const char *observed_name, enum wav2prg_bool add_if_missing){
+static const struct wav2prg_observer_loaders*** get_list_of_observers_maybe_adding_observed(const char *observed_name, enum wav2prg_bool add_if_missing){
   struct wav2prg_observed *current_observed;
   int number_of_observed = 0;
 
@@ -47,50 +42,23 @@ static struct wav2prg_observed_loaders** get_list_of_observers_maybe_adding_obse
   if (add_if_missing)
   {
     observed_list = realloc(observed_list, sizeof(observed_list[0]) * (2 + number_of_observed));
-    current_observed = &observed_list[number_of_observed];
-    current_observed->name = observed_name;
-    current_observed->observers = calloc(sizeof(struct wav2prg_observed_loaders), 1);
-    current_observed[1].name = NULL;
-    current_observed[1].observers = NULL;
-    return &current_observed->observers;
+    observed_list[number_of_observed + 1].name = NULL;
+    observed_list[number_of_observed + 1].observers = NULL;
+    observed_list[number_of_observed].name = observed_name;
+    observed_list[number_of_observed].observers = calloc(sizeof(struct wav2prg_observer_loaders*), 1);
+    return &observed_list[number_of_observed].observers;
   }
   return NULL;
 }
 
-static void add_one_observed(const char *observer_name, const char *observed_name, wav2prg_recognize_block recognize_func){
-  if (!strcmp(observed_name, "khc"))
-  {
-    add_one_observed(observer_name, "Kernal header chunk 1st copy", recognize_func);
-    add_one_observed(observer_name, "Kernal header chunk 2nd copy", recognize_func);
-  }
-  else if (!strcmp(observed_name, "kdc"))
-  {
-    add_one_observed(observer_name, "Kernal data chunk 1st copy", recognize_func);
-    add_one_observed(observer_name, "Kernal data chunk 2nd copy", recognize_func);
-  }
-  else if (!strcmp(observed_name, "khc16"))
-  {
-    add_one_observed(observer_name, "Kernal header chunk 1st copy C16", recognize_func);
-    add_one_observed(observer_name, "Kernal header chunk 2nd copy C16", recognize_func);
-  }
-  else if (!strcmp(observed_name, "kdc16"))
-  {
-    add_one_observed(observer_name, "Kernal data chunk 1st copy C16", recognize_func);
-    add_one_observed(observer_name, "Kernal data chunk 2nd copy C16", recognize_func);
-  }
-  else
-    add_observer_to_list(get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_true), observer_name, recognize_func);
+void add_observed(const char *observed_name, const struct wav2prg_observer_loaders *observed){
+  const struct wav2prg_observer_loaders*** list = get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_true);
+
+  add_observer_to_list(list, observed);
 }
 
-void add_observed(const char *observer_name, const struct wav2prg_observed_loaders *observed){
-  const struct wav2prg_observed_loaders *current_observed;
-
-  for(current_observed = observed; current_observed->loader != NULL; current_observed++)
-    add_one_observed(observer_name, current_observed->loader, current_observed->recognize_func);
-}
-
-struct wav2prg_observed_loaders* get_observers(const char *observed_name){
-  struct wav2prg_observed_loaders **observer = get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_false);
+const struct wav2prg_observer_loaders** get_observers(const char *observed_name){
+  const struct wav2prg_observer_loaders ***observer = get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_false);
   return observer ? *observer : NULL;
 }
 

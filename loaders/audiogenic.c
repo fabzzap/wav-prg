@@ -195,14 +195,10 @@ static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const st
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders audiogenic_observed_loaders[] = {
-  {"Audiogenic", recognize_itself},
-  {NULL,NULL}
-};
-
-static const struct wav2prg_observed_loaders specialagent_observed_loaders[] = {
-  {"Special Agent/Strike Force Cobra", recognize_itself},
-  {"khc",recognize_hc},
+static const struct wav2prg_observers audiogenic_specialagent_observed_loaders[] = {
+  {"Audiogenic", {"Audiogenic", recognize_itself}},
+  {"Special Agent/Strike Force Cobra", {"Special Agent/Strike Force Cobra", recognize_itself}},
+  {"Default C64", {"Special Agent/Strike Force Cobra", recognize_hc}},
   {NULL,NULL}
 };
 
@@ -236,8 +232,7 @@ static const struct wav2prg_loaders audiogenic[] =
       first_to_last,
       wav2prg_false,
       &audiogenic_specialagent_generate_private_state
-    },
-    audiogenic_observed_loaders
+    }
   },
   {
     "Special Agent/Strike Force Cobra",
@@ -267,10 +262,10 @@ static const struct wav2prg_loaders audiogenic[] =
       first_to_last,
       wav2prg_false,
       &audiogenic_specialagent_generate_private_state
-    },
-    specialagent_observed_loaders
+    }
   }
   ,{NULL}
 };
 
 LOADER2(audiogenic,1,0,"Audiogenic desc", audiogenic);
+WAV2PRG_OBSERVER(1,0, audiogenic_specialagent_observed_loaders);

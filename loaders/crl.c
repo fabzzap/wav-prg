@@ -164,10 +164,10 @@ static enum wav2prg_bool recognize_crl_self(struct wav2prg_plugin_conf* conf, co
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders crl_observed_loaders[] = {
-  {"khc", recognize_crl_hc},
-  {"CRL", recognize_crl_self},
-  {NULL,NULL}
+static const struct wav2prg_observers crl_observed_loaders[] = {
+  {"Default C64", {"CRL", recognize_crl_hc}},
+  {"CRL", {"CRL", recognize_crl_self}},
+  {NULL, {NULL, NULL}}
 };
 
 static enum wav2prg_bool crl_get_block(struct wav2prg_context *context, const struct wav2prg_functions *functions, struct wav2prg_plugin_conf *conf, struct wav2prg_raw_block *block, uint16_t size)
@@ -229,10 +229,10 @@ static const struct wav2prg_loaders crl_functions[] =
       first_to_last,
       wav2prg_false,
       &crl_generate_private_state
-    },
-    crl_observed_loaders
+    }
   },
   {NULL}
 };
 
 LOADER2(crl,1,0,"CRL plug-in",crl_functions);
+WAV2PRG_OBSERVER(1,0, crl_observed_loaders)

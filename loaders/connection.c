@@ -1,8 +1,5 @@
 #include "wav2prg_api.h"
 
-static uint16_t connection_thresholds[]={263};
-static uint8_t connection_pilot_sequence[]={16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
-
 static enum wav2prg_bool is_connection(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* datachunk_block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func)
 {
   if(datachunk_block->info.start != 698 || datachunk_block->info.end != 812)
@@ -16,50 +13,21 @@ static enum wav2prg_bool is_connection(struct wav2prg_plugin_conf* conf, const s
     return wav2prg_false;
     
   if (datachunk_block->data[707-698] == 173 && datachunk_block->data[712-698] == 173) {
+    uint8_t j, sbyte;
+
     info->end=datachunk_block->data[780-698]*256+datachunk_block->data[787-698];
+    change_sync_sequence_length_func(conf, 17);
+    for(j = 0, sbyte = 16; j < 17; j++, sbyte--)
+      conf->sync_sequence[j] = sbyte;
+    conf->thresholds[0] = 263;
     return wav2prg_true;
   }
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders connection_dependency[] = {
-  {"kdc", is_connection},
-  {NULL,NULL}
+static const struct wav2prg_observers connection_dependency[] = {
+  {"Kernal data chunk", {"Null loader", is_connection}},
+  {NULL, {NULL, NULL}}
 };
 
-static const struct wav2prg_loaders connection_functions[] = {
-  {
-    "Connection",
-    {
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL
-    },
-    {
-      msbf,
-      wav2prg_xor_checksum,
-      wav2prg_compute_and_check_checksum,
-      2,
-      connection_thresholds,
-      NULL,
-      wav2prg_pilot_tone_with_shift_register,
-      2,
-      sizeof(connection_pilot_sequence),
-      connection_pilot_sequence,
-      0,
-      first_to_last,
-      wav2prg_false,
-      NULL
-    },
-    connection_dependency
-  },
-  {NULL}
-};
-
-LOADER2(connection, 1, 0, "Connection, a loader common on pirate tapes (e.g. newsagents)", connection_functions)
+WAV2PRG_OBSERVER(1,0, connection_dependency)

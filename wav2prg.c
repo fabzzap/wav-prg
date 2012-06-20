@@ -17,24 +17,19 @@
 #include "get_pulse.h"
 #include "audiotap_interface.h"
 #include "audiotap.h"
+#include "observers.h"
 
 static void try_sync(struct display_interface_internal* internal, const char* loader_name)
 {
   printf("trying to get a sync using loader %s\n", loader_name);
 }
 
-static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info, const struct wav2prg_observed_loaders* dependencies)
+static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info)
 {
   printf("got a pilot tone from %u to %u", start_of_pilot_pos, sync_pos);
   if (info){
     printf(" and a block at %u\n", info_pos);
     printf("name %s start %u end %u\n", info->name, info->start, info->end);
-  }
-  else if (dependencies){
-    const struct wav2prg_observed_loaders* dep;
-    printf("\nThe chosen loader cannot find block info. A better solution is to use a loader this depends on.\n");
-    for(dep = dependencies; dep->loader != NULL; dep++)
-      printf("-- %s\n", dep->loader);
   }
   else
     printf(" but no block followed\n");
@@ -175,11 +170,6 @@ static enum wav2prg_bool display_list_of_loaders_with_dependencies(void)
     const struct wav2prg_loader *plugin_functions = get_loader_by_name(*one_loader);
 
     if(plugin_functions->functions->get_block_info == NULL) {
-      const struct wav2prg_observed_loaders *dep;
-
-      printf("%s\n", *one_loader);
-      for(dep = get_observed_loaders(*one_loader); dep && dep->loader != NULL; dep++)
-        printf("\t%s\n", dep->loader);
     }
     free(*one_loader);
   }
@@ -338,7 +328,7 @@ int main(int argc, char** argv)
 
   blocks = wav2prg_analyse(
     wav2prg_adaptively_tolerant,
-    selected_loader.loader_name ? selected_loader.loader_name : "Kernal header chunk 1st copy",
+    selected_loader.loader_name ? selected_loader.loader_name : "Default C64",
     NULL,
     &input_object,
     &input_functions,

@@ -1,7 +1,5 @@
 #include "wav2prg_api.h"
 
-static uint16_t opera_thresholds[]={692};
-
 static enum wav2prg_bool recognize_opera_dc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   if (block->info.start == 0x801
    && block->info.end == 0x9ff) {
@@ -25,6 +23,10 @@ static enum wav2prg_bool recognize_opera_dc(struct wav2prg_plugin_conf* conf, co
      ){
         info->start = block->data[*where_to_search_in_block + 1] + (block->data[*where_to_search_in_block + 6] << 8);
         info->end = block->data[*where_to_search_in_block + 11] + (block->data[*where_to_search_in_block + 16] << 8);
+        conf->checksum_type = wav2prg_do_not_compute_checksum;
+        conf->thresholds[0] = 692;
+        conf->findpilot_type = wav2prg_pilot_tone_made_of_1_bits_followed_by_0;
+        conf->min_pilots = 128;
         (*where_to_search_in_block) += 20;
         return wav2prg_true;
       }
@@ -33,45 +35,10 @@ static enum wav2prg_bool recognize_opera_dc(struct wav2prg_plugin_conf* conf, co
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders opera_observed_loaders[] = {
-  {"kdc", recognize_opera_dc},
-  {NULL,NULL}
+static const struct wav2prg_observers opera_observed_loaders[] = {
+  {"Kernal data chunk", {"Null loader", recognize_opera_dc}},
+  {NULL, {NULL, NULL}}
 };
 
-static const struct wav2prg_loaders opera_functions[] =
-{
-  {
-    "Opera Turbo Load",
-    {
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      NULL
-    },
-    {
-      msbf,
-      wav2prg_xor_checksum,/*ignored*/
-      wav2prg_do_not_compute_checksum,
-      2,
-      opera_thresholds,
-      NULL,
-      wav2prg_pilot_tone_made_of_1_bits_followed_by_0,
-      0x55,/*ignored*/
-      0,
-      NULL,
-      128,
-      first_to_last,
-      wav2prg_false,
-      NULL
-    },
-    opera_observed_loaders
-  },
-  {NULL}
-};
+WAV2PRG_OBSERVER(1,0, opera_observed_loaders)
 
-LOADER2(opera, 1, 0, "Opera Turbo Load, used by some Opera Soft programs", opera_functions)

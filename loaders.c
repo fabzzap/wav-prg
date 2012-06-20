@@ -17,7 +17,6 @@
 struct loader {
   const char *name;
   struct wav2prg_loader *loader;
-  const struct wav2prg_observed_loaders *observed;
   struct loader *next;
 };
 
@@ -26,11 +25,12 @@ static struct loader *loader_list = NULL;
 static enum wav2prg_bool register_loader(struct wav2prg_all_loaders *loader) {
   struct loader **last_loader;
   const struct wav2prg_loaders *one_loader;
+  char api_version[4] = WAVPRG_LOADER_API;
 
-  if (loader->api_version[0] != 'W'
-  ||  loader->api_version[1] != 'P'
-  ||  loader->api_version[2] != '4'
-  ||  loader->api_version[3] != '0'
+  if (loader->api_version[0] != api_version[0]
+  ||  loader->api_version[1] != api_version[1]
+  ||  loader->api_version[2] != api_version[2]
+  ||  loader->api_version[3] != api_version[3]
   )
   {
     return wav2prg_false;/*bad structure*/
@@ -48,9 +48,28 @@ static enum wav2prg_bool register_loader(struct wav2prg_all_loaders *loader) {
     (*last_loader)->loader->conf = &one_loader->conf;
     (*last_loader)->name = one_loader->name;
     (*last_loader)->next=NULL;
-    (*last_loader)->observed = one_loader->observed;
-    if (one_loader->observed)
-      add_observed(one_loader->name, (*last_loader)->observed);
+  }
+
+  return wav2prg_true;
+}
+
+static enum wav2prg_bool register_observer(struct wav2prg_all_observers *observer) {
+  struct loader **last_loader;
+  const struct wav2prg_observers *one_loader;
+  char api_version[4] = WAVPRG_OBSERVER_API;
+
+  if (observer->api_version[0] != api_version[0]
+  ||  observer->api_version[1] != api_version[1]
+  ||  observer->api_version[2] != api_version[2]
+  ||  observer->api_version[3] != api_version[3]
+  )
+  {
+    return wav2prg_false;/*bad structure*/
+  }
+
+  for(one_loader = observer->observers; one_loader->observed_name; one_loader++)
+  {
+    add_observed(one_loader->observed_name, &one_loader->observers);
   }
 
   return wav2prg_true;
@@ -116,6 +135,7 @@ register_dynamic_loader(const char *filename)
 #endif
   char *plugin_to_load;
   struct wav2prg_all_loaders *loader;
+  struct wav2prg_all_observers *observer;
 
   if (dirname == NULL)
     return NO_DIRECTORY;
@@ -137,7 +157,12 @@ register_dynamic_loader(const char *filename)
 #else
   loader = (struct wav2prg_all_loaders *)dlsym(handle, "wav2prg_loader");
 #endif
-  if (loader == 0) {
+#ifdef WIN32
+  observer = (struct wav2prg_all_observers *)GetProcAddress(handle, "wav2prg_observer");
+#else
+  observer = (struct wav2prg_all_observers *)dlsym(handle, "wav2prg_observer");
+#endif
+  if (loader == 0 && observer == 0) {
 #ifdef WIN32
     FreeLibrary(handle);
 #else
@@ -145,7 +170,15 @@ register_dynamic_loader(const char *filename)
 #endif
     return BAD_PLUGIN;
   }
-  if(!register_loader(loader)){
+  if(loader && !register_loader(loader)){
+#ifdef WIN32
+    FreeLibrary(handle);
+#else
+    dlclose(handle);
+#endif
+    return INIT_FAILURE;
+  }
+  if(observer && !register_observer(observer)){
 #ifdef WIN32
     FreeLibrary(handle);
 #else
@@ -255,12 +288,6 @@ const struct wav2prg_loader* get_loader_by_name(const char* name) {
   const struct loader *loader = get_a_loader(name);
   return loader ? loader->loader : NULL;
 }
-
-const struct wav2prg_observed_loaders* get_observed_loaders(const char* name) {
-  const struct loader *loader = get_a_loader(name);
-  return loader ? loader->observed : NULL;
-}
-
 
 static char** add_string_to_list(char **old_list, const char *new_string, uint32_t *old_size)
 {

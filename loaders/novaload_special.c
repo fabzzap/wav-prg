@@ -65,9 +65,9 @@ static enum wav2prg_bool keep_doing_novaload_special(struct wav2prg_plugin_conf*
   return state->start_of_block != 0;
 }
 
-static const struct wav2prg_observed_loaders novaload_special_observed_loaders[] = {
-  {"Novaload Special",keep_doing_novaload_special},
-  {NULL,NULL}
+static const struct wav2prg_observers novaload_special_observed_loaders[] = {
+  {"Novaload Special", {"Novaload Special", keep_doing_novaload_special}},
+  {NULL, {NULL, NULL}}
 };
 
 static const struct wav2prg_loaders novaload_special_functions[] =
@@ -100,10 +100,11 @@ static const struct wav2prg_loaders novaload_special_functions[] =
       first_to_last,
       wav2prg_false,
       &novaload_special_generate_private_state
-    },
-    novaload_special_observed_loaders
+    }
   },
   {NULL}
 };
 
 LOADER2(novaload_special, 1, 0, "Novaload (only special blocks)", novaload_special_functions)
+WAV2PRG_OBSERVER(1,0, novaload_special_observed_loaders)
+

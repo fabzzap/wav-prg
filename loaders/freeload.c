@@ -73,14 +73,6 @@ static enum wav2prg_bool recognize_freeload_with_turbotape_sync(struct wav2prg_p
   return wav2prg_false;
 }
 
-static enum wav2prg_bool recognize_freeload_from_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
-  if (recognize_fast_freeload(conf, block, info, no_gaps_allowed, where_to_search_in_block, change_sync_sequence_length_func))
-    return wav2prg_true;
-  if (recognize_freeload_with_turbotape_sync(conf, block, info, no_gaps_allowed, where_to_search_in_block, change_sync_sequence_length_func))
-    return wav2prg_true;
-  return wav2prg_false;
-}
-
 static enum wav2prg_bool recognize_freeload_16(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
   if (block->info.start == 819
    && block->info.end   == 1010){
@@ -114,10 +106,11 @@ static enum wav2prg_bool recognize_freeload_16(struct wav2prg_plugin_conf* conf,
   return wav2prg_false;
 }
 
-static const struct wav2prg_observed_loaders freeload_observed_loaders[] = {
-  {"khc", recognize_freeload_from_hc},
-  {"khc16", recognize_freeload_16},
-  {NULL,NULL}
+static const struct wav2prg_observers freeload_observers[] = {
+  {"Default C64", {"Freeload", recognize_fast_freeload}},
+  {"Default C64", {"Freeload", recognize_freeload_with_turbotape_sync}},
+  {"Default C16", {"Freeload", recognize_freeload_16}},
+  {NULL,{NULL,NULL}}
 };
 
 static const struct wav2prg_loaders freeload_functions[] = {
@@ -150,10 +143,9 @@ static const struct wav2prg_loaders freeload_functions[] = {
       wav2prg_false,
       NULL
     },
-    freeload_observed_loaders
   },
   {NULL}
 };
 
 LOADER2(freeload, 1, 0, "Freeload plug-in", freeload_functions)
-
+WAV2PRG_OBSERVER(1,0, freeload_observers)
