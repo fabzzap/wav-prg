@@ -147,5 +147,5 @@ static const struct wav2prg_loaders freeload_functions[] = {
   {NULL}
 };
 
-LOADER2(freeload, 1, 0, "Freeload plug-in", freeload_functions)
+WAV2PRG_LOADER(freeload, 1, 0, "Freeload plug-in", freeload_functions)
 WAV2PRG_OBSERVER(1,0, freeload_observers)

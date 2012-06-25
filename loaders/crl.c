@@ -234,5 +234,5 @@ static const struct wav2prg_loaders crl_functions[] =
   {NULL}
 };
 
-LOADER2(crl,1,0,"CRL plug-in",crl_functions);
+WAV2PRG_LOADER(crl,1,0,"CRL plug-in",crl_functions);
 WAV2PRG_OBSERVER(1,0, crl_observed_loaders)

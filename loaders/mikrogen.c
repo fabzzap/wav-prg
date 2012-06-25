@@ -159,6 +159,5 @@ static const struct wav2prg_loaders mikrogen_one_loader[] =
   {NULL}
 };
 
-LOADER2(mikrogen, 1, 0, "Mikro-Gen loader (old and new)", mikrogen_one_loader)
+WAV2PRG_LOADER(mikrogen, 1, 0, "Mikro-Gen loader (old and new)", mikrogen_one_loader)
 WAV2PRG_OBSERVER(1,0, mikrogen_observed_loaders)
-

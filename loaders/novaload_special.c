@@ -105,6 +105,5 @@ static const struct wav2prg_loaders novaload_special_functions[] =
   {NULL}
 };
 
-LOADER2(novaload_special, 1, 0, "Novaload (only special blocks)", novaload_special_functions)
+WAV2PRG_LOADER(novaload_special, 1, 0, "Novaload (only special blocks)", novaload_special_functions)
 WAV2PRG_OBSERVER(1,0, novaload_special_observed_loaders)
-

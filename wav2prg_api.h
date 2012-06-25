@@ -155,7 +155,7 @@ struct wav2prg_all_observers {
 #if defined DYNAMIC_LOADING
 
 #if defined WIN32 || defined __CYGWIN__
-#define WINDOWS_START_LINES _declspec(dllexport)
+#define WINDOWS_START_LINES __declspec(dllexport)
 #else
 #define WINDOWS_START_LINES
 #endif //defined WIN32 || defined __CYGWIN__

@@ -204,6 +204,5 @@ static const struct wav2prg_loaders snake_functions[] = {
   {NULL}
 };
 
-LOADER2(snake, 1, 0, "Steve Snake loader with 8-byte sync sequence", snake_functions)
+WAV2PRG_LOADER(snake, 1, 0, "Steve Snake loader with 8-byte sync sequence", snake_functions)
 WAV2PRG_OBSERVER(1,0, snake_observed_loaders)
-

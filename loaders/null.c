@@ -36,5 +36,5 @@ static const struct wav2prg_loaders null_functions[] = {
   {NULL}
 };
 
-LOADER2(null, 1, 0, "Loader with no overridden functions", null_functions)
+WAV2PRG_LOADER(null, 1, 0, "Loader with no overridden functions", null_functions)
 

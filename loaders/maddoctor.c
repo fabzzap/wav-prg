@@ -140,6 +140,6 @@ static const struct wav2prg_loaders maddoctor_functions[] ={
   {NULL}
 };
 
-LOADER2(maddoctor, 1, 0, "Mad Doctor loader", maddoctor_functions)
+WAV2PRG_LOADER(maddoctor, 1, 0, "Mad Doctor loader", maddoctor_functions)
 WAV2PRG_OBSERVER(1,0, maddoctor_observed_loaders)
 

@@ -53,4 +53,4 @@ static const struct wav2prg_loaders wizarddev_functions[] = {
   {NULL}
 };
 
-LOADER2(wizarddev, 1, 0, "Wizard Development loader", wizarddev_functions)
+WAV2PRG_LOADER(wizarddev, 1, 0, "Wizard Development loader", wizarddev_functions)

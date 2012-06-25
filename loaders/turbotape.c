@@ -99,5 +99,5 @@ const struct wav2prg_loaders turbotape_one_loader[] =
   {NULL}
 };
 
-LOADER2(turbotape,1,0,"Turbo Tape 64 desc", turbotape_one_loader)
+WAV2PRG_LOADER(turbotape,1,0,"Turbo Tape 64 desc", turbotape_one_loader)
 WAV2PRG_OBSERVER(1,0, turbotape_observed_loaders)

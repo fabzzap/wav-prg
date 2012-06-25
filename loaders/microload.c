@@ -49,4 +49,4 @@ static const struct wav2prg_loaders microload_functions[] = {
   {NULL}
 };
 
-LOADER2(microload, 1, 0, "Microload loader", microload_functions)
+WAV2PRG_LOADER(microload, 1, 0, "Microload loader", microload_functions)

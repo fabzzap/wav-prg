@@ -104,4 +104,4 @@ static const struct wav2prg_loaders pavlodaold_functions[] ={
   {NULL}
 };
 
-LOADER2(pavlodaold, 1, 0, "Pavloda (earliest version)", pavlodaold_functions)
+WAV2PRG_LOADER(pavlodaold, 1, 0, "Pavloda (earliest version)", pavlodaold_functions)

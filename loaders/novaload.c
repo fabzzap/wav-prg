@@ -101,10 +101,9 @@ static const struct wav2prg_loaders novaload_functions[] =
       first_to_last,
       wav2prg_false,
       NULL
-    },
-    NULL
+    }
   },
   {NULL}
 };
 
-LOADER2(novaload, 1, 0, "Novaload (only normal blocks) loader", novaload_functions)
+WAV2PRG_LOADER(novaload, 1, 0, "Novaload (only normal blocks) loader", novaload_functions)

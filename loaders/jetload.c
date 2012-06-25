@@ -87,4 +87,4 @@ static const struct wav2prg_loaders jetload_functions[] = {
   {NULL}
 };
 
-LOADER2(jetload, 1, 0, "Jetload plug-in", jetload_functions)
+WAV2PRG_LOADER(jetload, 1, 0, "Jetload plug-in", jetload_functions)

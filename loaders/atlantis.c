@@ -50,4 +50,4 @@ static const struct wav2prg_loaders atlantis[] = {
   {NULL}
 };
 
-LOADER2(atlantis,1,0,"desc", atlantis);
+WAV2PRG_LOADER(atlantis,1,0,"desc", atlantis);

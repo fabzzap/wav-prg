@@ -100,4 +100,4 @@ static const struct wav2prg_loaders theedge_functions[] = {
   {NULL}
 };
 
-LOADER2(theedge, 1, 0, "Loader used in some The Edge games, maybe should be called Booster", theedge_functions)
+WAV2PRG_LOADER(theedge, 1, 0, "Loader used in some The Edge games, maybe should be called Booster", theedge_functions)

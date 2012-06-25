@@ -142,4 +142,4 @@ static const struct wav2prg_loaders pavlodapenetrator_functions[] ={
   {NULL}
 };
 
-LOADER2(pavlodapenetrator, 1, 0, "Pavloda (version found in Penetrator)", pavlodapenetrator_functions)
+WAV2PRG_LOADER(pavlodapenetrator, 1, 0, "Pavloda (version found in Penetrator)", pavlodapenetrator_functions)

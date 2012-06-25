@@ -202,4 +202,4 @@ static const struct wav2prg_loaders pavloda_functions[] ={
   {NULL}
 };
 
-LOADER2(pavloda, 1, 0, "Pavloda (version used e.g. in Exploding Fist, sometimes referredd to as Super Pavloda", pavloda_functions)
+WAV2PRG_LOADER(pavloda, 1, 0, "Pavloda (version used e.g. in Exploding Fist, sometimes referredd to as Super Pavloda", pavloda_functions)

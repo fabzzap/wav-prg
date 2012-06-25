@@ -103,4 +103,5 @@ static const struct wav2prg_loaders nobby_functions[] = {
   {NULL}
 };
 
-LOADER2(nobby, 1, 0, "Nobby the Aardvark loader", nobby_functions)
+WAV2PRG_LOADER(nobby, 1, 0, "Nobby the Aardvark loader", nobby_functions)
+

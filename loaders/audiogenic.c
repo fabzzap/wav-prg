@@ -267,5 +267,5 @@ static const struct wav2prg_loaders audiogenic[] =
   ,{NULL}
 };
 
-LOADER2(audiogenic,1,0,"Audiogenic desc", audiogenic);
+WAV2PRG_LOADER(audiogenic,1,0,"Audiogenic desc", audiogenic);
 WAV2PRG_OBSERVER(1,0, audiogenic_specialagent_observed_loaders);
