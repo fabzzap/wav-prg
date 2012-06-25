@@ -90,6 +90,6 @@ static const struct wav2prg_loaders wildsave_functions[] = {
   {NULL}
 };
 
-LOADER2(wildsave, 1, 0, "Wild Save loader", wildsave_functions)
+WAV2PRG_LOADER(wildsave, 1, 0, "Wild Save loader", wildsave_functions)
 WAV2PRG_OBSERVER(1,0, wildsave_observed_loaders)
 

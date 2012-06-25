@@ -155,29 +155,13 @@ struct wav2prg_all_observers {
 #if defined DYNAMIC_LOADING
 
 #if defined WIN32 || defined __CYGWIN__
-
-#if defined __CYGWIN__
-#define DLL_ENTRY _cygwin_dll_entry
-#elif defined __GNUC__                 /* Mingw */
-#define DLL_ENTRY DllMainCRTStartup
+#define WINDOWS_START_LINES _declspec(dllexport)
 #else
-#define DLL_ENTRY _DllMainCRTStartup
-#endif
+#define WINDOWS_START_LINES
+#endif //defined WIN32 || defined __CYGWIN__
 
-#define STANDARD_WINDOWS_DLL_ENTRY_POINT \
-#ifndef ALREADY_DEFINED \
-#define ALREADY_DEFINED \
-int _stdcall \
-DLL_ENTRY(int hInst, \
-                   unsigned long ul_reason_for_call, void *lpReserved) \
-{ \
-  return 1; \
-}\
-#endif \
-#endif
-
-#define LOADER2(x, major,minor,desc, loaders) \
-_declspec(dllexport) \
+#define WAV2PRG_LOADER(x, major,minor,desc, loaders) \
+  WINDOWS_START_LINES \
 const struct wav2prg_all_loaders wav2prg_loader = \
 { \
   WAVPRG_LOADER_API, \
@@ -186,33 +170,10 @@ const struct wav2prg_all_loaders wav2prg_loader = \
      desc \
   }, \
   loaders \
-}; \
-STANDARD_WINDOWS_DLL_ENTRY_POINT
+};
 
 #define WAV2PRG_OBSERVER(major,minor, observers) \
-_declspec(dllexport) \
-const struct wav2prg_all_observers wav2prg_observer = \
-{ \
-  WAVPRG_OBSERVER_API, \
-  {major,minor}, \
-  observers} \
-}; \
-STANDARD_WINDOWS_DLL_ENTRY_POINT
-
-#else //!defined WIN32 && !defined __CYGWIN__
-
-#define LOADER2(x, major,minor,desc, loaders) \
-const struct wav2prg_all_loaders wav2prg_loader = \
-{ \
-  WAVPRG_LOADER_API, \
-  { \
-    {major,minor}, \
-     desc \
-  }, \
-  loaders \
-}; \
-
-#define WAV2PRG_OBSERVER(major,minor, observers) \
+  WINDOWS_START_LINES \
 const struct wav2prg_all_observers wav2prg_observer = \
 { \
   WAVPRG_OBSERVER_API, \
@@ -220,6 +181,4 @@ const struct wav2prg_all_observers wav2prg_observer = \
   observers \
 };
 
-#endif //defined WIN32 || defined __CYGWIN__
-
-#endif
+#endif //DYNAMIC_LOADING

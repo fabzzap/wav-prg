@@ -49,4 +49,4 @@ static const struct wav2prg_loaders turbo220_functions[] = {
   {NULL}
 };
 
-LOADER2(turbo220, 1, 0, "Turbo220 (similar to Turbo Tape 64)", turbo220_functions)
+WAV2PRG_LOADER(turbo220, 1, 0, "Turbo220 (similar to Turbo Tape 64)", turbo220_functions)

@@ -350,7 +350,7 @@ const struct wav2prg_loaders kernal_one_loader[] =
   {NULL}
 };
 
-LOADER2(kernal,1,0,"Kernal plug-in for WAV-PRG 4.0", kernal_one_loader)
+WAV2PRG_LOADER(kernal,1,0,"Kernal plug-in for WAV-PRG 4.0", kernal_one_loader)
 
 static const struct wav2prg_observers kernal_observers[] = {
   {"Default C64", {"Default C64", header_second_copy_after_first_copy}},
