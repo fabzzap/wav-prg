@@ -215,7 +215,8 @@ static enum wav2prg_bool get_sync_byte_using_shift_register(struct wav2prg_conte
     do{
       if(evolve_byte(context, functions, conf, byte) == wav2prg_false)
         return wav2prg_false;
-    }while(*byte != conf->pilot_byte || ++min_pilots < 8);
+      ++min_pilots;
+    }while(*byte != conf->pilot_byte || min_pilots < 8);
     min_pilots = 0;
     do{
       min_pilots++;
@@ -224,7 +225,7 @@ static enum wav2prg_bool get_sync_byte_using_shift_register(struct wav2prg_conte
     } while (*byte == conf->pilot_byte);
   } while(min_pilots < conf->min_pilots);
   return wav2prg_true;
-};
+}
 
 static enum wav2prg_bool get_first_byte_of_sync_sequence_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* byte)
 {
@@ -246,7 +247,7 @@ static enum wav2prg_sync_result sync_to_bit(struct wav2prg_context* context, con
       return wav2prg_wrong_pulse_when_syncing;
   }while(bit != sync_bit);
   return min_pilots <= conf->min_pilots ? wav2prg_sync_failure : wav2prg_sync_success;
-};
+}
 
 static enum wav2prg_sync_result get_sync_using_pilot_and_sync_sequence(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
