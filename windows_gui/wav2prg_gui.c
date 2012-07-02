@@ -60,9 +60,9 @@ static void list_plugins(HWND combobox){
   }
 
   for(one_loader = all_loaders; *one_loader != NULL; one_loader++){
-    const struct wav2prg_loader *plugin_functions = get_loader_by_name(*one_loader);
+    const struct wav2prg_loaders *plugin_functions = get_loader_by_name(*one_loader);
 
-    if(plugin_functions->functions->get_block_info != NULL) {
+    if(plugin_functions->functions.get_block_info != NULL) {
         SendMessageA(combobox, CB_ADDSTRING, 0, (LPARAM)*one_loader);
     }
     free(*one_loader);
@@ -143,14 +143,14 @@ static void try_sync(struct display_interface_internal* internal, const char* lo
   internal->loader_name = strdup(loader_name);
 }
 
-static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info, const struct wav2prg_observed_loaders* dependencies)
+static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info/*, const struct wav2prg_observed_loaders* dependencies*/)
 {
   char text[1024];
   TVINSERTSTRUCTA is = {NULL,TVI_LAST,{TVIF_TEXT,NULL,0,0,text}};
   HTREEITEM boundaries_item, info_item;
   int i;
 
-  if (!info && !dependencies) {
+  if (!info /*&& !dependencies*/) {
     _snprintf(text, sizeof(text), "Found start of block using %s but with no valid block", internal->loader_name);
      TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
      return;

@@ -102,7 +102,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   register_loaders();
   free(current_directory);
 
-        DialogBox(instance, MAKEINTRESOURCE(IDD_WAV2PRG), NULL,
+  DialogBox(instance, MAKEINTRESOURCE(IDD_WAV2PRG), NULL,
                   wav2prg_dialog_proc);
+  free_observers();
   return 0;
 }

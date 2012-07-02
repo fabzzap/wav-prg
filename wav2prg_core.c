@@ -484,37 +484,34 @@ static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
                                                    struct further_recognition *further_recognition
                                                   )
 {
-  const struct wav2prg_observer_loaders **observers = get_observers(current_loader);
+  struct obs_list *observers;
   struct wav2prg_plugin_conf *old_conf = *conf;
-  int i;
 
-  if (observers) {
-    for(i = 0; observers[i] != NULL; i++){
-      enum wav2prg_bool result;
-      uint16_t where_to_search_in_block = 0;
+  for(observers = get_observers(current_loader); observers != NULL; observers = observers->next){
+    enum wav2prg_bool result;
+    uint16_t where_to_search_in_block = 0;
 
-      if(strcmp(current_loader, observers[i]->loader)){
-        const struct wav2prg_loader *loader = get_loader_by_name(observers[i]->loader);
-        *conf = get_new_state(NULL, loader->conf);
+    if(strcmp(current_loader, observers->observer->loader)){
+      const struct wav2prg_loaders *loader = get_loader_by_name(observers->observer->loader);
+      *conf = get_new_state(NULL, &loader->conf);
+    }
+    result = allocate_info_and_recognize(*conf, block, no_gaps_allowed, info, observers->observer->recognize_func, &where_to_search_in_block);
+    if (result){
+      *new_loader = observers->observer->loader;
+      if(where_to_search_in_block > 0){
+        further_recognition->recognize_func = observers->observer->recognize_func;
+        memcpy(&further_recognition->block, block, sizeof(struct wav2prg_block));
+        further_recognition->where_to_search_in_block = where_to_search_in_block;
       }
-      result = allocate_info_and_recognize(*conf, block, no_gaps_allowed, info, observers[i]->recognize_func, &where_to_search_in_block);
-      if (result){
-        *new_loader = observers[i]->loader;
-        if(where_to_search_in_block > 0){
-          further_recognition->recognize_func = observers[i]->recognize_func;
-          memcpy(&further_recognition->block, block, sizeof(struct wav2prg_block));
-          further_recognition->where_to_search_in_block = where_to_search_in_block;
-        }
-        else
-          further_recognition->recognize_func = NULL;
-        if(*conf != old_conf)
-          delete_state(old_conf);
-        return result;
-      }
-      if(*conf != old_conf){
-        delete_state(*conf);
-        *conf = old_conf;
-      }
+      else
+        further_recognition->recognize_func = NULL;
+      if(*conf != old_conf)
+        delete_state(old_conf);
+      return result;
+    }
+    if(*conf != old_conf){
+      delete_state(*conf);
+      *conf = old_conf;
     }
   }
 
@@ -529,7 +526,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                              struct display_interface *display_interface,
                              struct display_interface_internal *display_interface_internal)
 {
-  const struct wav2prg_loader* current_loader;
+  const struct wav2prg_loaders* current_loader;
   struct wav2prg_context context =
   {
     input_object,
@@ -609,26 +606,26 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     if(current_loader == NULL)
       break;
     context.subclassed_functions.get_bit_func =
-      current_loader->functions->get_bit_func             ? current_loader->functions->get_bit_func             : get_bit_default;
+      current_loader->functions.get_bit_func             ? current_loader->functions.get_bit_func             : get_bit_default;
     context.subclassed_functions.get_byte_func =
-      current_loader->functions->get_byte_func            ? current_loader->functions->get_byte_func            : get_byte_default;
+      current_loader->functions.get_byte_func            ? current_loader->functions.get_byte_func            : get_byte_default;
     context.subclassed_functions.get_block_func =
-      current_loader->functions->get_block_func           ? current_loader->functions->get_block_func           : get_block_default;
+      current_loader->functions.get_block_func           ? current_loader->functions.get_block_func           : get_block_default;
     context.get_loaded_checksum_func =
-      current_loader->functions->get_loaded_checksum_func ? current_loader->functions->get_loaded_checksum_func : get_loaded_checksum_default;
-    context.postprocess_data_byte_func = current_loader->functions->postprocess_data_byte_func;
+      current_loader->functions.get_loaded_checksum_func ? current_loader->functions.get_loaded_checksum_func : get_loaded_checksum_default;
+    context.postprocess_data_byte_func = current_loader->functions.postprocess_data_byte_func;
     context.compute_checksum_step =
-      current_loader->functions->compute_checksum_step    ? current_loader->functions->compute_checksum_step    : compute_checksum_step_default;
+      current_loader->functions.compute_checksum_step    ? current_loader->functions.compute_checksum_step    : compute_checksum_step_default;
     context.get_first_byte_of_sync_sequence                =
-      current_loader->functions->get_first_byte_of_sync_sequence ? current_loader->functions->get_first_byte_of_sync_sequence : get_first_byte_of_sync_sequence_default;
+      current_loader->functions.get_first_byte_of_sync_sequence ? current_loader->functions.get_first_byte_of_sync_sequence : get_first_byte_of_sync_sequence_default;
     context.get_sync_check                =
-      current_loader->functions->get_sync                 ? current_loader->functions->get_sync                 : get_sync_default;
+      current_loader->functions.get_sync                 ? current_loader->functions.get_sync                 : get_sync_default;
     context.tolerances = NULL;
 
     if (conf == NULL)
       conf = get_new_state(
         !strcmp(loader_name, start_loader) ? start_conf : NULL,
-        current_loader->conf);
+        &current_loader->conf);
 
     if (context.using_opposite_waveform != conf->opposite_waveform){
       context.using_opposite_waveform = conf->opposite_waveform;
@@ -668,11 +665,11 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
 
       if (recognized_info == NULL) {
         memcpy(block->block.info.name, "                ", 16);
-        if(current_loader->functions->get_block_info == NULL){
+        if(current_loader->functions.get_block_info == NULL){
           res = wav2prg_false;
         }
         else
-          res = current_loader->functions->get_block_info(&context, &functions, conf, &block->block.info);
+          res = current_loader->functions.get_block_info(&context, &functions, conf, &block->block.info);
         if(res != wav2prg_true){
           context.display_interface->sync(
             context.display_interface_internal,
