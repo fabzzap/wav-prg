@@ -14,13 +14,11 @@
 #include <dirent.h>
 #endif
 
-struct loader {
+static struct loader {
   void *module;
   const struct wav2prg_loaders *loader;
   struct loader *next;
-};
-
-static struct loader *loader_list = NULL;
+} *loader_list = NULL;
 
 static enum wav2prg_bool register_loader(struct wav2prg_all_loaders *loader, void *module) {
   struct loader **last_loader;
@@ -73,21 +71,23 @@ static enum wav2prg_bool register_observer(struct wav2prg_all_observers *observe
 }
 
 static void unregister_loader(struct loader **loader) {
+  struct loader *new_next;
   if(*loader == NULL)
     return;
 
-  *loader = (*loader)->next;
+  new_next = (*loader)->next;
   free(*loader);
+  *loader = new_next;
 }
 
 void unregister_loaders_from_module(void *module) {
-  struct loader *one_loader;
+  struct loader **one_loader;
 
-  for (one_loader = loader_list; one_loader;){
-    if (module == one_loader->module)
-      unregister_loader(&one_loader);
+  for (one_loader = &loader_list; *one_loader;){
+    if (module == (*one_loader)->module)
+      unregister_loader(one_loader);
     else
-      one_loader = one_loader->next;
+      one_loader = &(*one_loader)->next;
   }
 }
 
@@ -301,4 +301,36 @@ char** get_loaders() {
   }
 
   return valid_loader_names;
+}
+
+static void cleanup_module(void *module)
+{
+  unregister_loaders_from_module(module);
+  unregister_from_module_same_observed(module);
+#ifdef WIN32
+  FreeLibrary(module);
+#else
+  dlclose(module);
+#endif
+}
+
+void cleanup_modules_used_by_loaders(void)
+{
+  while (loader_list){
+    cleanup_module(loader_list->module);
+  }
+}
+
+void cleanup_modules_used_by_observers(void)
+{
+  void *module;
+  while( (module = get_module_of_first_observer()) != NULL){
+    cleanup_module(module);
+  }
+}
+
+void cleanup_loaders_and_observers(void)
+{
+  cleanup_modules_used_by_loaders();
+  cleanup_modules_used_by_observers();
 }

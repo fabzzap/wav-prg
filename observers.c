@@ -71,7 +71,7 @@ static void unregister_observer(struct obs_list **obs) {
   *obs = new_next;
 }
 
-void unregister_observers_from_module(void *module, struct obs_list **observers) {
+static void unregister_observers_from_module(void *module, struct obs_list **observers) {
   while (*observers){
     if (module == (*observers)->module)
       unregister_observer(observers);
@@ -80,7 +80,7 @@ void unregister_observers_from_module(void *module, struct obs_list **observers)
   }
 }
 
-static void unregister_from_module_same_observed(void *module)
+void unregister_from_module_same_observed(void *module)
 {
   int i = 0, number_of_observed;
 
@@ -101,15 +101,7 @@ static void unregister_from_module_same_observed(void *module)
   }
 }
 
-void free_observers(void){
-  if (observed_list == NULL)
-    return;
-
-  while(observed_list[0].name != NULL){
-    while(observed_list[0].observers != NULL) {
-      unregister_from_module_same_observed(observed_list[0].observers->module);
-    }
-  }
-  free(observed_list);
-  observed_list = NULL;
+void* get_module_of_first_observer(void)
+{
+  return observed_list && observed_list->observers ? observed_list->observers->module : NULL;
 }

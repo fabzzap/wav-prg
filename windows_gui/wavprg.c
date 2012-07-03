@@ -104,6 +104,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   DialogBox(instance, MAKEINTRESOURCE(IDD_WAV2PRG), NULL,
                   wav2prg_dialog_proc);
-  free_observers();
+  cleanup_loaders_and_observers();
   return 0;
 }
