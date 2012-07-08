@@ -24,7 +24,7 @@ struct tolerances {
   struct tolerance measured;
   struct tolerance range;
   uint32_t statistics;
-  float average;
+  double average;
 };
 
 static struct {
@@ -209,7 +209,7 @@ static void update_statistics(uint32_t raw_pulse, struct tolerances *tolerance)
     tolerance->measured.min = raw_pulse;
   if (tolerance->measured.max < raw_pulse)
     tolerance->measured.max = raw_pulse;
-  tolerance->average = ((tolerance->average * tolerance->statistics) + raw_pulse) / (tolerance->statistics + 1);
+  tolerance->average = (((uint64_t)tolerance->average * tolerance->statistics) + raw_pulse) / (tolerance->statistics + 1);
   tolerance->statistics++;
 }
 
