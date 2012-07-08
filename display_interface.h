@@ -1,6 +1,8 @@
 struct display_interface_internal;
 struct wav2prg_block_info;
 struct plugin_tree;
+struct block_syncs;
+enum wav2prg_block_filling;
 #include "checksum_state.h"
 
 struct wav2prg_observed_loaders;

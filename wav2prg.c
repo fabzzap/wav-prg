@@ -24,15 +24,14 @@ static void try_sync(struct display_interface_internal* internal, const char* lo
   printf("trying to get a sync using loader %s\n", loader_name);
 }
 
-static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info)
+static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct wav2prg_block_info* info)
 {
-  printf("got a pilot tone from %u to %u", start_of_pilot_pos, sync_pos);
   if (info){
-    printf(" and a block at %u\n", info_pos);
+    printf("got a pilot tone and a block at %u\n", info_pos);
     printf("name %s start %u end %u\n", info->name, info->start, info->end);
   }
   else
-    printf(" but no block followed\n");
+    printf("got a pilot tone at %u but no block followed\n", info_pos);
 }
 
 static void progress(struct display_interface_internal *internal, uint32_t pos)
@@ -61,11 +60,9 @@ static void display_checksum(struct display_interface_internal* internal, enum w
   }
 }
 
-static void end(struct display_interface_internal *internal, unsigned char valid, enum wav2prg_checksum_state state, char loader_has_checksum, uint32_t end_pos, uint32_t last_valid_pos, uint16_t bytes)
+static void end(struct display_interface_internal *internal, unsigned char valid, enum wav2prg_checksum_state state, char loader_has_checksum, uint32_t num_syncs, struct block_syncs *syncs, uint32_t last_valid_pos, uint16_t bytes, enum wav2prg_block_filling filling)
 {
-  printf("Program ends at %u", end_pos);
-  if (last_valid_pos != end_pos)
-    printf(" (last valid byte at %u)", last_valid_pos);
+  printf("Program ends at %u", last_valid_pos);
   printf(", %u bytes long, ", bytes);
   if(!valid)
     printf("broken\n");
@@ -94,20 +91,10 @@ static struct display_interface text_based_display = {
   end
 };
 
-struct wav2prg_selected_loader {
-  const char *loader_name;
-  const struct wav2prg_loader* loader;
-};
-
 static enum wav2prg_bool check_single_loader(const char* loader_name, void* sel)
 {
-  struct wav2prg_selected_loader *selected = (struct wav2prg_selected_loader*)sel;
-  if (selected->loader_name){
-    printf("Cannot choose more than one loader\n");
-    return wav2prg_false;
-  }
-  selected->loader = get_loader_by_name(loader_name);
-  selected->loader_name = strdup(loader_name);
+  struct wav2prg_loaders *selected = (struct wav2prg_loaders*)sel;
+  selected->name = loader_name;
   return wav2prg_true;
 }
 
@@ -149,9 +136,9 @@ static enum wav2prg_bool display_list_of_loaders(void)
   char **one_loader;
 
   for(one_loader = all_loaders; *one_loader != NULL; one_loader++){
-    const struct wav2prg_loader *plugin_functions = get_loader_by_name(*one_loader);
+    const struct wav2prg_loaders *plugin_functions = get_loader_by_name(*one_loader);
 
-    if(plugin_functions->functions->get_block_info != NULL) {
+    if(plugin_functions->functions.get_block_info != NULL) {
       printf("%s\n", *one_loader);
     }
     free(*one_loader);
@@ -167,9 +154,9 @@ static enum wav2prg_bool display_list_of_loaders_with_dependencies(void)
 
   printf("\nThese loaders cannot be used as argument of -s. For each, the loaders they depend on are listed.\n");
   for(one_loader = all_loaders; *one_loader != NULL; one_loader++){
-    const struct wav2prg_loader *plugin_functions = get_loader_by_name(*one_loader);
+    const struct wav2prg_loaders *plugin_functions = get_loader_by_name(*one_loader);
 
-    if(plugin_functions->functions->get_block_info == NULL) {
+    if(plugin_functions->functions.get_block_info == NULL) {
     }
     free(*one_loader);
   }
@@ -198,7 +185,7 @@ static enum wav2prg_bool set_true(const char *arg, void *options)
 
 int main(int argc, char** argv)
 {
-  struct wav2prg_selected_loader selected_loader = {NULL, NULL};
+  struct wav2prg_loaders selected_loader = {NULL};
   struct wav2prg_input_object input_object;
   struct block_list_element *blocks;
   uint8_t machine = 0, videotype = 0, halfwaves = 0;
@@ -328,7 +315,7 @@ int main(int argc, char** argv)
 
   blocks = wav2prg_analyse(
     wav2prg_adaptively_tolerant,
-    selected_loader.loader_name ? selected_loader.loader_name : "Default C64",
+    selected_loader.name ? selected_loader.name : "Default C64",
     NULL,
     &input_object,
     &input_functions,
