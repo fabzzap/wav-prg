@@ -673,9 +673,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
         if(res != wav2prg_true){
           context.display_interface->sync(
             context.display_interface_internal,
-            block->syncs[0].start_sync,
-            block->syncs[0].end_sync,
-            0,
+            context.input->get_pos(context.input_object),
             NULL);
           free(context.tolerances);
           break; /* error in get_block_info */
@@ -691,10 +689,8 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       if(block->block.info.end <= block->block.info.start && block->block.info.end != 0){
         context.display_interface->sync(
           context.display_interface_internal,
-            block->syncs[0].start_sync,
-            block->syncs[0].end_sync,
-            0,
-            NULL);
+          context.input->get_pos(context.input_object),
+          NULL);
         free(context.tolerances);
         break; /* get_block_info succeeded but returned an invalid block */
       }
@@ -705,8 +701,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       block->end_of_info = context.input->get_pos(context.input_object);
       context.display_interface->sync(
         context.display_interface_internal,
-        block->syncs[0].start_sync,
-        block->syncs[0].end_sync,
         block->end_of_info,
         &block->block.info);
       initialize_raw_block(&context.raw_block, block->block.info.start, block->block.info.end, block->block.data, conf);
@@ -741,9 +735,11 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                                    res == wav2prg_true,
                                    block->state,
                                    conf->checksum_computation != wav2prg_do_not_compute_checksum,
-                                   block->syncs[block->num_of_syncs - 1].end,
+                                   block->num_of_syncs,
+                                   block->syncs,
                                    block->last_valid_data_byte,
-                                   block->real_end - block->real_start);
+                                   block->real_end - block->real_start,
+                                   context.raw_block.filling);
     }while(0);
 
     if (!(*context.current_block)

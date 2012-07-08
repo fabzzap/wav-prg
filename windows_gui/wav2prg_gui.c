@@ -32,6 +32,7 @@
 #include "../audiotap_interface.h"
 #include "../create_t64.h"
 #include "../write_cleaned_tap.h"
+#include "../wav2prg_block_list.h"
 
 char conversion_dir[MAX_PATH];
 extern HINSTANCE instance;
@@ -133,6 +134,7 @@ struct display_interface_internal
 {
   HWND window;
   uint8_t loaded_checksum, computed_checksum;
+  uint16_t start, end;
   char* loader_name;
   HTREEITEM current_item;
 };
@@ -143,7 +145,7 @@ static void try_sync(struct display_interface_internal* internal, const char* lo
   internal->loader_name = strdup(loader_name);
 }
 
-static void sync(struct display_interface_internal *internal, uint32_t start_of_pilot_pos, uint32_t sync_pos, uint32_t info_pos, struct wav2prg_block_info* info/*, const struct wav2prg_observed_loaders* dependencies*/)
+static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct wav2prg_block_info* info/*, const struct wav2prg_observed_loaders* dependencies*/)
 {
   char text[1024];
   TVINSERTSTRUCTA is = {NULL,TVI_LAST,{TVIF_TEXT,NULL,0,0,text}};
@@ -167,12 +169,6 @@ static void sync(struct display_interface_internal *internal, uint32_t start_of_
   is.hParent = internal->current_item;
   boundaries_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   is.hParent = boundaries_item;
-  _snprintf(text, sizeof(text), "start of sync: %u (%x)", start_of_pilot_pos, start_of_pilot_pos);
-  is.hInsertAfter = TVI_FIRST;
-  TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-  _snprintf(text, sizeof(text), "end of sync: %u (%x)", sync_pos, sync_pos);
-  is.hInsertAfter = TVI_LAST;
-  TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   _snprintf(text, sizeof(text), "end of info: %u (%x)", info_pos, info_pos);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   is.hParent = internal->current_item;
@@ -180,17 +176,32 @@ static void sync(struct display_interface_internal *internal, uint32_t start_of_
   info_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   is.hParent = info_item;
   _snprintf(text, sizeof(text), "Name: ");
-  for(i=0;i<16;i++)
-    if(info->name[i]>=32){
-      int len = strlen(text);
-      text[len] = info->name[i];
-      text[len + 1] = 0;
+  {
+    int real_len = 15;
+    while(1){
+      if (info->name[real_len] > 32){
+        real_len++;
+        break;
+      }
+      if(real_len == 0)
+        break;
+      real_len--;
     }
+    for(i = 0; i < real_len; i++)
+      if(info->name[i]>=32){
+        int len = strlen(text);
+        text[len] = info->name[i];
+        text[len + 1] = 0;
+      }
+  }
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   _snprintf(text, sizeof(text), "start: %u (%x)", info->start, info->start);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   _snprintf(text, sizeof(text), "end: %u (%x)", info->end, info->end);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+
+  internal->start = info->start;
+  internal->end = info->end;
 
   SendMessage(GetDlgItem(internal->window, IDC_ENTRY_PROGRESS), PBM_SETRANGE32, info->start, info->end != 0 ? info->end : 65536);
   ShowWindow(GetDlgItem(internal->window, IDC_ENTRY_PROGRESS), SW_SHOW);
@@ -213,14 +224,17 @@ static void display_checksum(struct display_interface_internal* internal, enum w
   internal->computed_checksum = computed;
 }
 
-static void end(struct display_interface_internal *internal, unsigned char valid, enum wav2prg_checksum_state state, char loader_has_checksum, uint32_t end_pos, uint32_t last_valid_pos, uint16_t bytes)
+static void end(struct display_interface_internal *internal, unsigned char valid, enum wav2prg_checksum_state state, char loader_has_checksum, uint32_t num_syncs, struct block_syncs *syncs, uint32_t last_valid_pos, uint16_t bytes, enum wav2prg_block_filling filling)
 {
   char text[1024];
   TVINSERTSTRUCTA is = {internal->current_item,TVI_LAST,{TVIF_TEXT,NULL,0,0,text}};
   HTREEITEM boundaries_item =
      TreeView_GetChild(GetDlgItem(internal->window, IDC_FOUND), internal->current_item);
+  HTREEITEM info_item =
+     TreeView_GetNextSibling(GetDlgItem(internal->window, IDC_FOUND), boundaries_item);
   const char *state_string;
-  HTREEITEM state_item;
+  HTREEITEM state_item, sync_item;
+  uint32_t sync = 0;
 
   ShowWindow(GetDlgItem(internal->window, IDC_ENTRY_PROGRESS), SW_HIDE);
   ShowWindow(GetDlgItem(internal->window, IDC_ENTRY_TEXT), SW_HIDE);
@@ -256,8 +270,29 @@ static void end(struct display_interface_internal *internal, unsigned char valid
   is.hParent = boundaries_item;
   _snprintf(text, sizeof(text), "Last data byte ends at: %u (%02x)", last_valid_pos, last_valid_pos);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-  _snprintf(text, sizeof(text), "End: %u (%02x)", end_pos, end_pos);
-  TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  is.hInsertAfter = TVI_LAST;
+  for (sync = 0; sync < num_syncs; sync++){
+    _snprintf(text, sizeof(text), "Sync");
+    sync_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    is.hParent = sync_item;
+    _snprintf(text, sizeof(text), "start of sync: %u (%x)", syncs[sync].start_sync, syncs[sync].start_sync);
+    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    _snprintf(text, sizeof(text), "end of sync: %u (%x)", syncs[sync].end_sync, syncs[sync].end_sync);
+    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    _snprintf(text, sizeof(text), "End: %u (%02x)", syncs[sync].end, syncs[sync].end);
+    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    is.hParent = boundaries_item;
+  }
+  if (bytes != internal->end - internal->start){
+    if (filling == first_to_last){
+      _snprintf(text, sizeof(text), "real end: %u (%x), %u bytes instead of %u", internal->start + bytes, internal->start + bytes, bytes, internal->end - internal->start);
+    }
+    else
+      _snprintf(text, sizeof(text), "real start: %u (%x), %u bytes instead of %u", internal->end - bytes, internal->end - bytes, bytes, internal->end - internal->start);
+    is.hParent = info_item;
+    is.hInsertAfter = TVI_LAST;
+    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  }
 }
 
 static struct display_interface windows_display = {
