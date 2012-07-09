@@ -315,10 +315,10 @@ static enum wav2prg_bool get_sync_and_record(struct wav2prg_context* context, co
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].start_sync = pos;
       (*context->current_block)->syncs[(*context->current_block)->num_of_syncs].end_sync   = context->input->get_pos(context->input_object);
       (*context->current_block)->num_of_syncs++;
-	  if (old_tolerances != NULL){
+      if (old_tolerances != NULL){
         copy_tolerances(conf->num_pulse_lengths, old_tolerances, context->tolerances);
-	    free(context->tolerances);
-	    context->tolerances = old_tolerances;
+        free(context->tolerances);
+        context->tolerances = old_tolerances;
       }
       return wav2prg_true;
     }
@@ -493,6 +493,8 @@ static enum wav2prg_bool look_for_dependent_plugin(const char* current_loader,
 
     if(strcmp(current_loader, observers->observer->loader)){
       const struct wav2prg_loaders *loader = get_loader_by_name(observers->observer->loader);
+      if(!loader)
+        continue;
       *conf = get_new_state(NULL, &loader->conf);
     }
     result = allocate_info_and_recognize(*conf, block, no_gaps_allowed, info, observers->observer->recognize_func, &where_to_search_in_block);
