@@ -91,10 +91,24 @@ static struct display_interface text_based_display = {
   end
 };
 
+struct wav2prg_selected_loader {
+  const char *loader_name;
+  const struct wav2prg_loaders* loader;
+};
+
 static enum wav2prg_bool check_single_loader(const char* loader_name, void* sel)
 {
-  struct wav2prg_loaders *selected = (struct wav2prg_loaders*)sel;
-  selected->name = loader_name;
+  struct wav2prg_selected_loader *selected = (struct wav2prg_selected_loader*)sel;
+  if (selected->loader_name){
+    printf("Cannot choose more than one loader\n");
+    return wav2prg_false;
+  }
+  selected->loader = get_loader_by_name(loader_name);
+  if (!selected->loader){
+    printf("Cannot find %s\n", loader_name);
+    return wav2prg_false;
+  }
+  selected->loader_name = loader_name;
   return wav2prg_true;
 }
 
@@ -174,6 +188,8 @@ static enum wav2prg_bool help_callback(const char *arg, void *options)
 static enum wav2prg_bool set_plugin_dir(const char *arg, void *options)
 {
   wav2prg_set_plugin_dir(arg);
+  cleanup_loaders_and_observers();
+  register_loaders();
   return wav2prg_true;
 }
 
@@ -185,7 +201,7 @@ static enum wav2prg_bool set_true(const char *arg, void *options)
 
 int main(int argc, char** argv)
 {
-  struct wav2prg_loaders selected_loader = {NULL};
+  struct wav2prg_selected_loader selected_loader = {NULL, NULL};
   struct wav2prg_input_object input_object;
   struct block_list_element *blocks;
   uint8_t machine = 0, videotype = 0, halfwaves = 0;
@@ -292,11 +308,11 @@ int main(int argc, char** argv)
   };
 
   wav2prg_set_default_plugin_dir();
+  register_loaders();
 
   if(!yet_another_getopt(options, (uint32_t*)&argc, argv))
     return 1;
 
-  register_loaders();
   if (show_list)
     display_list_of_loaders();
   if (show_list_dependent)
@@ -315,7 +331,7 @@ int main(int argc, char** argv)
 
   blocks = wav2prg_analyse(
     wav2prg_adaptively_tolerant,
-    selected_loader.name ? selected_loader.name : "Default C64",
+    selected_loader.loader_name ? selected_loader.loader_name : "Default C64",
     NULL,
     &input_object,
     &input_functions,
@@ -346,5 +362,7 @@ int main(int argc, char** argv)
       break;
     }
   }
+  free(dump);
+  audiotap_terminate_lib();
   return 0;
 }

@@ -12,6 +12,7 @@ struct wav2prg_plugin_conf;
 struct block_list_element {
   struct wav2prg_block block;
   enum {
+    block_no_sync,
     block_sync_no_info,
     block_sync_invalid_info,
     block_error_before_end,

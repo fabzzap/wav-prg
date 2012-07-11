@@ -639,8 +639,9 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
 
     res = get_sync_and_record(&context, &functions, conf, !no_gaps_allowed);
     if(res != wav2prg_true && !no_gaps_allowed){
-      free(*context.current_block);
+      free_block_list_element(*context.current_block);
       *context.current_block = NULL;
+      delete_state(conf);
       break;
     }
 
@@ -745,6 +746,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     }while(0);
 
     if (!(*context.current_block)
+      || (*context.current_block)->block_status == block_no_sync
       || (*context.current_block)->block_status == block_sync_no_info
       || (*context.current_block)->block_status == block_sync_invalid_info
       || (!keep_broken_blocks &&
