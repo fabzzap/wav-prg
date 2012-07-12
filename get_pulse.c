@@ -209,8 +209,8 @@ static void update_statistics(uint32_t raw_pulse, struct tolerances *tolerance)
     tolerance->measured.min = raw_pulse;
   if (tolerance->measured.max < raw_pulse)
     tolerance->measured.max = raw_pulse;
-  tolerance->average = (((uint64_t)tolerance->average * tolerance->statistics) + raw_pulse) / (tolerance->statistics + 1);
-  tolerance->statistics++;
+  tolerance->average = tolerance->average * tolerance->statistics + raw_pulse;
+  tolerance->average /= ++tolerance->statistics;
 }
 
 enum wav2prg_bool get_pulse_adaptively_tolerant(uint32_t raw_pulse, uint8_t num_pulse_lengths, struct tolerances *tolerances, uint8_t* pulse)
