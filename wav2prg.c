@@ -18,6 +18,7 @@
 #include "audiotap_interface.h"
 #include "audiotap.h"
 #include "observers.h"
+#include "wav2prg_block_list.h"
 
 static void try_sync(struct display_interface_internal* internal, const char* loader_name)
 {
@@ -363,6 +364,11 @@ int main(int argc, char** argv)
     }
   }
   free(dump);
+  while (blocks != NULL){
+    struct block_list_element *new_next = blocks->next;
+    free_block_list_element(blocks);
+    blocks = new_next;
+  }
   audiotap_terminate_lib();
   return 0;
 }

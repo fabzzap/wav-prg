@@ -17,5 +17,6 @@ struct block_list_element* new_block_list_element(uint8_t num_pulse_lengths, uin
 void free_block_list_element(struct block_list_element* block){
   free(block->thresholds);
   free(block->syncs);
+  free(block->loader_name);
   free(block);
 }

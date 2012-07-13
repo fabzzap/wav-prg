@@ -656,7 +656,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       block = *context.current_block;
       block->loader_name = strdup(loader_name);
       block->num_pulse_lengths = conf->num_pulse_lengths;
-      block->thresholds = malloc(sizeof(uint16_t) * (conf->num_pulse_lengths - 1));
       memcpy(block->thresholds, conf->thresholds, sizeof(uint16_t) * (conf->num_pulse_lengths - 1));
       if (conf->pulse_length_deviations){
         block->pulse_length_deviations = malloc(sizeof(uint16_t) * conf->num_pulse_lengths);
