@@ -21,7 +21,7 @@ static struct wav2prg_generate_private_state pavlodapenetrator_generate_private_
 static uint16_t pavlodapenetrator_thresholds[]={422,600};
 static uint8_t pavlodapenetrator_pilot_sequence[]={0x55};
 
-static uint8_t pavlodapenetrator_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
+static uint8_t pavlodapenetrator_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte, uint32_t *extended_checksum) {
   return old_checksum + byte + 1;
 }
 
@@ -126,6 +126,7 @@ static const struct wav2prg_loaders pavlodapenetrator_functions[] ={
       msbf,
       wav2prg_xor_checksum,/*ignored, compute_checksum_step overridden*/
       wav2prg_compute_and_check_checksum,
+      0,
       3,
       pavlodapenetrator_thresholds,
       NULL,

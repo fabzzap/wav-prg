@@ -33,6 +33,7 @@ static const struct wav2prg_loaders microload_functions[] = {
       lsbf,
       wav2prg_xor_checksum,
       wav2prg_compute_and_check_checksum,
+      0,
       2,
       microload_thresholds,
       NULL,

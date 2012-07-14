@@ -33,6 +33,7 @@ static const struct wav2prg_loaders turbo220_functions[] = {
       msbf,
       wav2prg_xor_checksum,/* ignored, not computing checksum */
       wav2prg_do_not_compute_checksum,
+      0,
       2,
       turbo220_thresholds,
       NULL,

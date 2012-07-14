@@ -57,7 +57,7 @@ typedef enum wav2prg_bool (*wav2prg_get_block_info)(struct wav2prg_context*, con
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef void              (*wav2prg_reset_checksum_to)(struct wav2prg_context*, uint8_t);
 typedef void              (*wav2prg_reset_checksum)(struct wav2prg_context*);
-typedef uint8_t           (*wav2prg_compute_checksum_step)(struct wav2prg_plugin_conf*, uint8_t, uint8_t, uint16_t);
+typedef uint8_t           (*wav2prg_compute_checksum_step)(struct wav2prg_plugin_conf*, uint8_t, uint8_t, uint16_t, uint32_t*);
 typedef void              (*wav2prg_postprocess_and_update_checksum)(struct wav2prg_context*, struct wav2prg_plugin_conf*, uint8_t*, uint16_t);
 typedef void              (*wav2prg_number_to_name)(uint8_t number, char* name);
 typedef void              (*wav2prg_add_byte_to_block)(struct wav2prg_context*, struct wav2prg_raw_block* block, uint8_t byte);
@@ -103,6 +103,7 @@ struct wav2prg_plugin_conf {
   enum wav2prg_plugin_endianness endianness;
   enum wav2prg_checksum checksum_type;
   enum wav2prg_checksum_computation checksum_computation;
+  uint8_t num_extended_checksum_bytes;
   uint8_t num_pulse_lengths;
   uint16_t *thresholds;
   int16_t *pulse_length_deviations;

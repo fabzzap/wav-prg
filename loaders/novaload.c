@@ -90,6 +90,7 @@ static const struct wav2prg_loaders novaload_functions[] =
       lsbf,
       wav2prg_add_checksum,
       wav2prg_compute_and_check_checksum,
+      0,
       sizeof(novaload_thresholds)/sizeof(*novaload_thresholds) + 1,
       novaload_thresholds,
       NULL,

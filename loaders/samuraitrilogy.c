@@ -43,15 +43,13 @@ static enum wav2prg_bool samuraitrilogy_get_block_info(struct wav2prg_context* c
 static enum wav2prg_bool samuraitrilogy_get_block_func(struct wav2prg_context*context, const struct wav2prg_functions*functions, struct wav2prg_plugin_conf*conf, struct wav2prg_raw_block*block, uint16_t block_len)
 {
   struct samuraitrilogy_private_state *state = (struct samuraitrilogy_private_state *)conf->private_state;
-  uint8_t old_start_of_block, checksum_high_byte;
+  uint8_t old_start_of_block;
   do 
   {
     old_start_of_block = state->start_of_block;
     if (!functions->get_block_func(context, functions, conf, block, 256))
       return wav2prg_false;
     if (functions->check_checksum_func(context, functions, conf) != wav2prg_checksum_state_correct)
-      return wav2prg_false;
-    if (!functions->get_byte_func(context, functions, conf, &checksum_high_byte))
       return wav2prg_false;
     functions->reset_checksum_func(context);
     if (!functions->get_byte_func(context, functions, conf, &state->start_of_block))
@@ -89,6 +87,7 @@ static const struct wav2prg_loaders samuraitrilogy_functions[] =
       lsbf,
       wav2prg_add_checksum,
       wav2prg_compute_checksum_but_do_not_check_it_at_end,
+      1,
       2,
       samuraitrilogy_thresholds,
       NULL,

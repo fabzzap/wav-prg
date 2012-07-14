@@ -163,7 +163,7 @@ static const struct wav2prg_observers snake_observed_loaders[] = {
   {NULL,NULL}
 };
 
-static uint8_t snake_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
+static uint8_t snake_compute_checksum_step(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte, uint32_t *extended_checksum) {
   uint8_t new_checksum = old_checksum ^ byte;
   if ((location_of_byte & 0xff) == 0xff)
     new_checksum++;
@@ -188,6 +188,7 @@ static const struct wav2prg_loaders snake_functions[] = {
       msbf,
       wav2prg_add_checksum,
       wav2prg_compute_and_check_checksum,
+      0,
       2,
       snake_thresholds,
       NULL,

@@ -83,6 +83,7 @@ const struct wav2prg_loaders turbotape_one_loader[] =
       msbf,
       wav2prg_xor_checksum,
       wav2prg_compute_and_check_checksum,
+      0,
       2,
       turbotape_thresholds,
       NULL,

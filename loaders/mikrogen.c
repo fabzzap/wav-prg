@@ -19,7 +19,7 @@ static enum wav2prg_sync_result mikrogen_get_sync(struct wav2prg_context* contex
     : wav2prg_sync_failure;
 }
 
-static uint8_t mikrogen_compute_checksum_step(struct wav2prg_plugin_conf *conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte)
+static uint8_t mikrogen_compute_checksum_step(struct wav2prg_plugin_conf *conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte, uint32_t *extended_checksum)
 {
   return old_checksum - byte;
 }
@@ -113,6 +113,7 @@ static const struct wav2prg_loaders mikrogen_one_loader[] =
       lsbf,
       wav2prg_xor_checksum /*ignored*/,
       wav2prg_compute_and_check_checksum,
+      0,
       3,
       mikrogen_thresholds,
       NULL,
@@ -143,6 +144,7 @@ static const struct wav2prg_loaders mikrogen_one_loader[] =
       lsbf,
       wav2prg_xor_checksum /*ignored*/,
       wav2prg_compute_and_check_checksum,
+      0,
       3,
       mikrogen_thresholds,
       NULL,

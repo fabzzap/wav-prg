@@ -131,6 +131,7 @@ static const struct wav2prg_loaders freeload_functions[] = {
       msbf,
       wav2prg_xor_checksum,
       wav2prg_compute_and_check_checksum,
+      0,
       2,
       freeload_thresholds,
       NULL,

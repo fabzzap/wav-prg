@@ -71,6 +71,7 @@ static const struct wav2prg_loaders jetload_functions[] = {
       lsbf,
       wav2prg_xor_checksum,
       wav2prg_do_not_compute_checksum,
+      0,
       2,
       jetload_thresholds,
       NULL,

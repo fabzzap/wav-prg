@@ -30,6 +30,7 @@ struct wav2prg_context {
   enum wav2prg_tolerance_type tolerance_type;
   struct tolerances *tolerances;
   uint8_t checksum;
+  uint32_t extended_checksum;
   struct wav2prg_raw_block raw_block;
   struct block_list_element *blocks;
   struct block_list_element **current_block;
@@ -76,11 +77,14 @@ static void reset_checksum_to(struct wav2prg_context* context, uint8_t byte)
 static void reset_checksum(struct wav2prg_context* context)
 {
   reset_checksum_to(context, 0);
+  context->extended_checksum = 0;
 }
 
-static uint8_t compute_checksum_step_default(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte) {
+static uint8_t compute_checksum_step_default(struct wav2prg_plugin_conf* conf, uint8_t old_checksum, uint8_t byte, uint16_t location_of_byte, uint32_t* extended_checksum) {
   if(conf->checksum_type == wav2prg_xor_checksum)
     return old_checksum ^ byte;
+  if (old_checksum + byte > 0xFF)
+    (*extended_checksum)++;
   return old_checksum + byte;
 }
 
@@ -105,7 +109,7 @@ static enum wav2prg_bool get_data_byte(struct wav2prg_context* context, const st
   if (context->postprocess_data_byte_func)
     *byte = context->postprocess_data_byte_func(conf, *byte, location);
   if (conf->checksum_computation != wav2prg_do_not_compute_checksum)
-    context->checksum = context->compute_checksum_step(conf, context->checksum, *byte, location);
+    context->checksum = context->compute_checksum_step(conf, context->checksum, *byte, location, &context->extended_checksum);
 
   return wav2prg_true;
 }
@@ -335,12 +339,24 @@ static enum wav2prg_checksum_state check_checksum_func(struct wav2prg_context* c
   uint32_t start_pos = context->input->get_pos(context->input_object);
   uint32_t end_pos;
   enum wav2prg_checksum_state res;
+  int i,mask;
 
   if (context->get_loaded_checksum_func(context, functions, conf, &loaded_checksum) == wav2prg_false)
     return wav2prg_checksum_state_unverified;
 
   end_pos = context->input->get_pos(context->input_object);
   res = computed_checksum == loaded_checksum ? wav2prg_checksum_state_correct : wav2prg_checksum_state_load_error;
+  for(i = 0,mask=0; i < 4 && i < conf->num_extended_checksum_bytes; i++, mask+=8){
+    uint8_t extended_loaded_checksum, extended_computed_checksum = (context->extended_checksum >> mask);
+    if (context->get_loaded_checksum_func(context, functions, conf, &extended_loaded_checksum) == wav2prg_false)
+      return wav2prg_checksum_state_unverified;
+    if (extended_loaded_checksum != extended_computed_checksum){
+      res = wav2prg_checksum_state_load_error;
+      loaded_checksum = extended_loaded_checksum;
+      computed_checksum = extended_computed_checksum;
+      break;
+    }
+  }
   context->display_interface->checksum(context->display_interface_internal, res, start_pos, end_pos, loaded_checksum, computed_checksum);
   return res;
 }
@@ -408,6 +424,7 @@ static struct wav2prg_plugin_conf* copy_conf(const struct wav2prg_plugin_conf *m
   conf->min_pilots=model_conf->min_pilots;
   conf->filling=model_conf->filling;
   conf->opposite_waveform=model_conf->opposite_waveform;
+  conf->num_extended_checksum_bytes = model_conf->num_extended_checksum_bytes;
 
   return conf;
 }
@@ -557,6 +574,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     },
     tolerance_type,
     NULL,
+    0,
     0,
     {
       0,

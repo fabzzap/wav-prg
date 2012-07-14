@@ -135,6 +135,7 @@ static const struct wav2prg_loaders flimbo_functions[] = {
       msbf,
       wav2prg_xor_checksum,/*ignored*/
       wav2prg_do_not_compute_checksum,
+      0,
       2,
       flimbo_thresholds,
       NULL,
@@ -165,6 +166,7 @@ static const struct wav2prg_loaders flimbo_functions[] = {
       msbf,
       wav2prg_xor_checksum,
       wav2prg_compute_and_check_checksum,
+      0,
       2,
       flimbo_thresholds,
       NULL,

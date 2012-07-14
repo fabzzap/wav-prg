@@ -218,6 +218,7 @@ static const struct wav2prg_loaders crl_functions[] =
       lsbf,
       wav2prg_xor_checksum,/*ignored*/
       wav2prg_do_not_compute_checksum,
+      0,
       4,
       crl_thresholds,
       NULL,

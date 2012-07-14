@@ -84,6 +84,7 @@ static const struct wav2prg_loaders theedge_functions[] = {
       msbf,
       wav2prg_xor_checksum,/*ignored*/
       wav2prg_do_not_compute_checksum,
+      0,
       2,
       theedge_thresholds,
       theedge_pulse_length_deviations,

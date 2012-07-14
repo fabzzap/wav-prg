@@ -3,12 +3,12 @@
 static uint16_t nobby_thresholds[]={0x168};
 static uint8_t nobby_sync_sequence[]={0x58};
 
-struct nobby_private_state {
-  uint8_t checksum[3];
-};
+const struct nobby_private_state {
+  uint8_t checksum[3], checked_checksum_byte;
+} nobby_private_state_model={{0,0,0},0};
 static struct wav2prg_generate_private_state nobby_generate_private_state = {
   sizeof(struct nobby_private_state),
-  NULL
+  &nobby_private_state_model
 };
 
 static enum wav2prg_sync_result nobby_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
@@ -65,7 +65,8 @@ static enum wav2prg_bool nobby_get_loaded_checksum(struct wav2prg_context* conte
 {
   struct nobby_private_state *state =(struct nobby_private_state *)conf->private_state;
 
-  *byte = state->checksum[0];
+  *byte = state->checksum[state->checked_checksum_byte];
+  state->checked_checksum_byte = (state->checked_checksum_byte + 1) % 3;
   return wav2prg_true;
 }
 
@@ -87,6 +88,7 @@ static const struct wav2prg_loaders nobby_functions[] = {
       msbf,
       wav2prg_add_checksum,
       wav2prg_compute_and_check_checksum,
+      2,
       2,
       nobby_thresholds,
       NULL,
