@@ -21,7 +21,7 @@ struct block_list_element {
   } block_status;
   uint16_t real_start;
   uint16_t real_end;
-  const char* loader_name;
+  char* loader_name;
   enum wav2prg_checksum_state state;
   uint8_t num_pulse_lengths;
   uint16_t *thresholds;
