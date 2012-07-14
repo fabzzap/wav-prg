@@ -68,6 +68,11 @@ static const struct wav2prg_observers samuraitrilogy_observed_loaders[] = {
   {NULL, {NULL, NULL}}
 };
 
+static enum wav2prg_bool samuraitrilogy_get_loaded_checksum(struct wav2prg_context *context, const struct wav2prg_functions *functions, struct wav2prg_plugin_conf *conf, uint8_t *byte)
+{
+  return functions->get_byte_func(context, functions, conf, byte);
+}
+
 static const struct wav2prg_loaders samuraitrilogy_functions[] =
 {
   {
@@ -80,7 +85,7 @@ static const struct wav2prg_loaders samuraitrilogy_functions[] =
       samuraitrilogy_get_block_info,
       samuraitrilogy_get_block_func,
       NULL,
-      NULL,
+      samuraitrilogy_get_loaded_checksum,
       NULL
     },
     {
