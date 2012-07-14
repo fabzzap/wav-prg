@@ -175,8 +175,9 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
   _snprintf(text, sizeof(text), "Info");
   info_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   is.hParent = info_item;
-  _snprintf(text, sizeof(text), "Name: ");
   {
+    char progname[17];
+    int prognamelen=0;
     int real_len = 15;
     while(1){
       if (info->name[real_len] > 32){
@@ -189,12 +190,14 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
     }
     for(i = 0; i < real_len; i++)
       if(info->name[i]>=32){
-        int len = strlen(text);
-        text[len] = info->name[i];
-        text[len + 1] = 0;
+        progname[prognamelen++] = info->name[i];
       }
+    if(prognamelen > 0){
+      progname[prognamelen]=0;
+      _snprintf(text, sizeof(text), "Name: %s", progname);
+      TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    }
   }
-  TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   _snprintf(text, sizeof(text), "start: %u (%x)", info->start, info->start);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   _snprintf(text, sizeof(text), "end: %u (%x)", info->end, info->end);
@@ -235,6 +238,7 @@ static void end(struct display_interface_internal *internal, unsigned char valid
   const char *state_string;
   HTREEITEM state_item, sync_item;
   uint32_t sync = 0;
+  uint16_t theoretical_size = internal->end - internal->start;
 
   ShowWindow(GetDlgItem(internal->window, IDC_ENTRY_PROGRESS), SW_HIDE);
   ShowWindow(GetDlgItem(internal->window, IDC_ENTRY_TEXT), SW_HIDE);
@@ -283,12 +287,12 @@ static void end(struct display_interface_internal *internal, unsigned char valid
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
     is.hParent = boundaries_item;
   }
-  if (bytes != internal->end - internal->start){
+  if (bytes != theoretical_size){
     if (filling == first_to_last){
-      _snprintf(text, sizeof(text), "real end: %u (%x), %u bytes instead of %u", internal->start + bytes, internal->start + bytes, bytes, internal->end - internal->start);
+      _snprintf(text, sizeof(text), "real end: %u (%x), %u bytes instead of %u", internal->start + bytes, internal->start + bytes, bytes, theoretical_size);
     }
     else
-      _snprintf(text, sizeof(text), "real start: %u (%x), %u bytes instead of %u", internal->end - bytes, internal->end - bytes, bytes, internal->end - internal->start);
+      _snprintf(text, sizeof(text), "real start: %u (%x), %u bytes instead of %u", internal->end - bytes, internal->end - bytes, bytes, theoretical_size);
     is.hParent = info_item;
     is.hInsertAfter = TVI_LAST;
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
