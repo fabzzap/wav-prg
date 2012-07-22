@@ -42,9 +42,6 @@ struct wav2prg_functions;
 struct wav2prg_plugin_conf;
 struct wav2prg_plugin_functions;
 
-typedef void              (*wav2prg_change_sync_sequence_length)(struct wav2prg_plugin_conf*, uint8_t);
-typedef enum wav2prg_bool (*wav2prg_recognize_block)(struct wav2prg_plugin_conf*, const struct wav2prg_block*, struct wav2prg_block_info*, enum wav2prg_bool*, uint16_t*, wav2prg_change_sync_sequence_length);
-
 typedef enum wav2prg_bool (*wav2prg_get_pulse_func)(struct wav2prg_context*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_bit_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
 typedef enum wav2prg_bool (*wav2prg_get_byte_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, uint8_t*);
@@ -115,6 +112,25 @@ struct wav2prg_plugin_conf {
   enum wav2prg_block_filling filling;
   enum wav2prg_bool opposite_waveform;
   void* private_state;
+};
+
+struct wav2prg_observer_functions;
+struct wav2prg_observer_context;
+
+typedef void                        (*wav2prg_change_sync_sequence_length)(struct wav2prg_plugin_conf*, uint8_t);
+typedef void                        (*wav2prg_set_restart_point)(struct wav2prg_observer_context*, uint16_t);
+typedef struct wav2prg_plugin_conf* (*wav2prg_observer_get_conf)(struct wav2prg_observer_context*);
+typedef void                        (*wav2prg_observer_set_info)(struct wav2prg_observer_context*, uint16_t, uint16_t, const char*);
+typedef void                        (*wav2prg_disallow_gaps)(struct wav2prg_observer_context*);
+
+typedef enum wav2prg_bool (*wav2prg_recognize_block)(struct wav2prg_observer_context*, const struct wav2prg_observer_functions*, const struct wav2prg_block*, uint16_t);
+
+struct wav2prg_observer_functions {
+  wav2prg_change_sync_sequence_length change_sync_sequence_length_func;
+  wav2prg_set_restart_point set_restart_point_func;
+  wav2prg_observer_get_conf get_conf_func;
+  wav2prg_observer_set_info set_info_func;
+  wav2prg_disallow_gaps disallow_gaps_func;
 };
 
 struct wav2prg_observer_loaders {

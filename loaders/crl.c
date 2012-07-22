@@ -41,8 +41,11 @@ static enum wav2prg_sync_result crl_get_sync(struct wav2prg_context* context, co
   return wav2prg_sync_success;
 }
 
-static enum wav2prg_bool recognize_crl_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
-  uint16_t i, length_of_base_entry;
+static enum wav2prg_bool recognize_crl_hc(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  uint16_t i, start, length_of_base_entry;
   uint8_t where_is_start_of_base;
 
   /* first of all look for LDA ?;STA $04 */
@@ -79,7 +82,7 @@ static enum wav2prg_bool recognize_crl_hc(struct wav2prg_plugin_conf* conf, cons
   if (i + 10 == block->info.end - block->info.start)
     return wav2prg_false;
 
-  info->start = block->data[where_is_start_of_base] + 256 * block->data[where_is_start_of_base + 1];
+  start = block->data[where_is_start_of_base] + 256 * block->data[where_is_start_of_base + 1];
   /* look if start of base is changed */
   for (i = 0; i <= 182; i++) {
     if (block->data[i    ] == 0xa9
@@ -90,21 +93,25 @@ static enum wav2prg_bool recognize_crl_hc(struct wav2prg_plugin_conf* conf, cons
      && block->data[i + 7] == 0x8d
      && block->data[i + 8] == 0x3d + where_is_start_of_base
      && block->data[i + 9] == 0x03) {
-      info->start = block->data[i + 1] + 256 * block->data[i + 6];
+      start = block->data[i + 1] + 256 * block->data[i + 6];
       break;
     }
   }
-  info->end = info->start + length_of_base_entry;
+  observer_functions->set_info_func(observer_context, start, start + length_of_base_entry, NULL);
   return wav2prg_true;
 }
 
-static enum wav2prg_bool recognize_crl_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_crl_self(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
   uint16_t i;
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context); 
   struct crl_private_state *state = (struct crl_private_state*)conf->private_state;
   enum wav2prg_bool a_initialised = wav2prg_false, low_found = wav2prg_false, high_found = wav2prg_false;
   uint8_t a_value, low_value, high_value;
 
-  if (*where_to_search_in_block == 0){
+  if (start_point == 0){
     for(i = 0; i + 13 < block->info.end - block->info.start; i++){
       uint16_t pos_of_low_byte, pos_of_high_byte;
       if (block->data[i] == 0xad
@@ -130,7 +137,7 @@ static enum wav2prg_bool recognize_crl_self(struct wav2prg_plugin_conf* conf, co
     if (i + 13 == block->info.end - block->info.start)
       return wav2prg_false;
   }
-  for (i = *where_to_search_in_block; i + 2 < block->info.end - block->info.start; i++){
+  for (i = start_point; i + 2 < block->info.end - block->info.start; i++){
     if (block->data[i] == 0xa9){
       a_initialised = wav2prg_true;
       a_value = block->data[i + 1];
@@ -154,10 +161,11 @@ static enum wav2prg_bool recognize_crl_self(struct wav2prg_plugin_conf* conf, co
      && high_found
      && block->data[i] == 0x85
      && block->data[i + 1] == 0x04) {
-      info->start =
-        low_value + 256 * high_value;
-      info->end = info->start + 256 * a_value;
-      *where_to_search_in_block = i + 2;
+      observer_functions->set_info_func(observer_context,
+                                        low_value + 256 * high_value,
+                                        low_value + 256 * high_value + 256 * a_value,
+                                        NULL);
+      observer_functions->set_restart_point_func(observer_context, i + 2);
       return wav2prg_true;
     }
   }

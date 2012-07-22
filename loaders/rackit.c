@@ -59,7 +59,11 @@ static enum wav2prg_bool rackit_get_block_info(struct wav2prg_context* context, 
   return wav2prg_true;
 }
 
-static enum wav2prg_bool is_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool is_rackit(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
   const uint8_t xor_bytes[]={0x98,0xe8,0x60,0x08,0x98,0xec,0xb4,0x04,0x08,0x24,0xe8,0xc0,
                              0x28,0x24,0x80,0xc0,0xbc,0xe0,0xa4,0xc0,0xe0,0xa4,0x40,0x80};
@@ -154,7 +158,10 @@ static enum wav2prg_bool is_rackit(struct wav2prg_plugin_conf* conf, const struc
   return wav2prg_false;
 }
 
-static enum wav2prg_bool keep_doing_rackit(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool keep_doing_rackit(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
   return (block->info.start != 0xfffc || block->info.end != 0xfffe);
 }
 

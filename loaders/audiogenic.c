@@ -119,7 +119,11 @@ static enum wav2prg_bool audiogenic_specialagent_get_block(struct wav2prg_contex
   return wav2prg_true;
 }
 
-enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+enum wav2prg_bool recognize_itself(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
 
   return state->state == audiogenic_synced
@@ -128,7 +132,10 @@ enum wav2prg_bool recognize_itself(struct wav2prg_plugin_conf* conf, const struc
      );
 }
 
-static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_hc(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
   struct{
     enum wav2prg_bool register_filled;
     uint8_t value;
@@ -137,6 +144,7 @@ static enum wav2prg_bool recognize_hc(struct wav2prg_plugin_conf* conf, const st
   uint16_t i = 0x35b - 0x33c;
   enum wav2prg_bool a_initialized = wav2prg_false, x_initialized = wav2prg_false;
   uint8_t a_value, x_value;
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
   if (block->info.start != 828 || block->info.end != 1020
     || block->data[0] != 3

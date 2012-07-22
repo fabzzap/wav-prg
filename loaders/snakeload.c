@@ -17,8 +17,12 @@ static enum wav2prg_bool snakeload_get_block_info(struct wav2prg_context* contex
 static uint16_t snakeload_thresholds[]={0x3ff};
 static uint8_t snakeload_pilot_sequence[]={'e','i','l','y','K'};
 
-static enum wav2prg_bool recognize_snakeload(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_snakeload(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
   uint16_t i, blocklen = block->info.end - block->info.start;
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
   if (block->info.start != 0x801)
     return wav2prg_false;

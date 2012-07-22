@@ -60,7 +60,11 @@ static enum wav2prg_bool novaload_special_get_block_func(struct wav2prg_context*
   return wav2prg_true;
 }
 
-static enum wav2prg_bool keep_doing_novaload_special(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool keep_doing_novaload_special(struct wav2prg_observer_context *observer_context,
+                                         const struct wav2prg_observer_functions *observer_functions,
+                                         const struct wav2prg_block *block,
+                                         uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   struct novaload_special_private_state *state = (struct novaload_special_private_state *)conf->private_state;
   return state->start_of_block != 0;
 }

@@ -46,7 +46,10 @@ static enum wav2prg_bool maddoctor_get_block(struct wav2prg_context* context, co
   }
 }
 
-static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
   if (block->info.start == 828
    && block->info.end == 1020
    && block->data[0] == 1
@@ -64,36 +67,45 @@ static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_plugin_conf* conf
    && block->data[0x369 - 0x33c] == 0x85
    && block->data[0x36A - 0x33c] == 0xFC
   ){
-    info->start = block->data[0x364 - 0x33c] + (block->data[0x368 - 0x33c] << 8);
-    info->end = info->start + (block->data[0x360 - 0x33c] << 8);
+  	 uint16_t start = block->data[0x364 - 0x33c] + (block->data[0x368 - 0x33c] << 8);
+    observer_functions->set_info_func(observer_context,
+                         start,
+                         start + (block->data[0x360 - 0x33c] << 8),
+                         NULL);
     return wav2prg_true;
   }
   return wav2prg_false;
 }
 
-static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
   uint16_t i;
 
-  if(*where_to_search_in_block == 0)
+  if(start_point == 0)
     for (i = 0; i < 144 && i + 2 < block->info.end - block->info.start; i++){
       if(block->data[i] == 0xCE
      && (block->data[i + 1] - 3) % 256 == (i + 1 + block->info.start) % 256
      &&  block->data[i + 2] == (block->info.start >> 8)
         ){
-        *where_to_search_in_block = i + 3;
+        start_point = i + 3;
         break;
       }
     }
-  if(*where_to_search_in_block == 0)
+  if(start_point == 0)
     return wav2prg_false;
-  for (i = *where_to_search_in_block; i < *where_to_search_in_block + 10 && i + 5 < block->info.end - block->info.start; i++){
+  for (i = start_point; i < start_point + 10 && i + 5 < block->info.end - block->info.start; i++){
     if(block->data[i    ] == 0xA9
     && block->data[i + 2] == 0xA2
     && block->data[i + 4] == 0xA0
     ){
-      info->start = block->data[i + 3] + (block->data[i + 5] << 8);
-      info->end = info->start + (block->data[i + 1] << 8);
-      *where_to_search_in_block = i + 6;
+      uint16_t start = block->data[i + 3] + (block->data[i + 5] << 8);
+      observer_functions->set_info_func(observer_context,
+                                        start,
+                                        start + (block->data[i + 1] << 8),
+                                        NULL);
+      observer_functions->set_restart_point_func(observer_context, i + 6);
       return wav2prg_true;
     }
   }

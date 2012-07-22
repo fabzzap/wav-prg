@@ -154,21 +154,29 @@ enum wav2prg_bool kernal_get_loaded_checksum(struct wav2prg_context* context, co
   return wav2prg_true;
 }
 
-static enum wav2prg_bool is_headerchunk(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func)
+static enum wav2prg_bool is_headerchunk(struct wav2prg_observer_context *observer_context,
+                                         const struct wav2prg_observer_functions *observer_functions,
+                                         const struct wav2prg_block *block,
+                                         uint16_t start_point)
 {
   if(block->info.start == 828
   && block->info.end >= 849
   && block->info.end <= 1020
   && (block->data[0] == 1 || block->data[0] == 3)){
-    info->start = block->data[1] + (block->data[2] << 8);
-    info->end   = block->data[3] + (block->data[4] << 8);
+    uint16_t start = block->data[1] + (block->data[2] << 8);
+    uint16_t end   = block->data[3] + (block->data[4] << 8);
+    observer_functions->set_info_func(observer_context, start, end, NULL);
     return wav2prg_true;
   }
   return wav2prg_false;
 }
 
-static enum wav2prg_bool basic_header_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool basic_header_second_copy_after_first_copy(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
   uint8_t pilot_byte, i;
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
   for(i = 0, pilot_byte = 9; i < conf->len_of_sync_sequence; i++, pilot_byte--){
     if (conf->sync_sequence[i] != kernal_1stcopy_pilot_sequence[i])
@@ -178,23 +186,40 @@ static enum wav2prg_bool basic_header_second_copy_after_first_copy(struct wav2pr
   return wav2prg_true;
 }
 
-static enum wav2prg_bool header_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
-  *no_gaps_allowed  = wav2prg_true;
-  return basic_header_second_copy_after_first_copy(conf, block, info, no_gaps_allowed, where_to_search_in_block, change_sync_sequence_length_func);
+static enum wav2prg_bool header_second_copy_after_first_copy(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  observer_functions->disallow_gaps_func(observer_context);
+
+  return basic_header_second_copy_after_first_copy(observer_context,
+                                                   observer_functions,
+                                                   block,
+                                                   start_point);
 }
 
-static enum wav2prg_bool data_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
-  info->start = block->info.start;
-  info->end   = block->info.end;
+static enum wav2prg_bool data_second_copy_after_first_copy(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  observer_functions->set_info_func(observer_context, block->info.start, block->info.end, NULL);
 
-  return header_second_copy_after_first_copy(conf, block, info, no_gaps_allowed, where_to_search_in_block, change_sync_sequence_length_func);
+  return header_second_copy_after_first_copy(observer_context,
+                                             observer_functions,
+                                             block,
+                                             start_point);
 }
 
-static enum wav2prg_bool c16_data_second_copy_after_first_copy(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
-  info->start = block->info.start;
-  info->end   = block->info.end;
+static enum wav2prg_bool c16_data_second_copy_after_first_copy(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  observer_functions->set_info_func(observer_context, block->info.start, block->info.end, NULL);
 
-  return basic_header_second_copy_after_first_copy(conf, block, info, no_gaps_allowed, where_to_search_in_block, change_sync_sequence_length_func);
+  return basic_header_second_copy_after_first_copy(observer_context,
+                                                   observer_functions,
+                                                   block,
+                                                   start_point);
 }
 
 enum wav2prg_bool kernal_headerchunk_16_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
@@ -211,15 +236,16 @@ enum wav2prg_bool kernal_headerchunk_16_get_block_info(struct wav2prg_context* c
   return wav2prg_true;
 }
 
-static enum wav2prg_bool is_c16_headerchunk(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func)
+static enum wav2prg_bool is_c16_headerchunk(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point)
 {
   if(block->info.start == 819
   && block->info.end == 1010){
-    int i;
-    info->start = block->data[0] + (block->data[1] << 8);
-    info->end   = block->data[2] + (block->data[3] << 8);
-    for(i = 0; i < 16; i++)
-      info->name[i] = block->data[i + 4];
+    uint16_t start = block->data[0] + (block->data[1] << 8);
+    uint16_t end   = block->data[2] + (block->data[3] << 8);
+    observer_functions->set_info_func(observer_context, start, end, block->data + 4);
     return wav2prg_true;
   }
   return wav2prg_false;

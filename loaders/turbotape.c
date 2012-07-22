@@ -4,6 +4,7 @@ static enum wav2prg_bool turbotape_get_block_info(struct wav2prg_context* contex
 {
   uint8_t byte;
   int i;
+  
   if (functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
     return wav2prg_false;
   if (byte != 1 && byte != 2 && byte != 0x61)
@@ -28,7 +29,10 @@ static enum wav2prg_bool turbotape_get_block_info(struct wav2prg_context* contex
 static uint16_t turbotape_thresholds[]={263};
 static uint8_t turbotape_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
-static enum wav2prg_bool recognize_turrican(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_turrican(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
   if (block->info.start == 0x801
    && block->info.end >= 0xb34
    && block->info.end <= 0xb37) {
@@ -48,6 +52,8 @@ static enum wav2prg_bool recognize_turrican(struct wav2prg_plugin_conf* conf, co
      ){
         uint8_t new_sync_len = block->data[i +  7];
         int j, sbyte;
+        struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
+
         change_sync_sequence_length_func(conf, new_sync_len);
         for(j = 0, sbyte = new_sync_len; j < new_sync_len; j++, sbyte--)
           conf->sync_sequence[j] = sbyte;

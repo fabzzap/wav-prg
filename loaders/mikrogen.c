@@ -24,8 +24,11 @@ static uint8_t mikrogen_compute_checksum_step(struct wav2prg_plugin_conf *conf, 
   return old_checksum - byte;
 }
 
-static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
-  uint16_t i;
+static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_observer_context *observer_context,
+                                         const struct wav2prg_observer_functions *observer_functions,
+                                         const struct wav2prg_block *block,
+                                         uint16_t start_point){
+  uint16_t i, j;
 
   for (i = 0; i + 15 < block->info.end - block->info.start; i++)
     if (block->data[i     ] == 0xa9
@@ -45,25 +48,30 @@ static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_plugin_conf* conf
        break;
   if (i + 15 >= block->info.end - block->info.start)
     return wav2prg_false;
-  info->start = block->data[i +  5] * 256 + block->data[i +  1];
-  for (i = i + 15; i + 6 < block->info.end - block->info.start; i++)
-    if (block->data[i     ] == 0xe6
-     && block->data[i +  1] == 0xfe
-     && block->data[i +  2] == 0xa5
-     && block->data[i +  3] == 0xfe
-     && block->data[i +  4] == 0xc9
-     && block->data[i +  6] == 0xd0)
+  for (j = i + 15; j + 6 < block->info.end - block->info.start; j++)
+    if (block->data[j     ] == 0xe6
+     && block->data[j +  1] == 0xfe
+     && block->data[j +  2] == 0xa5
+     && block->data[j +  3] == 0xfe
+     && block->data[j +  4] == 0xc9
+     && block->data[j +  6] == 0xd0)
        break;
-  if (i + 6 == block->info.end - block->info.start)
+  if (j + 6 == block->info.end - block->info.start)
     return wav2prg_false;
-  info->end = block->data[i +  5] * 256 - 1;
+  observer_functions->set_info_func(observer_context,
+                                    block->data[i +  5] * 256 + block->data[i +  1],
+                                    block->data[j +  5] * 256 - 1,
+                                    NULL);
   return wav2prg_true;
 }
 
-static enum wav2prg_bool recognize_mikrogen_new(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_mikrogen_new(struct wav2prg_observer_context *observer_context,
+                                         const struct wav2prg_observer_functions *observer_functions,
+                                         const struct wav2prg_block *block,
+                                         uint16_t start_point){
   uint16_t i;
 
-  for (i = *where_to_search_in_block; i + 17 < block->info.end - block->info.start; i++){
+  for (i = start_point; i + 17 < block->info.end - block->info.start; i++){
     if (block->data[i + 0] == 0xa9
      && block->data[i + 2] == 0x85
      && block->data[i + 3] == 0xfd
@@ -79,9 +87,11 @@ static enum wav2prg_bool recognize_mikrogen_new(struct wav2prg_plugin_conf* conf
      && block->data[i + 16] == 0xad
      && block->data[i + 17] == 0x0e
       ){
-      *where_to_search_in_block = i + 18;
-      info->start = block->data[i + 1] + block->data[i + 5] * 256;
-      info->end = block->data[i + 9] + block->data[i + 13] * 256 - 1;
+      observer_functions->set_info_func(observer_context,
+                                        block->data[i + 1] + block->data[i + 5] * 256,
+                                        block->data[i + 9] + block->data[i + 13] * 256 - 1,
+                                        NULL);
+      observer_functions->set_restart_point_func(observer_context, i + 18);
       return wav2prg_true;
     }
   }

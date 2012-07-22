@@ -12,7 +12,12 @@ static enum wav2prg_bool freeload_get_block_info(struct wav2prg_context* context
 static uint16_t freeload_thresholds[]={0x168};
 static uint8_t freeload_pilot_sequence[]={90};
 
-static enum wav2prg_bool recognize_fast_freeload(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_fast_freeload(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
+
   if (block->info.start == 0x33c
    && block->info.end == 0x3fc
    && block->data[0] == 0x03
@@ -37,7 +42,12 @@ static enum wav2prg_bool recognize_fast_freeload(struct wav2prg_plugin_conf* con
   return wav2prg_false;
 }
 
-static enum wav2prg_bool recognize_freeload_with_turbotape_sync(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_freeload_with_turbotape_sync(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
+
   if (block->info.start == 0x33c
    && block->info.end == 0x3fc){
     int i;
@@ -61,7 +71,7 @@ static enum wav2prg_bool recognize_freeload_with_turbotape_sync(struct wav2prg_p
         uint8_t new_len = block->data[i + 19], j, sbyte;
         conf->thresholds[0] = block->data[i + 1];
         conf->pilot_byte =  block->data[i + 11];
-        change_sync_sequence_length_func(conf, new_len);
+        observer_functions->change_sync_sequence_length_func(conf, new_len);
         for(j = 0, sbyte = new_len; j < new_len; j++, sbyte--)
           conf->sync_sequence[j] = sbyte;
         conf->endianness = lsbf;
@@ -73,7 +83,12 @@ static enum wav2prg_bool recognize_freeload_with_turbotape_sync(struct wav2prg_p
   return wav2prg_false;
 }
 
-static enum wav2prg_bool recognize_freeload_16(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_freeload_16(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
+
   if (block->info.start == 819
    && block->info.end   == 1010){
     if(block->data[0x3a1 - 819] == 0x20

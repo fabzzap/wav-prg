@@ -47,12 +47,16 @@ static enum wav2prg_bool snake_detect(uint8_t *snakeblock, uint16_t blocklen, ui
 }
 
 
-static enum wav2prg_bool snake_unencrypted(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func)
+static enum wav2prg_bool snake_unencrypted(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point)
 {
   uint16_t i;
   uint8_t snakeblock[1024];
   uint16_t blocklen = 0;
   uint16_t offset;
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
   if (block->info.start != 0x801 || block->info.end < 0x900)
     return 0;
@@ -90,11 +94,15 @@ static enum wav2prg_bool snake_unencrypted(struct wav2prg_plugin_conf* conf, con
   return snake_detect(snakeblock, blocklen, offset, conf);
 }
 
-static enum wav2prg_bool snake_encrypted(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func)
+static enum wav2prg_bool snake_encrypted(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point)
 {
   uint8_t snakeblock[1024];
   uint16_t blocklen = 0;
   uint16_t offset;
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
   if(block->info.start != 0x801 || block->info.end <= 0x863)
     return 0;
@@ -128,7 +136,11 @@ static enum wav2prg_bool snake_encrypted(struct wav2prg_plugin_conf* conf, const
   return snake_detect(snakeblock, blocklen, offset, conf);
 }
 
-static enum wav2prg_bool recognize_snake_swiv(struct wav2prg_plugin_conf* conf, const struct wav2prg_block* block, struct wav2prg_block_info *info, enum wav2prg_bool *no_gaps_allowed, uint16_t *where_to_search_in_block, wav2prg_change_sync_sequence_length change_sync_sequence_length_func){
+static enum wav2prg_bool recognize_snake_swiv(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   uint16_t offset, i, blocklen;
   uint8_t snakeblock[1024];
 
