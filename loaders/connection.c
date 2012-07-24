@@ -5,7 +5,27 @@ static enum wav2prg_bool is_connection(struct wav2prg_observer_context *observer
                                          const struct wav2prg_block *datachunk_block,
                                          uint16_t start_point)
 {
-  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
+  uint16_t connection_thresholds[]={263};
+  uint8_t connection_pilot_sequence[]={16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0};
+  const struct wav2prg_plugin_conf connection_conf =
+  {
+   msbf,
+   wav2prg_xor_checksum,
+    wav2prg_compute_and_check_checksum,
+    0,
+    2,
+    connection_thresholds,
+    NULL,
+    wav2prg_pilot_tone_with_shift_register,
+    2,
+    sizeof(connection_pilot_sequence),
+    connection_pilot_sequence,
+    0,
+    first_to_last,
+    wav2prg_false,
+    NULL
+  };
+  struct wav2prg_plugin_conf *conf = observer_functions->use_different_conf_func(observer_context, &connection_conf);
   uint16_t start;
 
   if(datachunk_block->info.start != 698 || datachunk_block->info.end != 812)
@@ -25,10 +45,6 @@ static enum wav2prg_bool is_connection(struct wav2prg_observer_context *observer
                                       start,
                                       datachunk_block->data[780-698]*256+datachunk_block->data[787-698],
                                       NULL);
-    observer_functions->change_sync_sequence_length_func(conf, 17);
-    for(j = 0, sbyte = 16; j < 17; j++, sbyte--)
-      conf->sync_sequence[j] = sbyte;
-    conf->thresholds[0] = 263;
     return wav2prg_true;
   }
   return wav2prg_false;

@@ -120,6 +120,7 @@ struct wav2prg_observer_context;
 typedef void                        (*wav2prg_change_sync_sequence_length)(struct wav2prg_plugin_conf*, uint8_t);
 typedef void                        (*wav2prg_set_restart_point)(struct wav2prg_observer_context*, uint16_t);
 typedef struct wav2prg_plugin_conf* (*wav2prg_observer_get_conf)(struct wav2prg_observer_context*);
+typedef struct wav2prg_plugin_conf* (*wav2prg_observer_use_different_conf)(struct wav2prg_observer_context*, const struct wav2prg_plugin_conf*);
 typedef void                        (*wav2prg_observer_set_info)(struct wav2prg_observer_context*, uint16_t, uint16_t, const char*);
 typedef void                        (*wav2prg_disallow_gaps)(struct wav2prg_observer_context*);
 
@@ -129,6 +130,7 @@ struct wav2prg_observer_functions {
   wav2prg_change_sync_sequence_length change_sync_sequence_length_func;
   wav2prg_set_restart_point set_restart_point_func;
   wav2prg_observer_get_conf get_conf_func;
+  wav2prg_observer_use_different_conf use_different_conf_func;
   wav2prg_observer_set_info set_info_func;
   wav2prg_disallow_gaps disallow_gaps_func;
 };
