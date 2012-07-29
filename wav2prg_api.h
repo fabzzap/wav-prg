@@ -163,6 +163,7 @@ struct wav2prg_all_observers {
   const char version[2];
   const struct wav2prg_observers {
     const char* observed_name;
+    const char* observation_description;
     struct wav2prg_observer_loaders observers;
   } *observers;
 };

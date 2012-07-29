@@ -667,6 +667,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     add_byte_to_block
   };
   const char *loader_name = start_loader;
+  const char *observation = NULL;
   struct wav2prg_plugin_conf* conf = NULL;
   struct further_recognition further_recognition = {{{0}},0,NULL};
   struct current_recognition current_recognition = {NULL,wav2prg_false};
@@ -709,7 +710,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       input->invert(input_object);
     }
 
-    context.display_interface->try_sync(context.display_interface_internal, loader_name);
+    context.display_interface->try_sync(context.display_interface_internal, loader_name, observation);
     *pointer_to_current_block = new_block_list_element(conf->num_pulse_lengths, conf->thresholds);
     current_block = *pointer_to_current_block;
     context.current_syncs = &current_block->syncs;
@@ -864,6 +865,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
             else
               further_recognition.recognize_func = NULL;
             loader_name = observers->observer->loader;
+            observation = observers->observation_description;
             break;
           }
         }
@@ -890,6 +892,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       delete_state(conf);
       conf = NULL;
       loader_name = start_loader;
+      observation = NULL;
       current_recognition.no_gaps_allowed = wav2prg_false;
     }
   }

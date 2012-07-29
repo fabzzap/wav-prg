@@ -9,23 +9,6 @@ static struct wav2prg_observed {
   struct obs_list *observers;
 } *observed_list = NULL;
 
-static void add_observer_to_list(struct obs_list **observers, const struct wav2prg_observer_loaders *new_observer, void *module){
-  struct obs_list *new_element = malloc(sizeof(struct obs_list));
-  new_element->observer = new_observer;
-  new_element->module = module;
-  /* recognition of Kernal loaders is added at end,
-     recognition of anything else is added at beginning */
-  if (!strcmp(new_observer->loader, "Default C64")
-   || !strcmp(new_observer->loader, "Default C16")
-   || !strcmp(new_observer->loader, "Kernal data chunk")
-   || !strcmp(new_observer->loader, "Kernal data chunk C16")
-   ){
-    for(; *observers; observers = &(*observers)->next);
-  }
-  new_element->next = *observers;
-  *observers = new_element;
-}
-
 static struct obs_list** get_list_of_observers_maybe_adding_observed(const char *observed_name, enum wav2prg_bool add_if_missing){
   struct wav2prg_observed *current_observed;
   int number_of_observed = 0;
@@ -49,10 +32,24 @@ static struct obs_list** get_list_of_observers_maybe_adding_observed(const char 
   return NULL;
 }
 
-void add_observed(const char *observed_name, const struct wav2prg_observer_loaders *observer, void *module){
-  struct obs_list ** list = get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_true);
+void add_observed(const char *observed_name, const struct wav2prg_observer_loaders *observer, void *module, const char* observation_description){
+  struct obs_list **list = get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_true);
+  struct obs_list *new_element = malloc(sizeof(struct obs_list));
 
-  add_observer_to_list(list, observer, module);
+  new_element->observer = observer;
+  new_element->observation_description = observation_description;
+  new_element->module = module;
+  /* recognition of Kernal loaders is added at end,
+     recognition of anything else is added at beginning */
+  if (!strcmp(observer->loader, "Default C64")
+   || !strcmp(observer->loader, "Default C16")
+   || !strcmp(observer->loader, "Kernal data chunk")
+   || !strcmp(observer->loader, "Kernal data chunk C16")
+   ){
+    for(; *list; list = &(*list)->next);
+  }
+  new_element->next = *list;
+  *list = new_element;
 }
 
 struct obs_list* get_observers(const char *observed_name){

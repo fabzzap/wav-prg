@@ -99,9 +99,9 @@ static enum wav2prg_bool recognize_mikrogen_new(struct wav2prg_observer_context 
 }
 
 static const struct wav2prg_observers mikrogen_observed_loaders[] = {
-  {"Kernal data chunk", {"Mikro-Gen (old)", recognize_mikrogen_old}},
-  {"Kernal data chunk", {"Mikro-Gen (new)", recognize_mikrogen_new}},
-  {NULL, {NULL, NULL}}
+  {"Kernal data chunk", NULL, {"Mikro-Gen (old)", recognize_mikrogen_old}},
+  {"Kernal data chunk", NULL, {"Mikro-Gen (new)", recognize_mikrogen_new}},
+  {NULL, NULL, {NULL, NULL}}
 };
 
 static const struct wav2prg_loaders mikrogen_one_loader[] = 

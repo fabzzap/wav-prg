@@ -43,8 +43,8 @@ static enum wav2prg_bool recognize_opera_dc(struct wav2prg_observer_context *obs
 }
 
 static const struct wav2prg_observers opera_observed_loaders[] = {
-  {"Kernal data chunk", {"Null loader", recognize_opera_dc}},
-  {NULL, {NULL, NULL}}
+  {"Kernal data chunk", "Opera Turbo Load", {"Null loader", recognize_opera_dc}},
+  {NULL, NULL, {NULL, NULL}}
 };
 
 WAV2PRG_OBSERVER(1,0, opera_observed_loaders)

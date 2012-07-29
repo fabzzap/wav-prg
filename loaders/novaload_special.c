@@ -70,8 +70,8 @@ static enum wav2prg_bool keep_doing_novaload_special(struct wav2prg_observer_con
 }
 
 static const struct wav2prg_observers novaload_special_observed_loaders[] = {
-  {"Novaload Special", {"Novaload Special", keep_doing_novaload_special}},
-  {NULL, {NULL, NULL}}
+  {"Novaload Special", NULL, {"Novaload Special", keep_doing_novaload_special}},
+  {NULL, NULL, {NULL, NULL}}
 };
 
 static const struct wav2prg_loaders novaload_special_functions[] =

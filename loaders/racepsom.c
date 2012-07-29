@@ -141,7 +141,7 @@ static enum wav2prg_bool recognize_racepsom(struct wav2prg_observer_context *obs
     return wav2prg_false;
   }
   for(i = start_point; i + 6 < block->info.end - block->info.start; i++) {
-  	 if(check_location(block->data + i, block->data[23], wav2prg_true, &start)){
+     if(check_location(block->data + i, block->data[23], wav2prg_true, &start)){
       observer_functions->set_restart_point_func(observer_context, i + 7);
       observer_functions->set_info_func(observer_context, start, 0, NULL);
       return wav2prg_true;
@@ -151,8 +151,8 @@ static enum wav2prg_bool recognize_racepsom(struct wav2prg_observer_context *obs
 }
 
 static const struct wav2prg_observers racepsom_observed_loaders[] = {
-  {"Kernal data chunk", {"RAC Epsom", recognize_racepsom}},
-  {NULL,NULL}
+  {"Kernal data chunk", NULL, {"RAC Epsom", recognize_racepsom}},
+  {NULL, NULL, NULL}
 };
 
 WAV2PRG_OBSERVER(1,0, racepsom_observed_loaders)

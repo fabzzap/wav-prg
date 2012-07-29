@@ -51,8 +51,8 @@ static enum wav2prg_bool is_connection(struct wav2prg_observer_context *observer
 }
 
 static const struct wav2prg_observers connection_dependency[] = {
-  {"Kernal data chunk", {"Null loader", is_connection}},
-  {NULL, {NULL, NULL}}
+  {"Kernal data chunk", "Connection", {"Null loader", is_connection}},
+  {NULL, NULL, {NULL, NULL}}
 };
 
 WAV2PRG_OBSERVER(1,0, connection_dependency)

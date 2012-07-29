@@ -20,9 +20,12 @@
 #include "observers.h"
 #include "wav2prg_block_list.h"
 
-static void try_sync(struct display_interface_internal* internal, const char* loader_name)
+static void try_sync(struct display_interface_internal* internal, const char* loader_name, const char* observation)
 {
-  printf("trying to get a sync using loader %s\n", loader_name);
+  printf("trying to get a sync using loader %s", loader_name);
+  if (observation != NULL)
+    printf(" (%s)", observation);
+  printf("\n");
 }
 
 static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct wav2prg_block_info* info)
