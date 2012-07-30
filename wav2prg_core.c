@@ -865,7 +865,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
             else
               further_recognition.recognize_func = NULL;
             loader_name = observers->observer->loader;
-            observation = observers->observation_description;
+            observation = observers->observer->observation_description;
             break;
           }
         }

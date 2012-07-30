@@ -383,13 +383,13 @@ const struct wav2prg_loaders kernal_one_loader[] =
 WAV2PRG_LOADER(kernal,1,0,"Kernal plug-in for WAV-PRG 4.0", kernal_one_loader)
 
 static const struct wav2prg_observers kernal_observers[] = {
-  {"Default C64", "2nd copy", {"Default C64", header_second_copy_after_first_copy}},
-  {"Default C64", NULL, {"Kernal data chunk", is_headerchunk}},
-  {"Kernal data chunk", "2nd copy", {"Kernal data chunk", data_second_copy_after_first_copy}},
-  {"Default C16", "2nd copy", {"Default C16", basic_header_second_copy_after_first_copy}},
-  {"Default C16", NULL, {"Kernal data chunk C16", is_c16_headerchunk}},
-  {"Kernal data chunk C16", "2nd copy", {"Kernal data chunk C16", c16_data_second_copy_after_first_copy}},
-  {NULL, NULL, NULL}
+  {"Default C64", {"Default C64","2nd copy",  header_second_copy_after_first_copy}},
+  {"Default C64", {"Kernal data chunk", NULL, is_headerchunk}},
+  {"Kernal data chunk", {"Kernal data chunk", "2nd copy", data_second_copy_after_first_copy}},
+  {"Default C16", {"Default C16", "2nd copy", basic_header_second_copy_after_first_copy}},
+  {"Default C16", {"Kernal data chunk C16", NULL, is_c16_headerchunk}},
+  {"Kernal data chunk C16", {"Kernal data chunk C16", "2nd copy", c16_data_second_copy_after_first_copy}},
+  {NULL, {NULL, NULL, NULL}}
 };
 
 WAV2PRG_OBSERVER(1,0, kernal_observers)

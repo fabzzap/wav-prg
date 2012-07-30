@@ -151,8 +151,8 @@ static enum wav2prg_bool recognize_racepsom(struct wav2prg_observer_context *obs
 }
 
 static const struct wav2prg_observers racepsom_observed_loaders[] = {
-  {"Kernal data chunk", NULL, {"RAC Epsom", recognize_racepsom}},
-  {NULL, NULL, NULL}
+  {"Kernal data chunk", {"RAC Epsom", NULL, recognize_racepsom}},
+  {NULL, {NULL, NULL, NULL}}
 };
 
 WAV2PRG_OBSERVER(1,0, racepsom_observed_loaders)

@@ -137,6 +137,7 @@ struct wav2prg_observer_functions {
 
 struct wav2prg_observer_loaders {
   const char* loader;
+  const char* observation_description;
   wav2prg_recognize_block recognize_func;
 };
 
@@ -163,7 +164,6 @@ struct wav2prg_all_observers {
   const char version[2];
   const struct wav2prg_observers {
     const char* observed_name;
-    const char* observation_description;
     struct wav2prg_observer_loaders observers;
   } *observers;
 };

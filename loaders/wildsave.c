@@ -56,8 +56,8 @@ static enum wav2prg_bool keep_doing_wildsave(struct wav2prg_observer_context *ob
 }
 
 static const struct wav2prg_observers wildsave_observed_loaders[] = {
-  {"Wild Save", NULL, {"Wild Save", keep_doing_wildsave}},
-  {NULL, NULL, {NULL, NULL}}
+  {"Wild Save", {"Wild Save", NULL, keep_doing_wildsave}},
+  {NULL, {NULL, NULL, NULL}}
 };
 
 static const struct wav2prg_loaders wildsave_functions[] = {

@@ -64,7 +64,7 @@ static enum wav2prg_bool register_observer(struct wav2prg_all_observers *observe
 
   for(one_loader = observer->observers; one_loader->observed_name; one_loader++)
   {
-    add_observed(one_loader->observed_name, &one_loader->observers, module, one_loader->observation_description);
+    add_observed(one_loader->observed_name, &one_loader->observers, module);
   }
 
   return wav2prg_true;

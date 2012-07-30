@@ -204,10 +204,10 @@ static enum wav2prg_bool recognize_hc(struct wav2prg_observer_context *observer_
 }
 
 static const struct wav2prg_observers audiogenic_specialagent_observed_loaders[] = {
-  {"Audiogenic", NULL, {"Audiogenic", recognize_itself}},
-  {"Special Agent/Strike Force Cobra", NULL, {"Special Agent/Strike Force Cobra", recognize_itself}},
-  {"Default C64", NULL, {"Special Agent/Strike Force Cobra", recognize_hc}},
-  {NULL,NULL}
+  {"Audiogenic",{"Audiogenic",  NULL, recognize_itself}},
+  {"Special Agent/Strike Force Cobra", {"Special Agent/Strike Force Cobra", NULL, recognize_itself}},
+  {"Default C64", {"Special Agent/Strike Force Cobra", NULL, recognize_hc}},
+  {NULL,{NULL,NULL,NULL}}
 };
 
 static const struct wav2prg_loaders audiogenic[] =

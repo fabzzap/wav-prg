@@ -69,8 +69,8 @@ static enum wav2prg_bool keep_doing_samuraitrilogy(struct wav2prg_observer_conte
 }
 
 static const struct wav2prg_observers samuraitrilogy_observed_loaders[] = {
-  {"Samurai Trilogy", NULL, {"Samurai Trilogy", keep_doing_samuraitrilogy}},
-  {NULL, NULL, {NULL, NULL}}
+  {"Samurai Trilogy", {"Samurai Trilogy", NULL, keep_doing_samuraitrilogy}},
+  {NULL, {NULL, NULL, NULL}}
 };
 
 static enum wav2prg_bool samuraitrilogy_get_loaded_checksum(struct wav2prg_context *context, const struct wav2prg_functions *functions, struct wav2prg_plugin_conf *conf, uint8_t *byte)

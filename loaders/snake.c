@@ -169,9 +169,9 @@ static enum wav2prg_bool recognize_snake_swiv(struct wav2prg_observer_context *o
 }
 
 static const struct wav2prg_observers snake_observed_loaders[] = {
-  {"Kernal data chunk", NULL, {"Snake", recognize_snake_swiv}},
-  {"Kernal data chunk", NULL, {"Snake", snake_unencrypted}},
-  {"Kernal data chunk", NULL, {"Snake", snake_encrypted}},
+  {"Kernal data chunk", {"Snake", NULL, recognize_snake_swiv}},
+  {"Kernal data chunk", {"Snake", NULL, snake_unencrypted}},
+  {"Kernal data chunk", {"Snake", NULL, snake_encrypted}},
   {NULL, NULL, NULL}
 };
 

@@ -5,7 +5,7 @@
 #include <string.h>
 
 static struct wav2prg_observed {
-  char *name;
+  const char *name;
   struct obs_list *observers;
 } *observed_list = NULL;
 
@@ -25,19 +25,18 @@ static struct obs_list** get_list_of_observers_maybe_adding_observed(const char 
     observed_list = realloc(observed_list, sizeof(observed_list[0]) * (2 + number_of_observed));
     observed_list[number_of_observed + 1].name = NULL;
     observed_list[number_of_observed + 1].observers = NULL;
-    observed_list[number_of_observed].name = strdup(observed_name);
+    observed_list[number_of_observed].name = observed_name;
     observed_list[number_of_observed].observers = NULL;
     return &observed_list[number_of_observed].observers;
   }
   return NULL;
 }
 
-void add_observed(const char *observed_name, const struct wav2prg_observer_loaders *observer, void *module, const char* observation_description){
+void add_observed(const char *observed_name, const struct wav2prg_observer_loaders *observer, void *module){
   struct obs_list **list = get_list_of_observers_maybe_adding_observed(observed_name, wav2prg_true);
   struct obs_list *new_element = malloc(sizeof(struct obs_list));
 
   new_element->observer = observer;
-  new_element->observation_description = observation_description;
   new_element->module = module;
   /* recognition of Kernal loaders is added at end,
      recognition of anything else is added at beginning */
@@ -89,7 +88,6 @@ void unregister_from_module_same_observed(void *module)
     unregister_observers_from_module(module, &observed_list[i].observers);
 
     if(observed_list[i].observers == NULL){
-      free(observed_list[i].name);
       memmove(observed_list + i, observed_list + i + 1, sizeof(observed_list[i]) * (number_of_observed - i));
       number_of_observed--;
     }

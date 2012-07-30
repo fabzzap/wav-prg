@@ -66,8 +66,8 @@ static enum wav2prg_bool recognize_turrican(struct wav2prg_observer_context *obs
 }
 
 static const struct wav2prg_observers turbotape_observed_loaders[] = {
-  {"Kernal data chunk", "Turrican", {"Turbo Tape 64", recognize_turrican}},
-  {NULL, NULL, {NULL, NULL}}
+  {"Kernal data chunk", {"Turbo Tape 64", "Turrican", recognize_turrican}},
+  {NULL, {NULL, NULL, NULL}}
 };
 
 const struct wav2prg_loaders turbotape_one_loader[] =

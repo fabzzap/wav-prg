@@ -167,8 +167,8 @@ static enum wav2prg_bool keep_doing_rackit(struct wav2prg_observer_context *obse
 
 static const struct wav2prg_observers rackit_observed_loaders[] = 
 {
-  {"Kernal data chunk", NULL, {"Rack-It", is_rackit}},
-  {"Rack-It"          , NULL, {"Rack-It", keep_doing_rackit}},
+  {"Kernal data chunk", {"Rack-It", NULL, is_rackit}},
+  {"Rack-It"          , {"Rack-It", NULL, keep_doing_rackit}},
   {NULL,NULL}
 };
 

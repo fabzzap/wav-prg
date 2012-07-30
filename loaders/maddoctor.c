@@ -113,8 +113,8 @@ static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_observer_contex
 }
 
 static const struct wav2prg_observers maddoctor_observed_loaders[] = {
-  {"Default C64", NULL, {"Mad Doctor", recognize_maddoctor_hc}},
-  {"Mad Doctor" , NULL, {"Mad Doctor", recognize_maddoctor_self}},
+  {"Default C64", {"Mad Doctor", NULL, recognize_maddoctor_hc}},
+  {"Mad Doctor" , {"Mad Doctor", NULL, recognize_maddoctor_self}},
   {NULL,NULL}
 };
 

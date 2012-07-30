@@ -122,10 +122,10 @@ static enum wav2prg_bool recognize_freeload_16(struct wav2prg_observer_context *
 }
 
 static const struct wav2prg_observers freeload_observers[] = {
-  {"Default C64", "fast", {"Freeload", recognize_fast_freeload}},
-  {"Default C64", "Turbo Tape 64-like sync", {"Freeload", recognize_freeload_with_turbotape_sync}},
-  {"Default C16", "C16", {"Freeload", recognize_freeload_16}},
-  {NULL, NULL, {NULL, NULL}}
+  {"Default C64", {"Freeload", "fast", recognize_fast_freeload}},
+  {"Default C64", {"Freeload", "Turbo Tape 64-like sync", recognize_freeload_with_turbotape_sync}},
+  {"Default C16", {"Freeload", "C16", recognize_freeload_16}},
+  {NULL, {NULL, NULL, NULL}}
 };
 
 static const struct wav2prg_loaders freeload_functions[] = {

@@ -173,9 +173,9 @@ static enum wav2prg_bool recognize_crl_self(struct wav2prg_observer_context *obs
 }
 
 static const struct wav2prg_observers crl_observed_loaders[] = {
-  {"Default C64", "first", {"CRL", recognize_crl_hc}},
-  {"CRL"        , NULL   , {"CRL", recognize_crl_self}},
-  {NULL         , NULL   , {NULL, NULL}}
+  {"Default C64", {"CRL", "first", recognize_crl_hc}},
+  {"CRL"        , {"CRL", NULL   , recognize_crl_self}},
+  {NULL         , {NULL , NULL   , NULL}}
 };
 
 static enum wav2prg_bool crl_get_block(struct wav2prg_context *context, const struct wav2prg_functions *functions, struct wav2prg_plugin_conf *conf, struct wav2prg_raw_block *block, uint16_t size)

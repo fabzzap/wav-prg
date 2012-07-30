@@ -55,8 +55,8 @@ static enum wav2prg_bool recognize_snakeload(struct wav2prg_observer_context *ob
 }
 
 static const struct wav2prg_observers snakeload_observed_loaders[] = {
-  {"Kernal data chunk", NULL, {"Snakeload", recognize_snakeload}},
-  {NULL, NULL, {NULL,NULL}}
+  {"Kernal data chunk", {"Snakeload", NULL, recognize_snakeload}},
+  {NULL, {NULL,NULL, NULL}}
 };
 
 static const struct wav2prg_loaders snakeload_functions[] = {
