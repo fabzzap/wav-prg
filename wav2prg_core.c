@@ -348,7 +348,6 @@ static enum wav2prg_checksum_state check_checksum_func(struct wav2prg_context* c
   if (context->get_loaded_checksum_func(context, functions, conf, &loaded_checksum) == wav2prg_false)
     return wav2prg_checksum_state_unverified;
 
-  end_pos = context->input->get_pos(context->input_object);
   res = computed_checksum == loaded_checksum ? wav2prg_checksum_state_correct : wav2prg_checksum_state_load_error;
   for(i = 0,mask=0; i < 4 && i < conf->num_extended_checksum_bytes; i++, mask+=8){
     uint8_t extended_loaded_checksum, extended_computed_checksum = (context->extended_checksum >> mask);
@@ -361,6 +360,7 @@ static enum wav2prg_checksum_state check_checksum_func(struct wav2prg_context* c
       break;
     }
   }
+  end_pos = context->input->get_pos(context->input_object);
   context->display_interface->checksum(context->display_interface_internal, res, start_pos, end_pos, loaded_checksum, computed_checksum);
   return res;
 }

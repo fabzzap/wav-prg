@@ -35,7 +35,7 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
     printf("name %s start %u end %u\n", info->name, info->start, info->end);
   }
   else
-    printf("got a pilot tone at %u but no block followed\n", info_pos);
+    printf("got a pilot tone but an error at %u occurred when checking block\n", info_pos);
 }
 
 static void progress(struct display_interface_internal *internal, uint32_t pos)
