@@ -286,7 +286,7 @@ int main(int argc, char** argv)
     },
     {
       increment_names,
-      "Maxumum allowed increment of pulse length range",
+      "Maximum allowed increment of pulse length range",
       set_distance_from_current_edge,
       NULL,
       wav2prg_false,
