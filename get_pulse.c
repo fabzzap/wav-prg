@@ -105,7 +105,7 @@ struct tolerances* get_tolerances(uint8_t num_pulse_lengths, const uint16_t *thr
         (uint16_t)(thresholds[i - 1] *  .08 + thresholds[i] * .92);
     }
     tolerances[num_pulse_lengths - 1].range.min = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.04);
-    tolerances[num_pulse_lengths - 1].range.max = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.56);
+    tolerances[num_pulse_lengths - 1].range.max = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.58);
   }
 
  return tolerances;
