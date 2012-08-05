@@ -276,6 +276,32 @@ static enum wav2prg_bool recognize_catalypse(struct wav2prg_observer_context *ob
   return wav2prg_false;
 }
 
+static enum wav2prg_bool recognize_ode(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct wav2prg_block *block,
+                                             uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
+
+  if (block->info.start == 0x33c
+   && block->info.end == 0x3fc
+   && block->data[0] == 0x03
+   && block->data[1] == 0xab
+   && block->data[2] == 0x02
+   && block->data[3] == 0x04
+   && block->data[4] == 0x03
+   && block->data[0x368 - 0x33c] == 0xc9
+   && block->data[0x37c - 0x33c] == 0xc9
+   && block->data[0x369 - 0x33c] == block->data[0x37d - 0x33c]
+   && block->data[0x380 - 0x33c] == 0xc9
+  ){
+    conf->thresholds[0] = 0x1b0;
+    conf->pilot_byte = block->data[0x369 - 0x33c];
+    conf->sync_sequence[0] = block->data[0x381 - 0x33c];
+    return wav2prg_true;
+  }
+  return wav2prg_false;
+}
+
 static const struct wav2prg_observers freeload_observers[] = {
   {"Default C64", {"Freeload", "fast", recognize_fast_freeload}},
   {"Default C64", {"Freeload", "Turbo Tape 64-like sync", recognize_freeload_with_turbotape_sync}},
@@ -283,6 +309,7 @@ static const struct wav2prg_observers freeload_observers[] = {
   {"Default C64", {"Freeload", "Firebird", recognize_firebird}},
   {"Default C64", {"Freeload", "Algasoft/Magnifici 7", recognize_algasoft}},
   {"Null loader", {"Freeload", "Catalypse", recognize_catalypse}},
+  {"Default C64", {"Freeload", "odeLOAD", recognize_ode}},
   {NULL, {NULL, NULL, NULL}}
 };
 
