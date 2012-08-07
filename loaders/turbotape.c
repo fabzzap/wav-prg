@@ -54,7 +54,7 @@ static enum wav2prg_bool recognize_turrican(struct wav2prg_observer_context *obs
         int j, sbyte;
         struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
-        change_sync_sequence_length_func(conf, new_sync_len);
+        observer_functions->change_sync_sequence_length_func(conf, new_sync_len);
         for(j = 0, sbyte = new_sync_len; j < new_sync_len; j++, sbyte--)
           conf->sync_sequence[j] = sbyte;
         
