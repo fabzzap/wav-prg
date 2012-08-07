@@ -135,14 +135,15 @@ struct display_interface_internal
   HWND window;
   uint8_t loaded_checksum, computed_checksum;
   uint16_t start, end;
-  char* loader_name;
+  const char* loader_name;
+  const char* observation_name;
   HTREEITEM current_item;
 };
 
-static void try_sync(struct display_interface_internal* internal, const char* loader_name)
+static void try_sync(struct display_interface_internal* internal, const char* loader_name, const char* observation_name)
 {
-  free(internal->loader_name);
-  internal->loader_name = strdup(loader_name);
+  internal->loader_name = loader_name;
+  internal->observation_name = observation_name;
 }
 
 static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct wav2prg_block_info* info/*, const struct wav2prg_observed_loaders* dependencies*/)
@@ -163,7 +164,10 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
      return;
   }
 
-  _snprintf(text, sizeof(text), "Found a block using %s", internal->loader_name);
+  if (internal->observation_name)
+    _snprintf(text, sizeof(text), "Found a block using %s (%s)", internal->loader_name, internal->observation_name);
+  else
+    _snprintf(text, sizeof(text), "Found a block using %s", internal->loader_name);
   internal->current_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   _snprintf(text, sizeof(text), "Boundaries");
   is.hParent = internal->current_item;
