@@ -20,7 +20,7 @@ static uint8_t usgoldlast_pilot_sequence[]={0xFF};
 
 static const struct wav2prg_loaders usgoldlast_functions[] = {
   {
-    "usgoldlast",
+    "US Gold filename last",
     {
       NULL,
       NULL,
