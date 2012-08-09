@@ -153,7 +153,7 @@ register_dynamic_loader(const char *filename)
 #ifdef WIN32
   handle = LoadLibraryA(plugin_to_load);
 #else
-  handle = dlopen(plugin_to_load, RTLD_LAZY);
+  handle = dlopen(plugin_to_load, RTLD_NOW);
 #endif
   free(plugin_to_load);
   if (handle == 0)
