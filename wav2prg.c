@@ -328,7 +328,11 @@ int main(int argc, char** argv)
   audiotap_initialize2();
 
   open_status = audio2tap_open_from_file3((struct audiotap**)&input_object.object, argv[1], &tparams, &machine, &videotype, &halfwaves);
-  if(open_status != AUDIOTAP_OK){
+  if(open_status == AUDIOTAP_LIBRARY_UNAVAILABLE){
+    printf("In order to open WAV files, you need libaudiofile and libtapencoder\n");
+    return 2;
+  }
+  else if(open_status != AUDIOTAP_OK){
     printf("File %s not found\n",argv[1]);
     return 2;
   }
@@ -349,9 +353,12 @@ int main(int argc, char** argv)
     case dump_to_tap:
       {
         struct audiotap *file_to_clean;
-        open_status = audio2tap_open_from_file3(&file_to_clean, argv[1], &tparams, &machine, &videotype, &halfwaves);
+        enum wav2prg_bool requested_use_halfwaves = machine == TAP_MACHINE_C16;
+        uint8_t actual_use_halfwaves = requested_use_halfwaves ? 1 : 0;
+
+        open_status = audio2tap_open_from_file3(&file_to_clean, argv[1], &tparams, &machine, &videotype, &actual_use_halfwaves);
         if(open_status == AUDIOTAP_OK){
-          write_cleaned_tap(blocks, file_to_clean, halfwaves != 0, current_dump->name, &text_based_display, NULL);
+          write_cleaned_tap(blocks, file_to_clean, requested_use_halfwaves && actual_use_halfwaves, current_dump->name, machine, videotype, &text_based_display, NULL);
           audio2tap_close(file_to_clean);
         }
       }
