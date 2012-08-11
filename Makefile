@@ -73,8 +73,19 @@ endif
 LDLIBS=-laudiotap
 ifdef AUDIOTAP_LIB
   LDLIBS+=-L$(AUDIOTAP_LIB)
-  ifdef USE_RPATH
-    LDLIBS+=-Wl,-rpath=$(AUDIOTAP_LIB)
+endif
+
+ifdef USE_RPATH
+  ifneq ($(AUDIOTAP_LIB),)
+    WAV2PRG_RPATH=$(AUDIOTAP_LIB)
+    ifneq ($(TAPENCODER_LIB),)
+      WAV2PRG_RPATH := $(WAV2PRG_RPATH):$(TAPENCODER_LIB)
+    endif
+  else
+    WAV2PRG_RPATH=$(TAPENCODER_LIB)
+  endif
+  ifneq ($(WAV2PRG_RPATH),)
+    LDLIBS+=-Wl,-rpath=$(WAV2PRG_RPATH)
   endif
 endif
 
