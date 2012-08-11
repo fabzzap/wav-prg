@@ -84,7 +84,14 @@ static enum wav2prg_bool get_pulse_for_clean_tap(struct audiotap *audiotap, stru
   return wav2prg_true;
 }
 
-void write_cleaned_tap(struct block_list_element* blocks, struct audiotap *input_handle, enum wav2prg_bool need_v2, const char* filename, struct display_interface *display_interface, struct display_interface_internal *display_interface_internal){
+void write_cleaned_tap(struct block_list_element* blocks,
+                       struct audiotap *input_handle,
+                       enum wav2prg_bool need_v2,
+                       const char* filename,
+                       uint8_t machine,
+                       uint8_t videotype,
+                       struct display_interface *display_interface,
+                       struct display_interface_internal *display_interface_internal){
   struct block_list_element* current_block;
   uint32_t sync = 0;
   const struct tolerances *tolerance = NULL;
@@ -103,7 +110,7 @@ void write_cleaned_tap(struct block_list_element* blocks, struct audiotap *input
     min_length_non_noise_pulse /= 2;
     max_length_non_pause_pulse /= 2;
   }
-  if (tap2audio_open_to_tapfile2(&output_handle, filename, need_v2 ? 2 : 1, 0, 0) != AUDIOTAP_OK)
+  if (tap2audio_open_to_tapfile2(&output_handle, filename, need_v2 ? 2 : 1, machine, videotype) != AUDIOTAP_OK)
     return;
 
   while(!audio2tap_is_eof(input_handle)){

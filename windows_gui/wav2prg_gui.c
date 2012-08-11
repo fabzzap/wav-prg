@@ -47,7 +47,7 @@ struct thread_params {
   HWND window;
   struct audiotap *clean_file;
   BOOL t64_checked, tap_checked, prg_checked;
-  uint8_t machine, videotype, halfwaves;
+  uint8_t machine, videotype;
   struct tapenc_params *tapenc_params;
 };
 
@@ -358,9 +358,17 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
       file.lpstrDefExt = "tap";
       file.lCustData = (LPARAM) t64_name;
       if (GetSaveFileNameA(&file) == TRUE){
-        if (audio2tap_open_from_file3(&p->clean_file,p->input_file,p->tapenc_params,&p->machine, &p->videotype,&p->halfwaves)==AUDIOTAP_OK){
+        enum wav2prg_bool requested_use_halfwaves = p->machine == TAP_MACHINE_C16 ? 1 : 0;
+        enum wav2prg_bool actual_use_halfwaves = requested_use_halfwaves;
+        if (audio2tap_open_from_file3(&p->clean_file,p->input_file,p->tapenc_params,&p->machine, &p->videotype,&actual_use_halfwaves)==AUDIOTAP_OK){
           SetDlgItemTextA(p->window, IDC_FILE_TEXT, "Cleaning progress indicator");
-          write_cleaned_tap(blocks, p->clean_file, p->halfwaves, output_filename, &windows_display, &internal);
+          write_cleaned_tap(blocks,
+                            p->clean_file,
+                            requested_use_halfwaves && actual_use_halfwaves,
+                            output_filename,
+                            p->machine,
+                            p->videotype,
+                            &windows_display, &internal);
           audio2tap_close(p->clean_file);
           p->clean_file = NULL;
         }
@@ -573,7 +581,6 @@ static void start_converting(HWND hwnd){
   tparams.prg_checked = IsDlgButtonChecked(hwnd, IDC_MAKE_PRG) == BST_CHECKED;
   tparams.machine = machine;
   tparams.videotype = videotype;
-  tparams.halfwaves = semiwaves;
   tparams.tapenc_params = &tapenc_params;
 
   DialogBoxParam(instance, MAKEINTRESOURCE(IDD_STATUS), hwnd, status_proc,
