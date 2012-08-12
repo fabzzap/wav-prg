@@ -143,8 +143,8 @@ struct wav2prg_observer_loaders {
 
 struct wav2prg_context;
 
-#define WAVPRG_LOADER_API {'W','L','4','0'}
-#define WAVPRG_OBSERVER_API {'W','O','4','0'}
+#define WAVPRG_LOADER_API {'B','L','4','0'}
+#define WAVPRG_OBSERVER_API {'B','O','4','0'}
 
 struct wav2prg_all_loaders {
   char api_version[4];
