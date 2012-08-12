@@ -203,6 +203,34 @@ static enum wav2prg_bool set_true(const char *arg, void *options)
   return wav2prg_true;
 }
 
+static enum wav2prg_bool set_uint8(const char *arg, void *options)
+{
+  *(uint8_t*)options = atoi(arg);
+  return wav2prg_true;
+}
+
+static enum wav2prg_bool set_uint8_to_1(const char *arg, void *options)
+{
+  *(uint8_t*)options = 1;
+  return wav2prg_true;
+}
+
+static enum wav2prg_bool set_machine(const char *arg, void *options)
+{
+  uint8_t* machine = (uint8_t*)options;
+  if(!strcmp(arg,"c64"))
+    *machine = TAP_MACHINE_C64;
+  else if(!strcmp(arg,"vic"))
+    *machine = TAP_MACHINE_VIC;
+  else if(!strcmp(arg,"c16"))
+    *machine = TAP_MACHINE_C16;
+  else {
+    printf("Unknown machine %s\n", arg);
+    return wav2prg_false;
+  }
+  return wav2prg_true;
+}
+
 int main(int argc, char** argv)
 {
   struct wav2prg_selected_loader selected_loader = {NULL, NULL};
@@ -224,6 +252,10 @@ int main(int argc, char** argv)
   const char *increment_names[]={"max-increment", NULL};
   const char *max_distance_names[]={"max-dist", "max-distance", "max-distance-from-avg", NULL};
   const char *loaders_dir_names[]={"P", "plugin-dir", "loaders-dir", NULL};
+  const char *sensitivity_names[]={"sensi", "sensitivity", NULL};
+  const char *inverted_names[]={"inv", "inverted", NULL};
+  const char *machine_names[]={"machine", NULL};
+  const char *ntsc_names[]={"ntsc", NULL};
   struct dump_argument tap_dump = {dump_to_tap, &dump};
   struct dump_argument prg_dump = {dump_to_prg, &dump};
   struct dump_argument t64_dump = {dump_to_t64, &dump};
@@ -307,6 +339,38 @@ int main(int argc, char** argv)
       NULL,
       wav2prg_false,
       option_must_have_argument
+    },
+    {
+      sensitivity_names,
+      "Sensitivity (when using audio files)",
+      set_uint8,
+      &tparams.sensitivity,
+      wav2prg_false,
+      option_must_have_argument
+    },
+    {
+      inverted_names,
+      "Audio file has inverted waveform (when using audio files)",
+      set_uint8_to_1,
+      &tparams.inverted,
+      wav2prg_false,
+      option_no_argument
+    },
+    {
+      machine_names,
+      "Machine for which the tape is intended (when using audio files): c64, vic, c16 (default c64)",
+      set_machine,
+      &machine,
+      wav2prg_false,
+      option_must_have_argument
+    },
+    {
+      ntsc_names,
+      "Tape is intended for NTSC (when using audio files)",
+      set_uint8_to_1,
+      &videotype,
+      wav2prg_false,
+      option_no_argument
     },
     {NULL}
   };
