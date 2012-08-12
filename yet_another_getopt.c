@@ -260,6 +260,8 @@ enum wav2prg_bool yet_another_getopt(const struct get_option *options, uint32_t 
   *argc = num_arg_non_options;
   free(arg_non_options);
   
+  free(last_matched_option);
+
   return ok_so_far;
 }
 
