@@ -11,6 +11,17 @@
 #define MIN_LENGTH_NON_NOISE_PULSE_DEFAULT 176
 #define MAX_LENGTH_NON_PAUSE_PULSE_DEFAULT 2160
 
+/* Used when cleaning v2 taps, null otherwise.
+   Pairs of pulses are loaded from the input file
+   and stored in pulse1 and pulse2.
+   When the pair of pulses cannot be cleaned, for example
+   when a new block starts at pulse2, or when pulse1 is
+   the first uncleanable block after a series of cleanable
+   ones, dirty is set to true and only pulse1 is written
+   in the output file. Then, pulse2 is transferred to
+   pulse1 (in refresh_v2) and half_filled is set to true.
+   When half_filled is true, only pulse2 is loaded from
+   the input file */
 struct v2_abstraction {
   uint32_t pulse1, pulse2;
   uint32_t pos_of_pulse2;
@@ -18,24 +29,12 @@ struct v2_abstraction {
   enum wav2prg_bool half_filled;
 };
 
-static void write_output_pulse(struct audiotap *output_handle, uint32_t pulse, struct v2_abstraction *abs) {
-  if (!abs || abs->dirty)
-    tap2audio_set_pulse(output_handle, pulse);
-  else{
+static void write_output_pulse(struct audiotap *output_handle, uint32_t pulse, enum wav2prg_bool split_in_two_halfwaves) {
+  if (split_in_two_halfwaves){
     pulse /= 2;
     tap2audio_set_pulse(output_handle, pulse);
-    tap2audio_set_pulse(output_handle, pulse);
   }
-}
-
-static void write_output_accumulated_pulse(struct audiotap *output_handle, uint32_t pulse, uint32_t npulses, enum wav2prg_bool need_v2) {
-  if (!need_v2 || (npulses % 2) == 1)
-    tap2audio_set_pulse(output_handle, pulse);
-  else{
-    pulse /= 2;
-    tap2audio_set_pulse(output_handle, pulse);
-    tap2audio_set_pulse(output_handle, pulse);
-  }
+  tap2audio_set_pulse(output_handle, pulse);
 }
 
 static uint32_t get_pos_for_clean_tap(struct audiotap *object, struct v2_abstraction *abs)
@@ -117,13 +116,11 @@ void write_cleaned_tap(struct block_list_element* blocks,
     int32_t pos = get_pos_for_clean_tap(input_handle, abs);
     uint32_t raw_pulse;
     enum wav2prg_bool accumulate_this_pulse;
+    uint32_t new_display_progress = pos / 8192;
 
-    {
-      uint32_t new_display_progress = pos / 8192;
-      if (new_display_progress != display_progress){
-        display_progress = new_display_progress;
-        display_interface->progress(display_interface_internal, pos);
-      }
+    if (new_display_progress != display_progress){
+      display_progress = new_display_progress;
+      display_interface->progress(display_interface_internal, pos);
     }
     while(current_block != NULL){
       if (sync >= current_block->num_of_syncs){
@@ -140,8 +137,8 @@ void write_cleaned_tap(struct block_list_element* blocks,
     && current_block != NULL
     && pos >= current_block->syncs[sync].start_sync){
       tolerance = get_existing_tolerances(current_block->num_pulse_lengths, current_block->thresholds);
-	  num_pulse_lengths = current_block->num_pulse_lengths;
-	  deviations = current_block->pulse_length_deviations;
+      num_pulse_lengths = current_block->num_pulse_lengths;
+      deviations = current_block->pulse_length_deviations;
       if (need_v2)
         abs = refresh_v2(abs);
       need_new_tolerances = wav2prg_false;
@@ -183,15 +180,15 @@ void write_cleaned_tap(struct block_list_element* blocks,
     }
     if (!accumulate_this_pulse){
       if (accumulated_pulses){
-        write_output_accumulated_pulse(output_handle, accumulated_pulses, num_accumulated_pulses, need_v2);
+        write_output_pulse(output_handle, accumulated_pulses, need_v2 && (num_accumulated_pulses % 2) == 0);
         accumulated_pulses = 0;
         num_accumulated_pulses = 0;
       }
-      write_output_pulse(output_handle, raw_pulse, abs);
+      write_output_pulse(output_handle, raw_pulse, abs && !abs->dirty);
     }
   }
   if (accumulated_pulses)
-    write_output_accumulated_pulse(output_handle, accumulated_pulses, num_accumulated_pulses, need_v2);
+    write_output_pulse(output_handle, accumulated_pulses, need_v2 && (num_accumulated_pulses % 2) == 0);
   tap2audio_close(output_handle);
 }
 
