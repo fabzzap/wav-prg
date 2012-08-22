@@ -667,6 +667,8 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
         if (succeeded) {
           wav2prg_set_plugin_dir(dir_name);
           new_dir_name = wav2prg_get_plugin_dir();
+          cleanup_loaders_and_observers();
+          register_loaders();
           if (new_dir_name == NULL)
             new_dir_name = "";
           else
