@@ -46,7 +46,7 @@ struct thread_params {
   const char *input_file;
   HWND window;
   struct audiotap *clean_file;
-  BOOL t64_checked, tap_checked, prg_checked;
+  enum{nothing_checked,t64_checked, tap_checked, prg_checked, p00_checked} destination;
   uint8_t machine, videotype;
   struct tapenc_params *tapenc_params;
 };
@@ -342,7 +342,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
     char output_filename[1024];
     char t64_name[25];
 
-    if (p->tap_checked && p->input_file && *p->input_file) {
+    if (p->destination == tap_checked && p->input_file && *p->input_file) {
       memset(&file, 0, sizeof(file));
  	    file.lStructSize = sizeof(file);
       file.hwndOwner = p->window;
@@ -358,8 +358,8 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
       file.lpstrDefExt = "tap";
       file.lCustData = (LPARAM) t64_name;
       if (GetSaveFileNameA(&file) == TRUE){
-        enum wav2prg_bool requested_use_halfwaves = p->machine == TAP_MACHINE_C16 ? 1 : 0;
-        enum wav2prg_bool actual_use_halfwaves = requested_use_halfwaves;
+        enum wav2prg_bool requested_use_halfwaves = p->machine == TAP_MACHINE_C16;
+        uint8_t actual_use_halfwaves = requested_use_halfwaves ? 1 : 0;
         if (audio2tap_open_from_file3(&p->clean_file,p->input_file,p->tapenc_params,&p->machine, &p->videotype,&actual_use_halfwaves)==AUDIOTAP_OK){
           SetDlgItemTextA(p->window, IDC_FILE_TEXT, "Cleaning progress indicator");
           write_cleaned_tap(blocks,
@@ -374,7 +374,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
         }
       }
     }
-    if (p->t64_checked) {
+    if (p->destination == t64_checked) {
       memset(&file, 0, sizeof(file));
  	    file.lStructSize = sizeof(file);
       file.hwndOwner = p->window;
@@ -576,9 +576,12 @@ static void start_converting(HWND hwnd){
   tparams.file.object = origin_file;
   tparams.input_file = input_filename;
   tparams.clean_file = NULL;
-  tparams.tap_checked = IsDlgButtonChecked(hwnd, IDC_CLEAN_TAP) == BST_CHECKED;
-  tparams.t64_checked = IsDlgButtonChecked(hwnd, IDC_MAKE_T64) == BST_CHECKED;
-  tparams.prg_checked = IsDlgButtonChecked(hwnd, IDC_MAKE_PRG) == BST_CHECKED;
+  tparams.destination =
+    IsDlgButtonChecked(hwnd, IDC_TO_TAP) == BST_CHECKED ? tap_checked :
+    IsDlgButtonChecked(hwnd, IDC_TO_T64) == BST_CHECKED ? t64_checked :
+    IsDlgButtonChecked(hwnd, IDC_TO_PRG) == BST_CHECKED ? prg_checked :
+    IsDlgButtonChecked(hwnd, IDC_TO_P00) == BST_CHECKED ? p00_checked :
+    nothing_checked;
   tparams.machine = machine;
   tparams.videotype = videotype;
   tparams.tapenc_params = &tapenc_params;
@@ -607,7 +610,7 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
     {
       const char *plugin_dir = wav2prg_get_plugin_dir();
       CheckRadioButton(hwndDlg, IDC_FROM_FILE, IDC_FROM_SOUND, IDC_FROM_FILE);
-      CheckRadioButton(hwndDlg, IDC_TO_PRG, IDC_DO_NOT_SAVE, IDC_DO_NOT_SAVE);
+      CheckRadioButton(hwndDlg, IDC_TO_PRG, IDC_TO_TAP, IDC_DO_NOT_SAVE);
       if (audiotap_startup_status.portaudio_init_status != LIBRARY_OK
        || audiotap_startup_status.tapencoder_init_status != LIBRARY_OK)
         EnableWindow(GetDlgItem(hwndDlg, IDC_FROM_SOUND), FALSE);
@@ -733,11 +736,20 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
       break;
     case IDC_TO_PRG:
     case IDC_TO_P00:
-      EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR       ), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_CHANGE_CONVERSION_DIR), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_BROKEN               ), TRUE);
       return TRUE;
-    case IDC_TO_T64:
     case IDC_DO_NOT_SAVE:
-      EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR), FALSE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_BROKEN               ), FALSE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR       ), FALSE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_CHANGE_CONVERSION_DIR), FALSE);
+      break;
+    case IDC_TO_T64:
+    case IDC_TO_TAP:
+      EnableWindow(GetDlgItem(hwndDlg, IDC_BROKEN               ), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR       ), FALSE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_CHANGE_CONVERSION_DIR), FALSE);
       return TRUE;
     case IDC_FROM_SOUND:
       EnableWindow(GetDlgItem(hwndDlg, IDC_FREQ), TRUE);

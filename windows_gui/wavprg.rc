@@ -1,6 +1,7 @@
 #include "resource.h"
 #include <windows.h>
 
+
 IDD_STATUS DIALOG DISCARDABLE  0, 0, 185, 183
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Conversion status"
@@ -13,7 +14,7 @@ BEGIN
                     WS_BORDER,7,143,171,14
     LTEXT           "Static",IDC_FILE_TEXT,7,94,171,8
     LTEXT           "This entry's progress",IDC_ENTRY_TEXT,7,126,171,8
-    CONTROL         "Tree2",IDC_FOUND,"SysTreeView32",TVS_HASBUTTONS | 
+    CONTROL         "Tree2",IDC_FOUND,"SysTreeView32",TVS_HASBUTTONS |
                     TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,
                     10,10,166,81
 END
@@ -33,40 +34,48 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,221,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,172,222,50,14
-    COMBOBOX        IDC_PLUGINS,12,26,210,150,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
-    EDITTEXT        IDC_CONVERSION_DIR,92,195,85,12,ES_AUTOHSCROLL | 
-                    ES_READONLY | WS_GROUP
-    CONTROL         "Include broken and incomplete files",IDC_BROKEN,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,155,151,13
-    CONTROL         "File",IDC_FROM_FILE,"Button",BS_AUTORADIOBUTTON | 
+    COMBOBOX        IDC_PLUGINS,61,7,114,150,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Change",IDC_CHANGE_PLUGIN_DIR,184,25,37,12
+    CONTROL         "File",IDC_FROM_FILE,"Button",BS_AUTORADIOBUTTON |
                     WS_GROUP | WS_TABSTOP,13,57,95,9
     CONTROL         "Sound card",IDC_FROM_SOUND,"Button",BS_AUTORADIOBUTTON,
-                    121,54,95,9
+                    121,57,95,9
     CONTROL         "Inverted waveform",IDC_INVERTED,"Button",
                     BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,13,88,75,11
-    EDITTEXT        IDC_MIN_HEIGHT,179,88,39,13,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_FREQ,179,104,39,13,ES_AUTOHSCROLL | ES_NUMBER | 
+    EDITTEXT        IDC_MIN_HEIGHT,182,88,37,13,ES_AUTOHSCROLL | ES_NUMBER |
+                    WS_GROUP
+    COMBOBOX        IDC_CLOCK,49,110,59,83,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_GROUP | WS_TABSTOP
+    EDITTEXT        IDC_FREQ,182,104,37,13,ES_AUTOHSCROLL | ES_NUMBER |
                     WS_DISABLED | WS_GROUP
-    COMBOBOX        IDC_CLOCK,49,110,59,83,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
-    LTEXT           "Use plug-in",IDC_STATIC,7,7,65,9
-    LTEXT           "In folder",IDC_STATIC,64,199,28,10
-    GROUPBOX        "Destination",IDC_STATIC,7,143,214,71
+    CONTROL         "Test only",IDC_DO_NOT_SAVE,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP | WS_TABSTOP,13,152,45,8
+    CONTROL         "Clean TAP",IDC_TO_TAP,"Button",BS_AUTORADIOBUTTON,13,
+                    163,50,8
+    CONTROL         "T64",IDC_TO_T64,"Button",BS_AUTORADIOBUTTON,13,174,29,8
+    CONTROL         "PRG",IDC_TO_PRG,"Button",BS_AUTORADIOBUTTON,13,185,31,8
+    CONTROL         "P00",IDC_TO_P00,"Button",BS_AUTORADIOBUTTON,13,196,29,8
+    CONTROL         "Include broken and incomplete files",IDC_BROKEN,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,93,
+                    153,124,10
+    PUSHBUTTON      "Change",IDC_CHANGE_CONVERSION_DIR,181,188,37,12,
+                    WS_DISABLED | WS_GROUP
+    EDITTEXT        IDC_CONVERSION_DIR,117,188,62,12,ES_AUTOHSCROLL |
+                    ES_READONLY | WS_DISABLED | WS_GROUP | NOT WS_TABSTOP
+    EDITTEXT        IDC_PLUGIN_DIR,61,25,114,12,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_TABSTOP
+    LTEXT           "Use loader",IDC_STATIC,7,7,50,9
+    LTEXT           "Plug-in directory",IDC_STATIC,7,26,50,9
     GROUPBOX        "Origin",IDC_STATIC,7,44,214,25
     GROUPBOX        "Advanced options (ignored if origin is a TAP file)",
-                    IDC_STATIC,7,74,215,63
+                    IDC_STATIC,7,74,214,63
+    LTEXT           "Sensitivity (0-100)",IDC_STATIC,111,88,57,15
     LTEXT           "Input frequency (Hz) (only if origin is sound card)",
                     IDC_STATIC,111,104,57,25
-    LTEXT           "Sensitivity (0-100)",IDC_STATIC,111,88,57,15
-    PUSHBUTTON      "Change",IDC_CHANGE_CONVERSION_DIR,181,195,37,12
     LTEXT           "Use clock",IDC_STATIC,13,110,36,10
-    CONTROL         "Create clean TAP",IDC_CLEAN_TAP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,11,171,72,10
-    CONTROL         "Create PRG",IDC_MAKE_PRG,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,9,198,54,10
-    CONTROL         "Create T64",IDC_MAKE_T64,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,10,183,51,10
+    GROUPBOX        "Destination",IDC_STATIC,7,143,214,71
+    LTEXT           "Folder for PRG/P00",IDC_STATIC,51,192,64,12
 END
 
 IDD_ABOUT DIALOGEX 0, 0, 155, 174
@@ -92,4 +101,3 @@ END
 
 
 IDI_ICON                ICON    DISCARDABLE     "wavprg.ico"
-

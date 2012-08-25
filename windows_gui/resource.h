@@ -1,4 +1,7 @@
-#define IDC_STATIC -1
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
+
 #define IDD_ABOUT                       101
 #define IDD_STATUS                      102
 #define IDD_T64_NAME                    103
@@ -19,17 +22,14 @@
 #define IDC_TO_P00                      1013
 #define IDC_TO_T64                      1014
 #define IDC_DO_NOT_SAVE                 1015
-#define IDC_INVERTED                    1016
-#define IDC_MIN_HEIGHT                  1017
-#define IDC_FREQ                        1018
-#define IDC_CLOCK                       1019
+#define IDC_TO_TAP                      1016
+#define IDC_INVERTED                    1017
+#define IDC_MIN_HEIGHT                  1018
+#define IDC_FREQ                        1019
+#define IDC_CLOCK                       1020
 #define IDC_CHANGE_PLUGIN_DIR           1021
-#define IDC_ADVANCED_PLUGIN             1022
 #define IDC_CHANGE_CONVERSION_DIR       1023
 #define IDC_TAPENCODER_STATUS           1024
 #define IDC_TAPDECODER_STATUS           1025
 #define IDC_PABLIO_STATUS               1026
 #define IDC_AUDIOFILE_STATUS            1027
-#define IDC_CLEAN_TAP                   1030
-#define IDC_MAKE_PRG                    1031
-#define IDC_MAKE_T64                    1032
