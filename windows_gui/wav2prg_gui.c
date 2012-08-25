@@ -55,6 +55,7 @@ static void list_plugins(HWND combobox){
   char **all_loaders = get_loaders();
   char **one_loader;
   LRESULT nlines;
+  WPARAM where_to_add_default_c16 = 0;
 
   while ((nlines = SendMessage(combobox, CB_GETCOUNT, 0, 0)) != CB_ERR && nlines > 0) {
     SendMessage(combobox, CB_DELETESTRING, 0, 0);
@@ -64,6 +65,13 @@ static void list_plugins(HWND combobox){
     const struct wav2prg_loaders *plugin_functions = get_loader_by_name(*one_loader);
 
     if(plugin_functions->functions.get_block_info != NULL) {
+      if(!strcmp(*one_loader, "Default C64")){
+        SendMessageA(combobox, CB_INSERTSTRING, 0, (LPARAM)*one_loader);
+        where_to_add_default_c16 = 1;
+      }
+      else if(!strcmp(*one_loader, "Default C16"))
+        SendMessageA(combobox, CB_INSERTSTRING, where_to_add_default_c16, (LPARAM)*one_loader);
+      else
         SendMessageA(combobox, CB_ADDSTRING, 0, (LPARAM)*one_loader);
     }
     free(*one_loader);
