@@ -16,7 +16,7 @@ struct tolerances* new_copy_tolerances(uint8_t num_pulse_lengths, const struct t
 
 uint16_t get_average(const struct tolerances*, uint8_t);
 
-enum wav2prg_bool set_distance_from_current_edge(const char* v, void *unused);
-enum wav2prg_bool set_distance_from_current_average(const char* v, void *unused);
+void set_pulse_retrieval_mode(uint32_t new_distance, enum wav2prg_bool use_distance_from_average);
+uint32_t get_pulse_retrieval_mode(enum wav2prg_bool *use_distance_from_average);
 
 void reset_tolerances(void);

@@ -132,7 +132,6 @@ void add_or_replace_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresh
 }
 
 #define MIN_NUM_PULSES_FOR_RELIABLE_STATISTICS 40
-#define MAX_DISTANCE 96
 
 static enum wav2prg_bool is_this_pulse_right_intolerant(uint32_t raw_pulse, const struct tolerance *tolerance)
 {
@@ -146,15 +145,16 @@ static enum {
 
 static uint32_t distance = 32;
 
-enum wav2prg_bool set_distance_from_current_edge(const char* v, void *unused){
-  distance = atoi(v);
-  return wav2prg_true;
+void set_pulse_retrieval_mode(uint32_t new_distance, enum wav2prg_bool use_distance_from_average)
+{
+  distance = new_distance;
+  mode = use_distance_from_average ? limited_distance_from_average : limited_increment;
 }
 
-enum wav2prg_bool set_distance_from_current_average(const char* v, void *unused){
-  mode = limited_distance_from_average;
-  distance = v ? atoi(v) : 96;
-  return wav2prg_true;
+uint32_t get_pulse_retrieval_mode(enum wav2prg_bool *use_distance_from_average)
+{
+  *use_distance_from_average = mode == limited_distance_from_average;
+  return distance;
 }
 
 static uint32_t min_allowed_value(struct tolerances *tolerance){

@@ -33,6 +33,7 @@
 #include "../create_t64.h"
 #include "../write_cleaned_tap.h"
 #include "../wav2prg_block_list.h"
+#include "../get_pulse.h"
 
 char conversion_dir[MAX_PATH];
 extern HINSTANCE instance;
@@ -608,6 +609,50 @@ static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPAR
   return 0;
 }
 
+static INT_PTR CALLBACK advanced_proc(HWND hwndDlg,      //handle to dialog box
+                                     UINT uMsg, //message
+                                     WPARAM wParam,     //first message parameter
+                                     LPARAM lParam      // second message parameter
+  ){
+  switch (uMsg) {
+  case WM_INITDIALOG:
+    {
+      enum wav2prg_bool use_distance_from_average;
+      uint32_t distance = get_pulse_retrieval_mode(&use_distance_from_average);
+      CheckRadioButton(hwndDlg, IDC_LIMITED_INCREMENT, IDC_LIMITED_DIST_FROM_AVG, 
+        use_distance_from_average ? IDC_LIMITED_DIST_FROM_AVG : IDC_LIMITED_INCREMENT);
+      SendMessage(GetDlgItem(hwndDlg, IDC_CHANGE_DISTANCE),
+            UDM_SETBUDDY,
+            (WPARAM)GetDlgItem(hwndDlg, IDC_DISTANCE),
+	          0);
+      SendMessage(GetDlgItem(hwndDlg, IDC_CHANGE_DISTANCE),
+            UDM_SETRANGE,
+            0,
+            MAKELPARAM(1,200));
+      SendMessage(GetDlgItem(hwndDlg, IDC_CHANGE_DISTANCE),
+            UDM_SETPOS,
+            0,
+            distance);
+    }
+    return TRUE;
+  case WM_COMMAND:
+	  switch(LOWORD(wParam)) {
+    case IDOK:
+      {
+        enum wav2prg_bool use_distance_from_average = IsDlgButtonChecked(hwndDlg, IDC_LIMITED_DIST_FROM_AVG);
+        uint32_t distance = GetDlgItemInt(hwndDlg, IDC_DISTANCE, NULL, FALSE);
+        set_pulse_retrieval_mode(distance, use_distance_from_average);
+      }
+      EndDialog(hwndDlg, 0);
+      return TRUE;
+    case IDCANCEL:
+      EndDialog(hwndDlg, 0);
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
                                      UINT uMsg, //message
                                      WPARAM wParam,     //first message parameter
@@ -764,6 +809,9 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
       return TRUE;
     case IDC_FROM_FILE:
       EnableWindow(GetDlgItem(hwndDlg, IDC_FREQ), FALSE);
+      return TRUE;
+    case IDC_ADVANCED_OPTIONS:
+      DialogBox(instance, MAKEINTRESOURCE(IDD_ADVANCED), hwndDlg, advanced_proc);
       return TRUE;
     case IDOK:
       start_converting(hwndDlg);

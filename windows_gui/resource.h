@@ -6,6 +6,7 @@
 #define IDD_STATUS                      102
 #define IDD_T64_NAME                    103
 #define IDD_WAV2PRG                     104
+#define IDD_ADVANCED                    108
 #define IDC_FILE_PROGRESS               1000
 #define IDC_ENTRY_PROGRESS              1001
 #define IDC_FILE_TEXT                   1002
@@ -28,8 +29,13 @@
 #define IDC_FREQ                        1019
 #define IDC_CLOCK                       1020
 #define IDC_CHANGE_PLUGIN_DIR           1021
+#define IDC_ADVANCED_OPTIONS            1022
 #define IDC_CHANGE_CONVERSION_DIR       1023
 #define IDC_TAPENCODER_STATUS           1024
 #define IDC_TAPDECODER_STATUS           1025
 #define IDC_PABLIO_STATUS               1026
 #define IDC_AUDIOFILE_STATUS            1027
+#define IDC_LIMITED_INCREMENT           1028
+#define IDC_LIMITED_DIST_FROM_AVG       1029
+#define IDC_DISTANCE                    1030
+#define IDC_CHANGE_DISTANCE             1033

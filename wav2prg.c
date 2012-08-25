@@ -231,6 +231,16 @@ static enum wav2prg_bool set_machine(const char *arg, void *options)
   return wav2prg_true;
 }
 
+static enum wav2prg_bool set_distance_from_current_edge(const char* v, void *unused){
+  set_pulse_retrieval_mode(atoi(v), wav2prg_false);
+  return wav2prg_true;
+}
+
+static enum wav2prg_bool set_distance_from_current_average(const char* v, void *unused){
+  set_pulse_retrieval_mode(v ? atoi(v) : 96, wav2prg_true);
+  return wav2prg_true;
+}
+
 int main(int argc, char** argv)
 {
   struct wav2prg_selected_loader selected_loader = {NULL, NULL};

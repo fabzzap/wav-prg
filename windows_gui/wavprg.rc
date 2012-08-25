@@ -1,6 +1,21 @@
 #include "resource.h"
 #include <windows.h>
+#include <commctrl.h>
 
+
+IDD_ADVANCED DIALOG 0, 0, 201, 95
+STYLE DS_MODALFRAME | DS_SETFONT | WS_CAPTION | WS_POPUP
+CAPTION "Advanced options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 7, 74, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 144, 74, 50, 14
+    AUTORADIOBUTTON "A pulse is accepted if its distance from the closest measured pulse is less or equal than the given distance", IDC_LIMITED_INCREMENT, 7, 7, 187, 21, BS_MULTILINE
+    AUTORADIOBUTTON "A pulse is accepted if its distance from the average is less or equal than the given distance", IDC_LIMITED_DIST_FROM_AVG, 7, 30, 187, 21, BS_MULTILINE
+    EDITTEXT        IDC_DISTANCE, 63, 54, 31, 13, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Given distance", IDC_STATIC, 7, 54, 50, 13, SS_LEFT
+    CONTROL         "Spin1", IDC_CHANGE_DISTANCE, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_SETBUDDYINT, 98, 54, 13, 13
+END
 
 IDD_STATUS DIALOG DISCARDABLE  0, 0, 185, 183
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
@@ -36,6 +51,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,172,222,50,14
     COMBOBOX        IDC_PLUGINS,61,7,114,150,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Advanced", IDC_ADVANCED_OPTIONS, 184, 7, 37, 12, WS_GROUP
     PUSHBUTTON      "Change",IDC_CHANGE_PLUGIN_DIR,184,25,37,12,
                     WS_GROUP
     CONTROL         "File",IDC_FROM_FILE,"Button",BS_AUTORADIOBUTTON |
