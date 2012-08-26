@@ -252,6 +252,7 @@ int main(int argc, char** argv)
   enum audiotap_status open_status;
   struct dump_element *dump = calloc(1, sizeof(struct dump_element)), *current_dump;
   enum wav2prg_bool show_list = wav2prg_false, show_list_dependent = wav2prg_false;
+  enum wav2prg_bool keep_broken = wav2prg_false;
   const char *o1names[]={"s", "single", "single-loader", NULL};
   const char *help_names[]={"h", "help", NULL};
   const char *option_tap_names[]={"t", "tap", NULL};
@@ -266,6 +267,7 @@ int main(int argc, char** argv)
   const char *inverted_names[]={"inv", "inverted", NULL};
   const char *machine_names[]={"machine", NULL};
   const char *ntsc_names[]={"ntsc", NULL};
+  const char *broken_names[]={"keep-broken", NULL};
   struct dump_argument tap_dump = {dump_to_tap, &dump};
   struct dump_argument prg_dump = {dump_to_prg, &dump};
   struct dump_argument t64_dump = {dump_to_t64, &dump};
@@ -382,6 +384,14 @@ int main(int argc, char** argv)
       wav2prg_false,
       option_no_argument
     },
+    {
+      broken_names,
+      "Also include broken and incomplete files in T64, PRG and P00",
+      set_true,
+      &keep_broken,
+      wav2prg_false,
+      option_no_argument
+    },
     {NULL}
   };
 
@@ -415,10 +425,12 @@ int main(int argc, char** argv)
     wav2prg_adaptively_tolerant,
     selected_loader.loader_name ? selected_loader.loader_name : "Default C64",
     NULL,
+    keep_broken,
     &input_object,
     &input_functions,
-    &text_based_display, NULL
-                          );
+    &text_based_display,
+    NULL
+    );
   audio2tap_close(input_object.object);
 
   for(current_dump = dump; current_dump->name != NULL; current_dump++)

@@ -40,8 +40,7 @@ extern HINSTANCE instance;
 extern struct audiotap_init_status audiotap_startup_status;
 
 struct thread_params {
-/*  filetype type;
-  int include_broken_files;*/
+  enum wav2prg_bool include_broken_files;
   char *loader_name;
   struct wav2prg_input_object file;
   const char *input_file;
@@ -342,6 +341,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
   blocks = wav2prg_analyse(wav2prg_adaptively_tolerant,
                     p->loader_name,
                     NULL,
+                    p->include_broken_files,
                     &p->file,
                     &input_functions,
                     &windows_display,
@@ -515,25 +515,14 @@ static enum wav2prg_bool try_open_file(struct audiotap **origin_file
 
 static void initialise_open(HWND hwnd
                            ,struct tapenc_params *tapenc_params
-                           ,char **loader_name
                            ,uint8_t *machine
                            ,uint8_t *videotype
                            ,uint8_t *halfwaves
                            ){
   BOOL success;
   LRESULT selected_clock;
-  LRESULT loader_name_len, selected_loader;
 
   *halfwaves = 0;
-  selected_loader = SendMessage(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETCURSEL, 0, 0);
-  if (selected_loader == CB_ERR) {
-    MessageBoxA(hwnd, "No plug-in selected!", "Cannot start conversion",
-               MB_ICONERROR);
-    return;
-  }
-  loader_name_len = SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXTLEN, selected_loader, 0);
-  *loader_name = malloc(loader_name_len + 1);
-  SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXT, selected_loader, (LPARAM)*loader_name);
   tapenc_params->min_duration = 0;
   tapenc_params->sensitivity = GetDlgItemInt(hwnd, IDC_MIN_HEIGHT, &success, FALSE);
   if (!success)
@@ -573,14 +562,14 @@ static void initialise_open(HWND hwnd
 static void start_converting(HWND hwnd
                             ,struct audiotap *origin_file
                             ,const char *input_filename
-                            ,char *loader_name
                             ,uint8_t machine
                             ,uint8_t videotype
                             ,struct tapenc_params *tapenc_params
                             ){
   struct thread_params tparams =
   {
-    loader_name,
+    IsDlgButtonChecked(hwnd, IDC_BROKEN),
+    NULL,
     {origin_file},
     input_filename,
     hwnd,
@@ -594,38 +583,46 @@ static void start_converting(HWND hwnd
     videotype,
     tapenc_params
   };
+  LRESULT selected_loader = SendMessage(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETCURSEL, 0, 0);
+  LRESULT loader_name_len;
 
+  if (selected_loader == CB_ERR) {
+    MessageBoxA(hwnd, "No plug-in selected!", "Cannot start conversion",
+               MB_ICONERROR);
+    return;
+  }
+  loader_name_len = SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXTLEN, selected_loader, 0);
+  tparams.loader_name = malloc(loader_name_len + 1);
+  SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXT, selected_loader, (LPARAM)tparams.loader_name);
   DialogBoxParam(instance, MAKEINTRESOURCE(IDD_STATUS), hwnd, status_proc,
-                 (LPARAM) & tparams);
+                 (LPARAM) &tparams);
   audio2tap_close(origin_file);
-  free(loader_name);
+  free(tparams.loader_name);
 }
 
 void start_converting_from_file(HWND hwnd, const char *input_filename)
 {
   struct tapenc_params tapenc_params;
-  char *loader_name;
   struct audiotap *origin_file;
   uint8_t machine;
   uint8_t videotype;
   uint8_t halfwaves;
 
-  initialise_open(hwnd, &tapenc_params, &loader_name, &machine, &videotype, &halfwaves);
+  initialise_open(hwnd, &tapenc_params, &machine, &videotype, &halfwaves);
   if(try_open_file(&origin_file, input_filename, &tapenc_params, &machine, &videotype, &halfwaves, hwnd))
-    start_converting(hwnd, origin_file, input_filename, loader_name, machine, videotype, &tapenc_params);
+    start_converting(hwnd, origin_file, input_filename, machine, videotype, &tapenc_params);
 }
 
 void start_converting_from_user_chosen_input(HWND hwnd)
 {
   struct tapenc_params tapenc_params;
-  char *loader_name;
   struct audiotap *origin_file;
   uint8_t machine;
   uint8_t videotype;
   uint8_t halfwaves;
   char input_filename[1024];
 
-  initialise_open(hwnd, &tapenc_params, &loader_name, &machine, &videotype, &halfwaves);
+  initialise_open(hwnd, &tapenc_params, &machine, &videotype, &halfwaves);
 
   if (IsDlgButtonChecked(hwnd, IDC_FROM_FILE) == BST_CHECKED) {
     OPENFILENAMEA file;
@@ -666,7 +663,7 @@ void start_converting_from_user_chosen_input(HWND hwnd)
       return;
     }
   }
-  start_converting(hwnd, origin_file, input_filename, loader_name, machine, videotype, &tapenc_params);
+  start_converting(hwnd, origin_file, input_filename, machine, videotype, &tapenc_params);
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData){

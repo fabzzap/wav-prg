@@ -597,6 +597,7 @@ static enum wav2prg_bool recognize_new_loader(wav2prg_recognize_block recognize_
 struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance_type,
                              const char* start_loader,
                              struct wav2prg_plugin_conf* start_conf,
+                             enum wav2prg_bool keep_broken_blocks,
                              struct wav2prg_input_object *input_object,
                              struct wav2prg_input_functions *input,
                              struct display_interface *display_interface,
@@ -672,7 +673,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
   struct further_recognition further_recognition = {{{0}},0,NULL};
   struct current_recognition current_recognition = {NULL,wav2prg_false};
   enum wav2prg_bool found_dependent_plugin;
-  enum wav2prg_bool keep_broken_blocks = wav2prg_false;
 
   reset_tolerances();
 
