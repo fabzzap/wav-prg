@@ -403,6 +403,17 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
         create_t64(blocks, (const char*)file.lCustData, output_filename);
     }
   }
+  /*  if (IsDlgButtonChecked(hwnd, IDC_TO_PRG) == BST_CHECKED
+   || IsDlgButtonChecked(hwnd, IDC_TO_P00) == BST_CHECKED) {
+    dir = FindFirstFileA(conversion_dir, &findfile);
+    if (dir == INVALID_HANDLE_VALUE) {
+      MessageBoxA(hwnd, "Cannot open conversion dir",
+                 "Cannot start conversion", MB_ICONERROR);
+      return;
+    }
+    FindClose(dir);
+  }
+*/
   SetWindowTextA(close_button, "Close");
   return 0;
 }
@@ -464,31 +475,51 @@ static INT_PTR CALLBACK status_proc(HWND hwnd,  //handle of window
   }
 }
 
-static void start_converting(HWND hwnd){
-  HANDLE dir;
-  WIN32_FIND_DATA findfile;
-  char input_filename[1024];
-  OPENFILENAMEA file;
-  enum audiotap_status init_status;
-  uint32_t freq;
-  struct tapenc_params tapenc_params;
+static enum wav2prg_bool try_open_file(struct audiotap **origin_file
+                                       ,const char *input_filename
+                                       ,struct tapenc_params *tapenc_params
+                                       ,uint8_t *machine
+                                       ,uint8_t *videotype
+                                       ,uint8_t *halfwaves
+                                       ,HWND hwnd
+                                       )
+{
+  enum audiotap_status init_status = audio2tap_open_from_file3(origin_file
+                                                              ,input_filename
+                                                              ,tapenc_params
+                                                              ,machine
+                                                              ,videotype
+                                                              ,halfwaves
+                                                              );
+  if (init_status == AUDIOTAP_NO_FILE) {
+    MessageBoxA(hwnd, "File does not exist", "Cannot convert", MB_ICONERROR);
+    return wav2prg_false;
+  }
+  if (init_status == AUDIOTAP_LIBRARY_UNAVAILABLE) {
+    MessageBoxA(hwnd,
+                 "Cannot deal with files other than TAP, because libaudiofile-0.dll and/or tapencoder.dll are not present or incorrect",
+                 "Cannot convert", MB_ICONERROR);
+    return wav2prg_false;
+  }
+  if (init_status != AUDIOTAP_OK) {
+    MessageBoxA(hwnd, "Error opening file", "Cannot convert", MB_ICONERROR);
+    return wav2prg_false;
+  }
+  return wav2prg_true;
+}
+
+static void initialise_open(HWND hwnd
+                           ,struct tapenc_params *tapenc_params
+                           ,char **loader_name
+                           ,uint8_t *machine
+                           ,uint8_t *videotype
+                           ,uint8_t *halfwaves
+                           ){
   BOOL success;
-  struct thread_params tparams;
-  uint8_t machine, videotype, semiwaves = 0;
   LRESULT selected_clock;
-  struct audiotap *origin_file;
   LRESULT loader_name_len, selected_loader;
 
-  if (IsDlgButtonChecked(hwnd, IDC_TO_PRG) == BST_CHECKED
-   || IsDlgButtonChecked(hwnd, IDC_TO_P00) == BST_CHECKED) {
-    dir = FindFirstFileA(conversion_dir, &findfile);
-    if (dir == INVALID_HANDLE_VALUE) {
-      MessageBoxA(hwnd, "Cannot open conversion dir",
-                 "Cannot start conversion", MB_ICONERROR);
-      return;
-    }
-    FindClose(dir);
-  }
+  *halfwaves = 0;
   selected_loader = SendMessage(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETCURSEL, 0, 0);
   if (selected_loader == CB_ERR) {
     MessageBoxA(hwnd, "No plug-in selected!", "Cannot start conversion",
@@ -496,54 +527,109 @@ static void start_converting(HWND hwnd){
     return;
   }
   loader_name_len = SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXTLEN, selected_loader, 0);
-  tparams.loader_name = malloc(loader_name_len + 1);
-  SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXT, selected_loader, (LPARAM)tparams.loader_name);
-  freq = GetDlgItemInt(hwnd, IDC_FREQ, &success, FALSE);
+  *loader_name = malloc(loader_name_len + 1);
+  SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXT, selected_loader, (LPARAM)*loader_name);
+  tapenc_params->min_duration = 0;
+  tapenc_params->sensitivity = GetDlgItemInt(hwnd, IDC_MIN_HEIGHT, &success, FALSE);
   if (!success)
-    freq = 44100;
-  tapenc_params.min_duration = 0;
-  tapenc_params.sensitivity = GetDlgItemInt(hwnd, IDC_MIN_HEIGHT, &success, FALSE);
-  if (!success)
-    tapenc_params.sensitivity = 12;
-  tapenc_params.initial_threshold = 20;
-  tapenc_params.inverted = IsDlgButtonChecked(hwnd, IDC_INVERTED) == BST_CHECKED;
-  semiwaves = 0;
+    tapenc_params->sensitivity = 12;
+  tapenc_params->initial_threshold = 20;
+  tapenc_params->inverted = IsDlgButtonChecked(hwnd, IDC_INVERTED) == BST_CHECKED;
   selected_clock =
     SendMessage(GetDlgItem(hwnd, IDC_CLOCK), CB_GETCURSEL, 0, 0);
   switch (selected_clock) {
   default:
-    machine = TAP_MACHINE_C64;
-    videotype = TAP_VIDEOTYPE_PAL;
+    *machine = TAP_MACHINE_C64;
+    *videotype = TAP_VIDEOTYPE_PAL;
     break;
   case 1:
-    machine = TAP_MACHINE_C64;
-    videotype = TAP_VIDEOTYPE_NTSC;
+    *machine = TAP_MACHINE_C64;
+    *videotype = TAP_VIDEOTYPE_NTSC;
     break;
   case 2:
-    machine = TAP_MACHINE_VIC;
-    videotype = TAP_VIDEOTYPE_PAL;
+    *machine = TAP_MACHINE_VIC;
+    *videotype = TAP_VIDEOTYPE_PAL;
     break;
   case 3:
-    machine = TAP_MACHINE_VIC;
-    videotype = TAP_VIDEOTYPE_NTSC;
+    *machine = TAP_MACHINE_VIC;
+    *videotype = TAP_VIDEOTYPE_NTSC;
     break;
   case 4:
-    machine = TAP_MACHINE_C16;
-    videotype = TAP_VIDEOTYPE_PAL;
+    *machine = TAP_MACHINE_C16;
+    *videotype = TAP_VIDEOTYPE_PAL;
     break;
   case 5:
-    machine = TAP_MACHINE_C16;
-    videotype = TAP_VIDEOTYPE_NTSC;
+    *machine = TAP_MACHINE_C16;
+    *videotype = TAP_VIDEOTYPE_NTSC;
     break;
   }
+}
 
-  input_filename[0] = 0;
-  memset(&file, 0, sizeof(file));
-  file.lStructSize = sizeof(file);
-  file.hwndOwner = hwnd;
-  file.nMaxFile = 1024;
+static void start_converting(HWND hwnd
+                            ,struct audiotap *origin_file
+                            ,const char *input_filename
+                            ,char *loader_name
+                            ,uint8_t machine
+                            ,uint8_t videotype
+                            ,struct tapenc_params *tapenc_params
+                            ){
+  struct thread_params tparams =
+  {
+    loader_name,
+    {origin_file},
+    input_filename,
+    hwnd,
+    NULL,
+    IsDlgButtonChecked(hwnd, IDC_TO_TAP) == BST_CHECKED ? tap_checked :
+    IsDlgButtonChecked(hwnd, IDC_TO_T64) == BST_CHECKED ? t64_checked :
+    IsDlgButtonChecked(hwnd, IDC_TO_PRG) == BST_CHECKED ? prg_checked :
+    IsDlgButtonChecked(hwnd, IDC_TO_P00) == BST_CHECKED ? p00_checked :
+    nothing_checked,
+    machine,
+    videotype,
+    tapenc_params
+  };
+
+  DialogBoxParam(instance, MAKEINTRESOURCE(IDD_STATUS), hwnd, status_proc,
+                 (LPARAM) & tparams);
+  audio2tap_close(origin_file);
+  free(loader_name);
+}
+
+void start_converting_from_file(HWND hwnd, const char *input_filename)
+{
+  struct tapenc_params tapenc_params;
+  char *loader_name;
+  struct audiotap *origin_file;
+  uint8_t machine;
+  uint8_t videotype;
+  uint8_t halfwaves;
+
+  initialise_open(hwnd, &tapenc_params, &loader_name, &machine, &videotype, &halfwaves);
+  if(try_open_file(&origin_file, input_filename, &tapenc_params, &machine, &videotype, &halfwaves, hwnd))
+    start_converting(hwnd, origin_file, input_filename, loader_name, machine, videotype, &tapenc_params);
+}
+
+void start_converting_from_user_chosen_input(HWND hwnd)
+{
+  struct tapenc_params tapenc_params;
+  char *loader_name;
+  struct audiotap *origin_file;
+  uint8_t machine;
+  uint8_t videotype;
+  uint8_t halfwaves;
+  char input_filename[1024];
+
+  initialise_open(hwnd, &tapenc_params, &loader_name, &machine, &videotype, &halfwaves);
 
   if (IsDlgButtonChecked(hwnd, IDC_FROM_FILE) == BST_CHECKED) {
+    OPENFILENAMEA file;
+
+    input_filename[0] = 0;
+    memset(&file, 0, sizeof(file));
+    file.lStructSize = sizeof(file);
+    file.hwndOwner = hwnd;
+    file.nMaxFile = 1024;
     file.lpstrFilter =
       "TAP and WAV files\0*.tap;*.wav\0TAP files\0*.tap\0WAV files\0*.wav\0All files\0*.*\0\0";
     file.lpstrTitle = "Choose the file to convert";
@@ -552,53 +638,30 @@ static void start_converting(HWND hwnd){
     file.nFilterIndex = 1;
     if (GetOpenFileNameA(&file) == FALSE)
       return;
-    init_status = audio2tap_open_from_file3(&origin_file, input_filename, &tapenc_params, &machine, &videotype, &semiwaves);
-    if (init_status == AUDIOTAP_NO_FILE) {
-      MessageBoxA(hwnd, "File does not exist", "Cannot convert", MB_ICONERROR);
+    if(!try_open_file(&origin_file, input_filename, &tapenc_params, &machine, &videotype, &halfwaves, hwnd))
       return;
-    }
-    if (init_status == AUDIOTAP_LIBRARY_UNAVAILABLE) {
-      MessageBoxA(hwnd,
-                   "Cannot deal with files other than TAP, because libaudiofile-0.dll and/or tapencoder.dll are not present or incorrect",
-                   "Cannot convert", MB_ICONERROR);
-      return;
-    }
-    if (init_status != AUDIOTAP_OK) {
-      MessageBoxA(hwnd, "Error opening file", "Cannot convert", MB_ICONERROR);
-      return;
-    }
   }
   else if (audiotap_startup_status.portaudio_init_status != LIBRARY_OK) {
-      MessageBoxA(hwnd,
-                 "Cannot open sound card, because libportaudio.dll is not present or incorrect",
-                 "Cannot convert", MB_ICONERROR);
+    MessageBoxA(hwnd,
+               "Cannot open sound card, because libportaudio.dll is not present or incorrect",
+               "Cannot convert", MB_ICONERROR);
       return;
   }
-  else if (audio2tap_from_soundcard3
+  else{
+    BOOL success;
+    uint32_t freq = GetDlgItemInt(hwnd, IDC_FREQ, &success, FALSE);
+
+    if (!success)
+      freq = 44100;
+    if (audio2tap_from_soundcard3
         (&origin_file, freq, &tapenc_params, machine,
-         videotype, semiwaves) != AUDIOTAP_OK) {
-    MessageBoxA(hwnd, "Sound card cannot be opened", "Cannot convert",
+         videotype, halfwaves) != AUDIOTAP_OK) {
+      MessageBoxA(hwnd, "Sound card cannot be opened", "Cannot convert",
                  MB_ICONERROR);
-    return;
+      return;
+    }
   }
-
-  tparams.file.object = origin_file;
-  tparams.input_file = input_filename;
-  tparams.clean_file = NULL;
-  tparams.destination =
-    IsDlgButtonChecked(hwnd, IDC_TO_TAP) == BST_CHECKED ? tap_checked :
-    IsDlgButtonChecked(hwnd, IDC_TO_T64) == BST_CHECKED ? t64_checked :
-    IsDlgButtonChecked(hwnd, IDC_TO_PRG) == BST_CHECKED ? prg_checked :
-    IsDlgButtonChecked(hwnd, IDC_TO_P00) == BST_CHECKED ? p00_checked :
-    nothing_checked;
-  tparams.machine = machine;
-  tparams.videotype = videotype;
-  tparams.tapenc_params = &tapenc_params;
-
-  DialogBoxParam(instance, MAKEINTRESOURCE(IDD_STATUS), hwnd, status_proc,
-                 (LPARAM) & tparams);
-  audio2tap_close(origin_file);
-  free(tparams.loader_name);
+  start_converting(hwnd, origin_file, input_filename, loader_name, machine, videotype, &tapenc_params);
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData){
@@ -814,7 +877,7 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
       DialogBox(instance, MAKEINTRESOURCE(IDD_ADVANCED), hwndDlg, advanced_proc);
       return TRUE;
     case IDOK:
-      start_converting(hwndDlg);
+      start_converting_from_user_chosen_input(hwndDlg);
       return TRUE;
     case IDCANCEL:
       EndDialog(hwndDlg, 0);
@@ -827,6 +890,19 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
               HH_DISPLAY_TOPIC, 0);
     return TRUE;
 #endif
+  case WM_DROPFILES:
+    {
+      UINT filenamesize = DragQueryFile((HDROP)wParam, 0, NULL, 0);
+      LPTSTR filename;
+
+      filenamesize++; /* for the null termination */
+      filename = malloc(filenamesize * sizeof(TCHAR));
+      DragQueryFile((HDROP)wParam, 0, filename, filenamesize);
+      DragFinish((HDROP)wParam);
+      start_converting_from_file(hwndDlg, filename);
+      free(filename);
+    }
+    return TRUE;
   default:
     return FALSE;
   }
