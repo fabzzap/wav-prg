@@ -415,6 +415,11 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
   }
 */
   SetWindowTextA(close_button, "Close");
+  while(blocks){
+    struct block_list_element *new_blocks = blocks->next;
+    free_block_list_element(blocks);
+    blocks = new_blocks;
+  }
   return 0;
 }
 
