@@ -34,6 +34,7 @@
 #include "../write_cleaned_tap.h"
 #include "../wav2prg_block_list.h"
 #include "../get_pulse.h"
+#include "../write_prg.h"
 
 char conversion_dir[MAX_PATH];
 extern HINSTANCE instance;
@@ -403,17 +404,19 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
         create_t64(blocks, (const char*)file.lCustData, output_filename);
     }
   }
-  /*  if (IsDlgButtonChecked(hwnd, IDC_TO_PRG) == BST_CHECKED
-   || IsDlgButtonChecked(hwnd, IDC_TO_P00) == BST_CHECKED) {
-    dir = FindFirstFileA(conversion_dir, &findfile);
+  if (p->destination == p00_checked
+    || p->destination == prg_checked) {
+    WIN32_FIND_DATAA findfile;
+    HANDLE dir = FindFirstFileA(conversion_dir, &findfile);
     if (dir == INVALID_HANDLE_VALUE) {
-      MessageBoxA(hwnd, "Cannot open conversion dir",
+      MessageBoxA(p->window, "Cannot open conversion dir",
                  "Cannot start conversion", MB_ICONERROR);
-      return;
     }
-    FindClose(dir);
+    else{
+      FindClose(dir);
+      write_prg(blocks, conversion_dir, p->destination == p00_checked);
+    }
   }
-*/
   SetWindowTextA(close_button, "Close");
   while(blocks){
     struct block_list_element *new_blocks = blocks->next;

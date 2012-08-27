@@ -450,7 +450,7 @@ int main(int argc, char** argv)
       }
       break;
     case dump_to_prg:
-      write_prg(blocks, current_dump->name);
+      write_prg(blocks, current_dump->name, wav2prg_false);
       break;
     case dump_to_t64:
       create_t64(blocks, NULL, current_dump->name);
