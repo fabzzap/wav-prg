@@ -19,6 +19,7 @@
 #include "audiotap.h"
 #include "observers.h"
 #include "wav2prg_block_list.h"
+#include "name_utils.h"
 
 static void try_sync(struct display_interface_internal* internal, const char* loader_name, const char* observation)
 {
@@ -31,8 +32,11 @@ static void try_sync(struct display_interface_internal* internal, const char* lo
 static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct wav2prg_block_info* info)
 {
   if (info){
+    char progname[17];
+
+    convert_petscii_string(info->name, progname, wav2prg_true);
     printf("got a pilot tone and a block at %u\n", info_pos);
-    printf("name %s start %u end %u\n", info->name, info->start, info->end);
+    printf("name %s start %u end %u\n", progname, info->start, info->end);
   }
   else
     printf("got a pilot tone but an error at %u occurred when checking block\n", info_pos);

@@ -1,4 +1,5 @@
 #include "wav2prg_block_list.h"
+#include "name_utils.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -148,37 +149,6 @@ Copy:
   return 1;
 }
 
-static void strip_trailing_spaces(const char *name, char *name_nosp)
-{
-  int i, j, k = 0;
-
-  for (i = 15; i >= 0; i--)
-    if (name[i] != ' ')
-      break;
-
-  for (j = 0; j <= i; j++){
-    if (name[j] >= 32
-     && name[j] != '/'
-#ifdef WIN32
-     && name[j] != '<'
-     && name[j] != '>'
-     && name[j] != ':'
-     && name[j] != '"'
-     && name[j] != '\\'
-     && name[j] != '|'
-     && name[j] != '?'
-     && name[j] != '*'
-#endif
-      )
-      name_nosp[k++] = name[j];
-    else if(name[j] >= -64 && name[j] <= -34)
-      name_nosp[k++] = name[j] + 160;
-    else if(name[j] == -1)
-      name_nosp[k++] = 126;
-  }
-  name_nosp[k] = 0;
-}
-
 void write_prg(struct block_list_element *blocks, const char *dirname, enum wav2prg_bool use_p00){
   char *extension, *filename, *fullpathname;
   int fildes = 0, i;
@@ -224,7 +194,7 @@ void write_prg(struct block_list_element *blocks, const char *dirname, enum wav2
     }
     else{
       char name_nospaces[17];
-      strip_trailing_spaces(blocks->block.info.name, name_nospaces);
+      convert_petscii_string(blocks->block.info.name, name_nospaces, wav2prg_false);
       if (!strlen(name_nospaces))
         strcpy(filename, "default");
       else

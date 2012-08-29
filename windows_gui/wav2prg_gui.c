@@ -35,6 +35,7 @@
 #include "../wav2prg_block_list.h"
 #include "../get_pulse.h"
 #include "../write_prg.h"
+#include "../name_utils.h"
 
 char conversion_dir[MAX_PATH];
 extern HINSTANCE instance;
@@ -190,23 +191,9 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
   is.hParent = info_item;
   {
     char progname[17];
-    int prognamelen=0;
-    int real_len = 15;
-    while(1){
-      if (info->name[real_len] > 32){
-        real_len++;
-        break;
-      }
-      if(real_len == 0)
-        break;
-      real_len--;
-    }
-    for(i = 0; i < real_len; i++)
-      if(info->name[i]>=32){
-        progname[prognamelen++] = info->name[i];
-      }
-    if(prognamelen > 0){
-      progname[prognamelen]=0;
+
+    convert_petscii_string(info->name, progname, wav2prg_true);
+    if(strlen(progname) > 0){
       _snprintf(text, sizeof(text), "Name: %s", progname);
       TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
     }
