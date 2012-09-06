@@ -45,12 +45,9 @@ struct thread_params {
   enum wav2prg_bool include_broken_files;
   char *loader_name;
   struct wav2prg_input_object file;
-  const char *input_file;
   HWND window;
-  struct audiotap *clean_file;
   enum{nothing_checked,t64_checked, tap_checked, prg_checked, p00_checked} destination;
-  uint8_t machine, videotype;
-  struct tapenc_params *tapenc_params;
+  uint8_t machine, videotype, halfwaves;
 };
 
 static void list_plugins(HWND combobox){
@@ -339,7 +336,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
     char output_filename[1024];
     char t64_name[25];
 
-    if (p->destination == tap_checked && p->input_file && *p->input_file) {
+    if (p->destination == tap_checked && audio2tap_seek_to_beginning((struct audiotap*)p->file.object)) {
       memset(&file, 0, sizeof(file));
  	    file.lStructSize = sizeof(file);
       file.hwndOwner = p->window;
@@ -355,20 +352,16 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
       file.lpstrDefExt = "tap";
       file.lCustData = (LPARAM) t64_name;
       if (GetSaveFileNameA(&file) == TRUE){
-        enum wav2prg_bool requested_use_halfwaves = p->machine == TAP_MACHINE_C16;
-        uint8_t actual_use_halfwaves = requested_use_halfwaves ? 1 : 0;
-        if (audio2tap_open_from_file3(&p->clean_file,p->input_file,p->tapenc_params,&p->machine, &p->videotype,&actual_use_halfwaves)==AUDIOTAP_OK){
-          SetDlgItemTextA(p->window, IDC_FILE_TEXT, "Cleaning progress indicator");
-          write_cleaned_tap(blocks,
-                            p->clean_file,
-                            requested_use_halfwaves && actual_use_halfwaves,
-                            output_filename,
-                            p->machine,
-                            p->videotype,
-                            &windows_display, &internal);
-          audio2tap_close(p->clean_file);
-          p->clean_file = NULL;
-        }
+        uint8_t actual_use_halfwaves = p->halfwaves && p->machine == TAP_MACHINE_C16;
+        audio2tap_enable_disable_halfwaves((struct audiotap*)p->file.object, actual_use_halfwaves);
+        SetDlgItemTextA(p->window, IDC_FILE_TEXT, "Cleaning progress indicator");
+        write_cleaned_tap(blocks,
+                          (struct audiotap*)p->file.object,
+                          actual_use_halfwaves != 0,
+                          output_filename,
+                          p->machine,
+                          p->videotype,
+                          &windows_display, &internal);
       }
     }
     if (p->destination == t64_checked) {
@@ -416,7 +409,6 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
 struct status_proc_params {
   HANDLE thread;
   struct audiotap *file;
-  struct audiotap **clean_file;
 };
 
 static INT_PTR CALLBACK status_proc(HWND hwnd,  //handle of window
@@ -441,17 +433,16 @@ static INT_PTR CALLBACK status_proc(HWND hwnd,  //handle of window
       thread =
         CreateThread(NULL, 0, wav2prg_thread, (LPVOID) tparams, 0,
                      &thread_id);
-      params = malloc(sizeof(struct status_proc_params));
-      params->file = tparams->file.object;
+      params = (struct status_proc_params *)malloc(sizeof(struct status_proc_params));
+      params->file = (struct audiotap *)tparams->file.object;
       params->thread = thread;
-      params->clean_file = &tparams->clean_file;
-      SetWindowLong(hwnd, GWL_USERDATA, (LONG) params);
+      SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) params);
       return 1;
     }
   case WM_COMMAND:
     if (LOWORD(wParam) == IDCANCEL) {
       struct status_proc_params *params =
-        (struct status_proc_params *)GetWindowLong(hwnd, GWL_USERDATA);
+        (struct status_proc_params *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
       if (WaitForSingleObject(params->thread, 0) == WAIT_OBJECT_0) {
         free(params);
@@ -459,8 +450,6 @@ static INT_PTR CALLBACK status_proc(HWND hwnd,  //handle of window
       }
       else {
         audiotap_terminate(params->file);
-        if (*params->clean_file)
-          audiotap_terminate(*params->clean_file);
       }
       return 1;
     }
@@ -512,7 +501,6 @@ static void initialise_open(HWND hwnd
   BOOL success;
   LRESULT selected_clock;
 
-  *halfwaves = 0;
   tapenc_params->min_duration = 0;
   tapenc_params->sensitivity = GetDlgItemInt(hwnd, IDC_MIN_HEIGHT, &success, FALSE);
   if (!success)
@@ -551,19 +539,16 @@ static void initialise_open(HWND hwnd
 
 static void start_converting(HWND hwnd
                             ,struct audiotap *origin_file
-                            ,const char *input_filename
                             ,uint8_t machine
                             ,uint8_t videotype
-                            ,struct tapenc_params *tapenc_params
+                            ,uint8_t halfwaves_available
                             ){
   struct thread_params tparams =
   {
     IsDlgButtonChecked(hwnd, IDC_BROKEN),
     NULL,
     {origin_file},
-    input_filename,
     hwnd,
-    NULL,
     IsDlgButtonChecked(hwnd, IDC_TO_TAP) == BST_CHECKED ? tap_checked :
     IsDlgButtonChecked(hwnd, IDC_TO_T64) == BST_CHECKED ? t64_checked :
     IsDlgButtonChecked(hwnd, IDC_TO_PRG) == BST_CHECKED ? prg_checked :
@@ -571,7 +556,7 @@ static void start_converting(HWND hwnd
     nothing_checked,
     machine,
     videotype,
-    tapenc_params
+    halfwaves_available
   };
   LRESULT selected_loader = SendMessage(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETCURSEL, 0, 0);
   LRESULT loader_name_len;
@@ -582,7 +567,7 @@ static void start_converting(HWND hwnd
     return;
   }
   loader_name_len = SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXTLEN, selected_loader, 0);
-  tparams.loader_name = malloc(loader_name_len + 1);
+  tparams.loader_name = (char*)malloc(loader_name_len + 1);
   SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXT, selected_loader, (LPARAM)tparams.loader_name);
   DialogBoxParam(instance, MAKEINTRESOURCE(IDD_STATUS), hwnd, status_proc,
                  (LPARAM) &tparams);
@@ -600,7 +585,7 @@ void start_converting_from_file(HWND hwnd, const char *input_filename)
 
   initialise_open(hwnd, &tapenc_params, &machine, &videotype, &halfwaves);
   if(try_open_file(&origin_file, input_filename, &tapenc_params, &machine, &videotype, &halfwaves, hwnd))
-    start_converting(hwnd, origin_file, input_filename, machine, videotype, &tapenc_params);
+    start_converting(hwnd, origin_file, machine, videotype, halfwaves);
 }
 
 void start_converting_from_user_chosen_input(HWND hwnd)
@@ -645,15 +630,16 @@ void start_converting_from_user_chosen_input(HWND hwnd)
 
     if (!success)
       freq = 44100;
-    if (audio2tap_from_soundcard3
+    if (audio2tap_from_soundcard4
         (&origin_file, freq, &tapenc_params, machine,
-         videotype, halfwaves) != AUDIOTAP_OK) {
+         videotype) != AUDIOTAP_OK) {
       MessageBoxA(hwnd, "Sound card cannot be opened", "Cannot convert",
                  MB_ICONERROR);
       return;
     }
+    halfwaves = 1;
   }
-  start_converting(hwnd, origin_file, input_filename, machine, videotype, &tapenc_params);
+  start_converting(hwnd, origin_file, machine, videotype, halfwaves);
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData){
@@ -885,11 +871,11 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
   case WM_DROPFILES:
     {
       UINT filenamesize = DragQueryFile((HDROP)wParam, 0, NULL, 0);
-      LPTSTR filename;
+      LPSTR filename;
 
       filenamesize++; /* for the null termination */
-      filename = malloc(filenamesize * sizeof(TCHAR));
-      DragQueryFile((HDROP)wParam, 0, filename, filenamesize);
+      filename = (LPSTR)malloc(filenamesize);
+      DragQueryFileA((HDROP)wParam, 0, filename, filenamesize);
       DragFinish((HDROP)wParam);
       start_converting_from_file(hwndDlg, filename);
       free(filename);
