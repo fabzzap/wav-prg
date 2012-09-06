@@ -4,12 +4,14 @@
 static char converted_char(char input_char, enum wav2prg_bool space_is_acceptable, enum wav2prg_bool forbidden_char_in_filename_is_acceptable)
 {
 	if(input_char >= -64 && input_char <= -34)
-      input_char += 160;
+    input_char += 160;
+  else if(input_char == -1)
+    input_char = 126;
 
   return input_char >= 32 && input_char <= 126
     && (space_is_acceptable || input_char > 32)
     && (forbidden_char_in_filename_is_acceptable ||
-    (input_char != '/'
+       (input_char != '/'
 #ifdef WIN32
      && input_char != '<'
      && input_char != '>'
@@ -36,7 +38,7 @@ void convert_petscii_string(char* name, char* output, enum wav2prg_bool forbidde
     char new_char = converted_char(name[j], wav2prg_true, forbidden_char_in_filename_is_acceptable);
 
     if (new_char != 0)
-      output[k++] = name[j];
+      output[k++] = new_char;
   }
 
   output[k] = 0;
