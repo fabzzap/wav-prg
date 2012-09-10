@@ -80,6 +80,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   DWORD current_directory_len, current_directory_len2;
 
   instance = hInstance;
+  CoInitialize(NULL);
   audiotap_startup_status = audiotap_initialize2();
 
   current_directory_len = GetCurrentDirectory(0, NULL);
@@ -105,5 +106,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   DialogBox(instance, MAKEINTRESOURCE(IDD_WAV2PRG), NULL,
                   wav2prg_dialog_proc);
   cleanup_loaders_and_observers();
+  audiotap_terminate_lib();
   return 0;
 }

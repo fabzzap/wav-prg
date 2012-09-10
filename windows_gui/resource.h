@@ -38,4 +38,5 @@
 #define IDC_LIMITED_INCREMENT           1028
 #define IDC_LIMITED_DIST_FROM_AVG       1029
 #define IDC_DISTANCE                    1030
+#define IDC_INCLUDE_ALL                 1031
 #define IDC_CHANGE_DISTANCE             1033

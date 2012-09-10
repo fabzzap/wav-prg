@@ -14,4 +14,5 @@
 
 struct block_list_element;
 
-void create_t64(struct block_list_element *list, const char *tape_name, const char *file_name);
+void create_t64(struct block_list_element *list, const char *tape_name, const char *file_name, enum wav2prg_bool include_all);
+enum wav2prg_bool include_block(struct block_list_element *blocks);

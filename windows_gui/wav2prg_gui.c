@@ -43,6 +43,7 @@ extern struct audiotap_init_status audiotap_startup_status;
 
 struct thread_params {
   enum wav2prg_bool include_broken_files;
+  enum wav2prg_bool include_slow_loading_files;
   char *loader_name;
   struct wav2prg_input_object file;
   HWND window;
@@ -158,7 +159,6 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
   char text[1024];
   TVINSERTSTRUCTA is = {NULL,TVI_LAST,{TVIF_TEXT,NULL,0,0,text}};
   HTREEITEM boundaries_item, info_item;
-  int i;
 
   if (!info /*&& !dependencies*/) {
     _snprintf(text, sizeof(text), "Found start of block using %s but with no valid block", internal->loader_name);
@@ -333,15 +333,14 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
                     &internal);
   if(!audiotap_is_terminated(p->file.object)){
     OPENFILENAMEA file;
-    char output_filename[1024];
+    char output_filename[1024] = {0};
     char t64_name[25];
 
     if (p->destination == tap_checked && audio2tap_seek_to_beginning((struct audiotap*)p->file.object)) {
       memset(&file, 0, sizeof(file));
- 	    file.lStructSize = sizeof(file);
+       file.lStructSize = sizeof(file);
       file.hwndOwner = p->window;
-	    file.nMaxFile = 1024;
-      output_filename[0] = 0;
+      file.nMaxFile = 1024;
       file.lpstrFilter = "TAP file (*.tap)\0*.tap\0All files\0*.*\0\0";
       file.lpstrTitle = "Choose the TAP file to be created";
       file.Flags = OFN_EXPLORER | OFN_HIDEREADONLY |
@@ -366,10 +365,9 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
     }
     if (p->destination == t64_checked) {
       memset(&file, 0, sizeof(file));
- 	    file.lStructSize = sizeof(file);
+      file.lStructSize = sizeof(file);
       file.hwndOwner = p->window;
-  	  file.nMaxFile = 1024;
-  	  file.nMaxFile = 1024;
+      file.nMaxFile = 1024;
       file.lpstrFilter = "T64 file (*.t64)\0*.t64\0All files\0*.*\0\0";
       file.lpstrTitle = "Choose the T64 file to be created";
       file.Flags = OFN_EXPLORER | OFN_HIDEREADONLY |
@@ -381,7 +379,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
       file.lpstrDefExt = "t64";
       file.lCustData = (LPARAM) t64_name;
       if (GetSaveFileNameA(&file) == TRUE)
-        create_t64(blocks, (const char*)file.lCustData, output_filename);
+        create_t64(blocks, (const char*)file.lCustData, output_filename, p->include_slow_loading_files);
     }
   }
   if (p->destination == p00_checked
@@ -394,7 +392,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
     }
     else{
       FindClose(dir);
-      write_prg(blocks, conversion_dir, p->destination == p00_checked);
+      write_prg(blocks, conversion_dir, p->destination == p00_checked, p->include_slow_loading_files);
     }
   }
   SetWindowTextA(close_button, "Close");
@@ -546,6 +544,7 @@ static void start_converting(HWND hwnd
   struct thread_params tparams =
   {
     IsDlgButtonChecked(hwnd, IDC_BROKEN),
+    IsDlgButtonChecked(hwnd, IDC_INCLUDE_ALL),
     NULL,
     {origin_file},
     hwnd,
@@ -665,7 +664,7 @@ static INT_PTR CALLBACK advanced_proc(HWND hwndDlg,      //handle to dialog box
       SendMessage(GetDlgItem(hwndDlg, IDC_CHANGE_DISTANCE),
             UDM_SETBUDDY,
             (WPARAM)GetDlgItem(hwndDlg, IDC_DISTANCE),
-	          0);
+            0);
       SendMessage(GetDlgItem(hwndDlg, IDC_CHANGE_DISTANCE),
             UDM_SETRANGE,
             0,
@@ -677,7 +676,7 @@ static INT_PTR CALLBACK advanced_proc(HWND hwndDlg,      //handle to dialog box
     }
     return TRUE;
   case WM_COMMAND:
-	  switch(LOWORD(wParam)) {
+    switch(LOWORD(wParam)) {
     case IDOK:
       {
         enum wav2prg_bool use_distance_from_average = IsDlgButtonChecked(hwndDlg, IDC_LIMITED_DIST_FROM_AVG);
@@ -729,8 +728,8 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
       return TRUE;
     }
   case WM_COMMAND:
-	  switch(LOWORD(wParam)) {
-	  case IDC_CHANGE_PLUGIN_DIR:
+    switch(LOWORD(wParam)) {
+    case IDC_CHANGE_PLUGIN_DIR:
     {
       BROWSEINFOA bi;
       char dir_name[MAX_PATH];
@@ -748,7 +747,9 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
         bi.lpfn = BrowseCallbackProc;
         bi.lParam = (LPARAM) dir_name;
       }
+      EnableWindow(hwndDlg, FALSE);
       selected = SHBrowseForFolderA(&bi);
+      EnableWindow(hwndDlg, TRUE);
       if (selected != NULL) {
         succeeded = SHGetPathFromIDListA(selected, dir_name);
         /*
@@ -793,7 +794,9 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
         bi.lpfn = BrowseCallbackProc;
         bi.lParam = (LPARAM) dir_name;
       }
+      EnableWindow(hwndDlg, FALSE);
       selected = SHBrowseForFolderA(&bi);
+      EnableWindow(hwndDlg, TRUE);
       if (selected != NULL) {
         succeeded = SHGetPathFromIDListA(selected, dir_name);
         /*
@@ -830,18 +833,26 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
       break;
     case IDC_TO_PRG:
     case IDC_TO_P00:
+      EnableWindow(GetDlgItem(hwndDlg, IDC_BROKEN               ), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDE_ALL          ), TRUE);
       EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR       ), TRUE);
       EnableWindow(GetDlgItem(hwndDlg, IDC_CHANGE_CONVERSION_DIR), TRUE);
-      EnableWindow(GetDlgItem(hwndDlg, IDC_BROKEN               ), TRUE);
       return TRUE;
     case IDC_DO_NOT_SAVE:
       EnableWindow(GetDlgItem(hwndDlg, IDC_BROKEN               ), FALSE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDE_ALL          ), FALSE);
       EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR       ), FALSE);
       EnableWindow(GetDlgItem(hwndDlg, IDC_CHANGE_CONVERSION_DIR), FALSE);
       break;
     case IDC_TO_T64:
+      EnableWindow(GetDlgItem(hwndDlg, IDC_BROKEN               ), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDE_ALL          ), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR       ), FALSE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_CHANGE_CONVERSION_DIR), FALSE);
+      break;
     case IDC_TO_TAP:
       EnableWindow(GetDlgItem(hwndDlg, IDC_BROKEN               ), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_INCLUDE_ALL          ), FALSE);
       EnableWindow(GetDlgItem(hwndDlg, IDC_CONVERSION_DIR       ), FALSE);
       EnableWindow(GetDlgItem(hwndDlg, IDC_CHANGE_CONVERSION_DIR), FALSE);
       return TRUE;

@@ -81,6 +81,9 @@ BEGIN
     CONTROL         "Include broken and incomplete files",IDC_BROKEN,"Button",
                     BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,93,
                     153,124,10
+    CONTROL         "Include all slow-loading blocks",IDC_INCLUDE_ALL,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_GROUP | WS_TABSTOP,93,
+                    165,124,10
     PUSHBUTTON      "Change",IDC_CHANGE_CONVERSION_DIR,181,188,37,12,
                     WS_DISABLED | WS_GROUP
     EDITTEXT        IDC_CONVERSION_DIR,117,188,62,12,ES_AUTOHSCROLL |

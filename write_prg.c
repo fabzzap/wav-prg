@@ -1,5 +1,6 @@
 #include "wav2prg_block_list.h"
 #include "name_utils.h"
+#include "create_t64.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -149,12 +150,21 @@ Copy:
   return 1;
 }
 
-void write_prg(struct block_list_element *blocks, const char *dirname, enum wav2prg_bool use_p00){
-  char *extension, *filename, *fullpathname;
-  int fildes = 0, i;
+void write_prg(struct block_list_element *blocks, const char *dirname, enum wav2prg_bool use_p00, enum wav2prg_bool include_all){
+  for(;blocks;blocks = blocks->next){
+    char *extension, *filename, *fullpathname;
+    int fildes = 0, i;
 
-  while(blocks){
-    fullpathname = malloc(strlen(dirname) + 25);
+    if (!include_all && !include_block(blocks))
+      continue;
+
+    if (!include_all &&
+      (!strcmp(blocks->loader_name, "Default C16")
+   || (!strcmp(blocks->loader_name, "Kernal data chunk C16")
+    && blocks->next != NULL && strcmp(blocks->next->loader_name, "Default C16"))))
+      continue;
+
+    fullpathname = (char*)malloc(strlen(dirname) + 25);
 
     sprintf(fullpathname, "%s/", dirname);
     filename = fullpathname + strlen(fullpathname);
@@ -228,6 +238,5 @@ void write_prg(struct block_list_element *blocks, const char *dirname, enum wav2
       close(fildes);
     }
     free(fullpathname);
-    blocks = blocks->next;
   }
 }
