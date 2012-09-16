@@ -34,6 +34,7 @@
 #include "../wav2prg_blocks.h"
 #include "../wav2prg_block_list.h"
 #include "../prg2wav_display_interface.h"
+#include "../name_utils.h"
 
 struct prg2wav_params {
   struct audiotap *file;
@@ -311,13 +312,19 @@ struct display_interface_internal {
   HWND status_window;
 };
 
-static void prg2wav_display_start(struct display_interface_internal *internal, uint32_t length){
-  ShowWindow(GetDlgItem(internal->status_window, IDC_ENTRY_TEXT), SW_SHOW);
-  ShowWindow(GetDlgItem(internal->status_window, IDC_ENTRY_PROGRESS), SW_SHOW);
+static void prg2wav_display_start(struct display_interface_internal *internal, uint32_t length, const char *name, uint32_t index, uint32_t total){
+  char caption[128], ascii_name[17];
+
   if (length > 65535)
     length = 65535;
   SendMessage(GetDlgItem(internal->status_window, IDC_ENTRY_PROGRESS), PBM_SETRANGE, 0,
     MAKELPARAM(0, length));
+  SendMessage(GetDlgItem(internal->status_window, IDC_ENTRY_PROGRESS), PBM_SETPOS,
+              0, 0);
+  convert_petscii_string(name, ascii_name, wav2prg_true);
+
+  _snprintf(caption, sizeof(caption), "Converting %s (%u of %u)", ascii_name, index, total);
+  SetDlgItemTextA(internal->status_window, IDC_PRG2WAV_CURRENT, caption);
 }
 
 static void prg2wav_display_update(struct display_interface_internal *internal, uint32_t length){
@@ -328,8 +335,6 @@ static void prg2wav_display_update(struct display_interface_internal *internal, 
 }
 
 static void prg2wav_display_end(struct display_interface_internal *internal){
-  ShowWindow(GetDlgItem(internal->status_window, IDC_ENTRY_TEXT), SW_HIDE);
-  ShowWindow(GetDlgItem(internal->status_window, IDC_ENTRY_PROGRESS), SW_HIDE);
 }
 
 static struct prg2wav_display_interface display_interface = {

@@ -59,5 +59,6 @@
 #define IDC_THRESHOLD                   1047
 #define IDC_THRESHOLD_SPIN              1048
 #define IDC_CHOOSE_TAP_VERSION          1049
+#define IDC_PRG2WAV_CURRENT             1050
 
 #define IDC_STATIC                      -1

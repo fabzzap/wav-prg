@@ -308,6 +308,12 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
   unsigned char *name = header_chunk + 5;
   int size_of_header_chunk = (machine == 0 ? sizeof(c64_header_chunk) : sizeof(c16_header_chunk));
   struct simple_block_list_element *block;
+  uint32_t nblocks = 0, current_block_num = 0;
+
+  for (block = block_list; block != NULL; block = block->next)
+  {
+    nblocks++;
+  }
 
   if (fast) {
     /* use custom threshold if user changed the default value of 263 */
@@ -338,7 +344,7 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
     if (block->block.info.end < block->block.info.start)
       continue;
 
-    display_interface->start(display_interface_internal, total_len);
+    display_interface->start(display_interface_internal, total_len, block->block.info.name, ++current_block_num, nblocks);
 
     if(!raw){
       /* write the header chunk */
@@ -385,9 +391,7 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
         if (tap2audio_set_pulse(file, 1000000))
           break;
     }
-  
     display_interface->update(display_interface_internal, statusbar_len);
+    display_interface->end(display_interface_internal);
   }
-
-  display_interface->end(display_interface_internal);
 }
