@@ -1,5 +1,4 @@
 #include "name_utils.h"
-#include "wav2prg_types.h"
 
 /* Return input_char converted from PETSCII to ASCII, or 0 if not acceptable */
 static char converted_char(char input_char, enum wav2prg_bool space_is_acceptable, enum wav2prg_bool forbidden_char_in_filename_is_acceptable)

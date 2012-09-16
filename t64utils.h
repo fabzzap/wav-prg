@@ -12,7 +12,7 @@
  * This file is part of WAV-PRG core processing files
  */
 
-struct wav2prg_block;
+struct program_block;
 
 typedef enum {
   not_a_valid_file,
@@ -25,6 +25,6 @@ filetype detect_type(FILE *infile);
 int get_total_entries(FILE *infile);
 int get_used_entries(FILE *infile);
 void get_tape_name(char *tape_name, FILE *infile);
-int get_entry(int count, FILE *infile, struct wav2prg_block *program);
-int get_first_entry(FILE *infile, struct wav2prg_block *program);
-int get_entry_info(int count, FILE *infile, struct wav2prg_block_info *info, unsigned int* offset);
+int get_entry(int count, FILE *infile, struct program_block *program);
+int get_first_entry(FILE *infile, struct program_block *program);
+int get_entry_info(int count, FILE *infile, struct program_block_info *info, unsigned int* offset);

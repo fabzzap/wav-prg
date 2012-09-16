@@ -24,7 +24,7 @@ static enum wav2prg_sync_result novaload_special_sync(struct wav2prg_context* co
   return functions->get_sync_sequence(context, functions, conf);
 }
 
-static enum wav2prg_bool novaload_special_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool novaload_special_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   struct novaload_special_private_state *state = (struct novaload_special_private_state *)conf->private_state;
 
@@ -62,7 +62,7 @@ static enum wav2prg_bool novaload_special_get_block_func(struct wav2prg_context*
 
 static enum wav2prg_bool keep_doing_novaload_special(struct wav2prg_observer_context *observer_context,
                                          const struct wav2prg_observer_functions *observer_functions,
-                                         const struct wav2prg_block *block,
+                                         const struct program_block *block,
                                          uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   struct novaload_special_private_state *state = (struct novaload_special_private_state *)conf->private_state;

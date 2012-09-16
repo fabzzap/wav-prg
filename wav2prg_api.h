@@ -1,6 +1,9 @@
-#include "wav2prg_types.h"
-#include "wav2prg_blocks.h"
+#include "wavprg_types.h"
+#include "program_block.h"
 #include "checksum_state.h"
+#include "block_list.h"
+
+#include <stdint.h>
 
 enum wav2prg_plugin_endianness {
   lsbf,
@@ -50,7 +53,7 @@ typedef enum wav2prg_bool (*wav2prg_get_word_func)(struct wav2prg_context*, cons
 typedef enum wav2prg_bool (*wav2prg_get_block_func)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_raw_block*, uint16_t);
 typedef enum wav2prg_bool (*wav2prg_get_sync)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, enum wav2prg_bool);
 typedef enum wav2prg_sync_result (*wav2prg_get_sync_check)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
-typedef enum wav2prg_bool (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct wav2prg_block_info*);
+typedef enum wav2prg_bool (*wav2prg_get_block_info)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*, struct program_block_info*);
 typedef enum wav2prg_checksum_state (*wav2prg_check_checksum)(struct wav2prg_context*, const struct wav2prg_functions*, struct wav2prg_plugin_conf*);
 typedef void              (*wav2prg_reset_checksum_to)(struct wav2prg_context*, uint8_t);
 typedef void              (*wav2prg_reset_checksum)(struct wav2prg_context*);
@@ -124,7 +127,7 @@ typedef struct wav2prg_plugin_conf* (*wav2prg_observer_use_different_conf)(struc
 typedef void                        (*wav2prg_observer_set_info)(struct wav2prg_observer_context*, uint16_t, uint16_t, const char*);
 typedef void                        (*wav2prg_disallow_gaps)(struct wav2prg_observer_context*);
 
-typedef enum wav2prg_bool (*wav2prg_recognize_block)(struct wav2prg_observer_context*, const struct wav2prg_observer_functions*, const struct wav2prg_block*, uint16_t);
+typedef enum wav2prg_bool (*wav2prg_recognize_block)(struct wav2prg_observer_context*, const struct wav2prg_observer_functions*, const struct program_block*, uint16_t);
 
 struct wav2prg_observer_functions {
   wav2prg_change_sync_sequence_length change_sync_sequence_length_func;

@@ -18,7 +18,7 @@
 #include "audiotap_interface.h"
 #include "audiotap.h"
 #include "observers.h"
-#include "wav2prg_block_list.h"
+#include "block_list.h"
 #include "name_utils.h"
 
 static void try_sync(struct display_interface_internal* internal, const char* loader_name, const char* observation)
@@ -29,7 +29,7 @@ static void try_sync(struct display_interface_internal* internal, const char* lo
   printf("\n");
 }
 
-static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct wav2prg_block_info* info)
+static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct program_block_info* info)
 {
   if (info){
     char progname[17];
@@ -145,7 +145,7 @@ static enum wav2prg_bool add_to_dump_list(const char* filename, void* dumps)
   int i = 0;
   while((*current_dumps->dumps)[i].name != NULL)
     i++;
-  *current_dumps->dumps = realloc(*current_dumps->dumps, (i + 2)*sizeof(struct dump_element));
+  *current_dumps->dumps = (struct dump_element*)realloc(*current_dumps->dumps, (i + 2)*sizeof(struct dump_element));
   (*current_dumps->dumps)[i].name = strdup(filename);
   (*current_dumps->dumps)[i].dump_type = current_dumps->dump_type;
   (*current_dumps->dumps)[i + 1].name = NULL;

@@ -1,6 +1,6 @@
 #include "prg2wav_utils.h"
 #include "t64utils.h"
-#include "wav2prg_block_list.h"
+#include "block_list.h"
 
 void add_all_entries_from_t64(struct simple_block_list_element **block, FILE *fd)
 {

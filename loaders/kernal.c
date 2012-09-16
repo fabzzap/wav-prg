@@ -99,7 +99,7 @@ enum wav2prg_bool kernal_get_byte(struct wav2prg_context* context, const struct 
   return sync_with_byte_and_get_it(context, functions, conf, byte, 0);
 }
 
-enum wav2prg_bool kernal_headerchunk_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+enum wav2prg_bool kernal_headerchunk_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t i;
   struct headerchunk_private_state *headerchunk_necessary_bytes = (struct headerchunk_private_state *)conf->private_state;
@@ -156,7 +156,7 @@ enum wav2prg_bool kernal_get_loaded_checksum(struct wav2prg_context* context, co
 
 static enum wav2prg_bool is_headerchunk(struct wav2prg_observer_context *observer_context,
                                          const struct wav2prg_observer_functions *observer_functions,
-                                         const struct wav2prg_block *block,
+                                         const struct program_block *block,
                                          uint16_t start_point)
 {
   if(block->info.start == 828
@@ -173,7 +173,7 @@ static enum wav2prg_bool is_headerchunk(struct wav2prg_observer_context *observe
 
 static enum wav2prg_bool basic_header_second_copy_after_first_copy(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   uint8_t pilot_byte, i;
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
@@ -188,7 +188,7 @@ static enum wav2prg_bool basic_header_second_copy_after_first_copy(struct wav2pr
 
 static enum wav2prg_bool header_second_copy_after_first_copy(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   observer_functions->disallow_gaps_func(observer_context);
 
@@ -200,7 +200,7 @@ static enum wav2prg_bool header_second_copy_after_first_copy(struct wav2prg_obse
 
 static enum wav2prg_bool data_second_copy_after_first_copy(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   observer_functions->set_info_func(observer_context, block->info.start, block->info.end, NULL);
 
@@ -212,7 +212,7 @@ static enum wav2prg_bool data_second_copy_after_first_copy(struct wav2prg_observ
 
 static enum wav2prg_bool c16_data_second_copy_after_first_copy(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   observer_functions->set_info_func(observer_context, block->info.start, block->info.end, NULL);
 
@@ -222,7 +222,7 @@ static enum wav2prg_bool c16_data_second_copy_after_first_copy(struct wav2prg_ob
                                                    start_point);
 }
 
-enum wav2prg_bool kernal_headerchunk_16_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+enum wav2prg_bool kernal_headerchunk_16_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t byte;
 
@@ -238,7 +238,7 @@ enum wav2prg_bool kernal_headerchunk_16_get_block_info(struct wav2prg_context* c
 
 static enum wav2prg_bool is_c16_headerchunk(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point)
 {
   if(block->info.start == 819

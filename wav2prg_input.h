@@ -1,7 +1,8 @@
 #ifndef WAV2PRG_INPUT_H
 #define WAV2PRG_INPUT_H
 
-#include "wav2prg_types.h"
+#include "wavprg_types.h"
+#include <stdint.h>
 
 struct wav2prg_input_object {
   void* object;

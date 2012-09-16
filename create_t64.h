@@ -12,6 +12,8 @@
  * This file is part of WAV-PRG core processing files
  */
 
+#include "wavprg_types.h"
+
 struct block_list_element;
 
 void create_t64(struct block_list_element *list, const char *tape_name, const char *file_name, enum wav2prg_bool include_all);

@@ -1,6 +1,6 @@
 #include "wav2prg_api.h"
 
-static enum wav2prg_bool turbotape_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool turbotape_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t byte;
   int i;
@@ -31,7 +31,7 @@ static uint8_t turbotape_pilot_sequence[]={9,8,7,6,5,4,3,2,1};
 
 static enum wav2prg_bool recognize_turrican(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   if (block->info.start == 0x801
    && block->info.end >= 0xb34

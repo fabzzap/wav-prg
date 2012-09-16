@@ -23,7 +23,7 @@ static enum wav2prg_sync_result wildsave_sync(struct wav2prg_context* context, c
   return functions->get_sync_sequence(context, functions, conf);
 }
 
-static enum wav2prg_bool wildsave_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool wildsave_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint16_t size;
   uint8_t end_check_byte;
@@ -49,7 +49,7 @@ static uint8_t wildsave_postprocess_data_byte(struct wav2prg_plugin_conf *conf, 
 
 static enum wav2prg_bool keep_doing_wildsave(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point)
 {
   return wav2prg_true;

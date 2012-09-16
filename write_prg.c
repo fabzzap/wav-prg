@@ -1,4 +1,4 @@
-#include "wav2prg_block_list.h"
+#include "block_list.h"
 #include "name_utils.h"
 #include "create_t64.h"
 

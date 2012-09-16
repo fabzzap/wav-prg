@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 
 #include "t64utils.h"
-#include "wav2prg_blocks.h"
+#include "program_block.h"
 
 static int file_size(FILE *descriptor){
   struct stat file_attributes;
@@ -107,7 +107,7 @@ int get_used_entries(FILE *infile){
   int total_entries = get_total_entries(infile);
   int used_entries = 0;
   int count;
-  struct wav2prg_block program;
+  struct program_block program;
 
   for (count = 1; count <= total_entries; count++)
     if (get_entry(count, infile, &program) != 0)
@@ -122,7 +122,7 @@ void get_tape_name(char *tape_name, FILE *infile){
   tape_name[24] = 0;
 }
 
-int get_entry_info(int count, FILE *infile, struct wav2prg_block_info *info, unsigned int* offset){
+int get_entry_info(int count, FILE *infile, struct program_block_info *info, unsigned int* offset){
   unsigned char byte;
   int power;
 
@@ -174,7 +174,7 @@ int get_entry_info(int count, FILE *infile, struct wav2prg_block_info *info, uns
    out of range. For .PRG and .P00 count is ignored, the only
    entry is returned */
 
-int get_entry(int count, FILE *infile, struct wav2prg_block *program){
+int get_entry(int count, FILE *infile, struct program_block *program){
   switch (detect_type(infile)) {
   case t64:
     {
@@ -200,7 +200,7 @@ int get_entry(int count, FILE *infile, struct wav2prg_block *program){
 It returns the first used entry of a .T64 file. Useful if you
 are sure that a T64 file has only one used entry */
 
-int get_first_entry(FILE *infile, struct wav2prg_block *program){
+int get_first_entry(FILE *infile, struct program_block *program){
   filetype type = detect_type(infile);
   int count;
   int total_entries;

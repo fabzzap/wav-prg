@@ -1,5 +1,5 @@
 #include "wav2prg_input.h"
-#include "wav2prg_block_list.h"
+#include "block_list.h"
 #include "wav2prg_api.h"
 #include "audiotap.h"
 #include "get_pulse.h"

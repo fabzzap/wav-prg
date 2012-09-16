@@ -32,7 +32,7 @@
 #include "../audiotap_interface.h"
 #include "../create_t64.h"
 #include "../write_cleaned_tap.h"
-#include "../wav2prg_block_list.h"
+#include "../block_list.h"
 #include "../get_pulse.h"
 #include "../write_prg.h"
 #include "../name_utils.h"
@@ -154,7 +154,7 @@ static void try_sync(struct display_interface_internal* internal, const char* lo
   internal->observation_name = observation_name;
 }
 
-static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct wav2prg_block_info* info/*, const struct wav2prg_observed_loaders* dependencies*/)
+static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct program_block_info* info/*, const struct wav2prg_observed_loaders* dependencies*/)
 {
   char text[1024];
   TVINSERTSTRUCTA is = {NULL,TVI_LAST,{TVIF_TEXT,NULL,0,0,text}};

@@ -1,6 +1,6 @@
 #include "wav2prg_api.h"
 
-static enum wav2prg_bool turbo220_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool turbo220_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint16_t entry_point;
   if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)

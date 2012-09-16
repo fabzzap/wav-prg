@@ -2,9 +2,10 @@
 #include "wav2prg_core.h"
 #include "loaders.h"
 #include "wav2prg_display_interface.h"
-#include "wav2prg_block_list.h"
+#include "block_list.h"
 #include "get_pulse.h"
 #include "observers.h"
+#include "wav2prg_input.h"
 
 #include <malloc.h>
 #include <string.h>
@@ -467,12 +468,12 @@ static struct wav2prg_tolerance* get_strict_tolerances(const char* loader_name){
    and the format of the following block can be guessed */
  
 struct current_recognition {
-  struct wav2prg_block_info *recognized_info;
+  struct program_block_info *recognized_info;
   enum wav2prg_bool no_gaps_allowed;
 };
 
 struct further_recognition {
-  struct wav2prg_block block;
+  struct program_block block;
   uint16_t where_to_search_in_block;
   wav2prg_recognize_block recognize_func;
 };
@@ -487,7 +488,7 @@ struct wav2prg_observer_context {
 
 static void change_sync_sequence_length(struct wav2prg_plugin_conf *conf, uint8_t len)
 {
-  conf->sync_sequence = realloc(conf->sync_sequence, len);
+  conf->sync_sequence = (uint8_t*)realloc(conf->sync_sequence, len);
   conf->len_of_sync_sequence = len;
 }
 
@@ -531,7 +532,7 @@ static void observer_set_info(struct wav2prg_observer_context *observer_context,
   else{
     memcpy(observer_context->current_recognition->recognized_info->name, observer_context->observed_block_name, sizeof(observer_context->current_recognition->recognized_info->name));
     if (observer_context->where_to_search_in_block > 0)
-      number_to_name(observer_context->where_to_search_in_block, observer_context->current_recognition->recognized_info->name);
+      number_to_name((uint8_t)observer_context->where_to_search_in_block, observer_context->current_recognition->recognized_info->name);
   }
 }
 
@@ -544,7 +545,7 @@ static enum wav2prg_bool recognize_new_loader(wav2prg_recognize_block recognize_
                                               struct wav2prg_plugin_conf **conf,
                                               const char *loader,
                                               struct current_recognition *current_recognition,
-                                              struct wav2prg_block *block,
+                                              struct program_block *block,
                                               uint16_t where_to_search_in_block,
                                               uint16_t *where_to_save_restart_point){
   struct wav2prg_observer_context observer_context =
@@ -860,7 +861,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
           if (found_dependent_plugin){
             if(further_recognition.where_to_search_in_block > 0){
               further_recognition.recognize_func = observers->observer->recognize_func;
-              memcpy(&further_recognition.block, &current_block->block, sizeof(struct wav2prg_block));
+              memcpy(&further_recognition.block, &current_block->block, sizeof(struct program_block));
             }
             else
               further_recognition.recognize_func = NULL;

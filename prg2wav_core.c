@@ -19,7 +19,7 @@
 
 #include "prg2wav_core.h"
 #include "audiotap.h"
-#include "wav2prg_block_list.h"
+#include "block_list.h"
 #include "prg2wav_display_interface.h"
 
 static int slow_write_bit(struct audiotap *file, unsigned char bit, int short_pulse, int long_pulse){
@@ -148,7 +148,7 @@ static int turbotape_write_byte(struct audiotap *file, unsigned char byte, uint1
 }
 
 static int turbotape_convert(struct audiotap *file,
-                             struct wav2prg_block *program,
+                             struct program_block *program,
                              uint32_t *statusbar_len,
                              uint16_t threshold,
                              struct prg2wav_display_interface *display_interface,

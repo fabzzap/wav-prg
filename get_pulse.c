@@ -1,5 +1,4 @@
 #include "wav2prg_api.h"
-#include "wav2prg_block_list.h"
 #include "get_pulse.h"
 
 #include <stdlib.h>
@@ -77,14 +76,14 @@ void copy_tolerances(uint8_t num_pulse_lengths, struct tolerances *dest, const s
 
 struct tolerances* new_copy_tolerances(uint8_t num_pulse_lengths, const struct tolerances *src)
 {
-  struct tolerances* dest = malloc(sizeof(*src) * num_pulse_lengths);
+  struct tolerances* dest = (struct tolerances*)malloc(sizeof(*src) * num_pulse_lengths);
   copy_tolerances(num_pulse_lengths, dest, src);
   return dest;
 }
 
 struct tolerances* get_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresholds){
   const struct tolerances *existing_tolerances = get_existing_tolerances(num_pulse_lengths, thresholds);
-  struct tolerances *tolerances = malloc(sizeof(*tolerances) * num_pulse_lengths);
+  struct tolerances *tolerances = (struct tolerances*)malloc(sizeof(*tolerances) * num_pulse_lengths);
 
   if (existing_tolerances != NULL)
     copy_tolerances(num_pulse_lengths, tolerances, existing_tolerances);
@@ -127,7 +126,7 @@ void add_or_replace_tolerances(uint8_t num_pulse_lengths, const uint16_t *thresh
     store = realloc(store, sizeof(*store) * (store_size + 1));
   store[store_size].tolerances = tolerances;
   store[store_size].num_pulse_lengths = num_pulse_lengths;
-  store[store_size].thresholds = malloc(sizeof(uint16_t) * (num_pulse_lengths - 1));
+  store[store_size].thresholds = (uint16_t*)malloc(sizeof(uint16_t) * (num_pulse_lengths - 1));
   memcpy(store[store_size++].thresholds, thresholds, sizeof(uint16_t) * (num_pulse_lengths - 1));
 }
 

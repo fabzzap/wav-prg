@@ -1,9 +1,12 @@
-#include "wav2prg_types.h"
-#include "wav2prg_input.h"
+#include "wavprg_types.h"
+
+#include <stdint.h>
 
 struct wav2prg_display_interface;
 struct display_interface_internal;
 struct wav2prg_plugin_conf;
+struct wav2prg_input_object;
+struct wav2prg_input_functions;
 
 enum wav2prg_tolerance_type {
   wav2prg_tolerant,

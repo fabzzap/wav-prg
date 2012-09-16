@@ -31,8 +31,8 @@
 #include "../prg2wav_core.h"
 #include "../prg2wav_utils.h"
 #include "audiotap.h"
-#include "../wav2prg_blocks.h"
-#include "../wav2prg_block_list.h"
+//#include "../wav2prg_blocks.h"
+#include "../block_list.h"
 #include "../prg2wav_display_interface.h"
 #include "../name_utils.h"
 
@@ -52,7 +52,7 @@ static void write_entries_to_window(HWND window, char *filename){
   filetype type;
   LVITEMA row;
   FILE *fd;
-  struct wav2prg_block program;
+  struct program_block program;
 
   HWND preview = GetDlgItem(window, IDC_PREVIEW);
   HWND text = GetDlgItem(window, IDC_FILE_TYPE);

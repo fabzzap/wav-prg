@@ -1,4 +1,7 @@
-#include "wav2prg_blocks.h"
+#ifndef BLOCK_SYNCS_H
+#define BLOCK_SYNCS_H
+
+#include "program_block.h"
 #include "checksum_state.h"
 
 struct block_syncs {
@@ -10,7 +13,7 @@ struct block_syncs {
 struct wav2prg_plugin_conf;
 
 struct block_list_element {
-  struct wav2prg_block block;
+  struct program_block block;
   enum {
     block_no_sync,
     block_sync_no_info,
@@ -35,7 +38,7 @@ struct block_list_element {
 };
 
 struct simple_block_list_element {
-  struct wav2prg_block block;
+  struct program_block block;
   struct simple_block_list_element *next;
 };
 
@@ -44,3 +47,6 @@ void free_block_list_element(struct block_list_element* block);
 void add_simple_block_list_element(struct simple_block_list_element **before_this);
 void remove_simple_block_list_element(struct simple_block_list_element **remove_here);
 void remove_all_simple_block_list_elements(struct simple_block_list_element **remove_here);
+
+
+#endif //ndef BLOCK_SYNCS_H

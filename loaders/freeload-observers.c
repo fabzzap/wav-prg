@@ -2,7 +2,7 @@
 
 static enum wav2prg_bool recognize_fast_freeload(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
@@ -32,7 +32,7 @@ static enum wav2prg_bool recognize_fast_freeload(struct wav2prg_observer_context
 
 static enum wav2prg_bool recognize_freeload_with_turbotape_sync(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
@@ -73,7 +73,7 @@ static enum wav2prg_bool recognize_freeload_with_turbotape_sync(struct wav2prg_o
 
 static enum wav2prg_bool recognize_freeload_16(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
@@ -111,7 +111,7 @@ static enum wav2prg_bool recognize_freeload_16(struct wav2prg_observer_context *
 
 static enum wav2prg_bool recognize_firebird(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
@@ -168,7 +168,7 @@ static enum wav2prg_bool recognize_firebird(struct wav2prg_observer_context *obs
 
 static enum wav2prg_bool recognize_algasoft(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
@@ -223,7 +223,7 @@ static enum wav2prg_bool recognize_algasoft(struct wav2prg_observer_context *obs
 
 static enum wav2prg_bool recognize_catalypse(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 
@@ -278,7 +278,7 @@ static enum wav2prg_bool recognize_catalypse(struct wav2prg_observer_context *ob
 
 static enum wav2prg_bool recognize_ode(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
 

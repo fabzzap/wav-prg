@@ -25,7 +25,7 @@ static enum wav2prg_sync_result samuraitrilogy_sync(struct wav2prg_context* cont
   return functions->get_sync_sequence(context, functions, conf);
 }
 
-static enum wav2prg_bool samuraitrilogy_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool samuraitrilogy_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   struct samuraitrilogy_private_state *state = (struct samuraitrilogy_private_state *)conf->private_state;
 
@@ -41,7 +41,7 @@ static enum wav2prg_bool samuraitrilogy_get_block_info(struct wav2prg_context* c
   return wav2prg_true;
 }
 
-static enum wav2prg_bool samuraitrilogy_data_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool samuraitrilogy_data_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t i;
   struct samuraitrilogy_private_state *state = (struct samuraitrilogy_private_state *)conf->private_state;
@@ -74,7 +74,7 @@ static enum wav2prg_bool samuraitrilogy_get_block_func(struct wav2prg_context*co
 
 static enum wav2prg_bool keep_doing_samuraitrilogy(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   struct samuraitrilogy_private_state *state = (struct samuraitrilogy_private_state *)conf->private_state;

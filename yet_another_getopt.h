@@ -1,4 +1,6 @@
-#include "wav2prg_types.h"
+#include "wavprg_types.h"
+
+#include <stdint.h>
 
 typedef enum wav2prg_bool (*option_callback)(const char*, void*);
 
