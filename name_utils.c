@@ -1,3 +1,4 @@
+#include "name_utils.h"
 #include "wav2prg_types.h"
 
 /* Return input_char converted from PETSCII to ASCII, or 0 if not acceptable */
@@ -26,7 +27,7 @@ static char converted_char(char input_char, enum wav2prg_bool space_is_acceptabl
 }
 
 /* input and output must be at least 17 chars long (16+null termination) */
-void convert_petscii_string(char* name, char* output, enum wav2prg_bool forbidden_char_in_filename_is_acceptable)
+void convert_petscii_string(const char* name, char* output, enum wav2prg_bool forbidden_char_in_filename_is_acceptable)
 {
   int i, j, k = 0;
 
