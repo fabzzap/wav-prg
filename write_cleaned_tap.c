@@ -3,7 +3,7 @@
 #include "wav2prg_api.h"
 #include "audiotap.h"
 #include "get_pulse.h"
-#include "display_interface.h"
+#include "wav2prg_display_interface.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -17,7 +17,7 @@ void write_cleaned_tap(struct block_list_element* blocks,
                        const char* filename,
                        uint8_t machine,
                        uint8_t videotype,
-                       struct display_interface *display_interface,
+                       struct wav2prg_display_interface *wav2prg_display_interface,
                        struct display_interface_internal *display_interface_internal)
 {
   /* tolerance = NULL, need_new_tolerances = true: nothing is being cleaned at this time
@@ -55,7 +55,7 @@ void write_cleaned_tap(struct block_list_element* blocks,
 
     if (new_display_progress != display_progress){
       display_progress = new_display_progress;
-      display_interface->progress(display_interface_internal, pos);
+      wav2prg_display_interface->progress(display_interface_internal, pos);
     }
     while(current_block != NULL){
       if (sync >= current_block->num_of_syncs){

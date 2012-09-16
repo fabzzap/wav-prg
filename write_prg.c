@@ -48,12 +48,12 @@ static int ReduceName(const char *sC64Name, char *pDosName){
       sBuf[i] = '_';
       break;
     default:
-      if (islower(sBuf[i])) {
+      if (islower((unsigned char)sBuf[i])) {
         sBuf[i] -= 32;
         break;
       }
 
-      if (isalnum(sBuf[i])) {
+      if (isalnum((unsigned char)sBuf[i])) {
         break;
       }
 

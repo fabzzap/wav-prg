@@ -30,10 +30,17 @@ struct block_list_element {
   struct block_syncs* syncs;
   uint32_t end_of_info;
   uint32_t last_valid_data_byte;
-  struct block_list_element* next;
   enum wav2prg_bool opposite_waveform;
+  struct block_list_element* next;
+};
+
+struct simple_block_list_element {
+  struct wav2prg_block block;
+  struct simple_block_list_element *next;
 };
 
 struct block_list_element* new_block_list_element(uint8_t num_pulse_lengths, uint16_t *thresholds);
 void free_block_list_element(struct block_list_element* block);
-
+void add_simple_block_list_element(struct simple_block_list_element **before_this);
+void remove_simple_block_list_element(struct simple_block_list_element **remove_here);
+void remove_all_simple_block_list_elements(struct simple_block_list_element **remove_here);

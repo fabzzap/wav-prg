@@ -1,7 +1,7 @@
 #include "wav2prg_types.h"
 #include "wav2prg_input.h"
 
-struct display_interface;
+struct wav2prg_display_interface;
 struct display_interface_internal;
 struct wav2prg_plugin_conf;
 
@@ -21,6 +21,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                              enum wav2prg_bool keep_broken_blocks,
                              struct wav2prg_input_object *input_object,
                              struct wav2prg_input_functions *input,
-                             struct display_interface *display_interface,
+                             struct wav2prg_display_interface *wav2prg_display_interface,
                              struct display_interface_internal *display_interface_internal);
 

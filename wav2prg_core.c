@@ -1,7 +1,7 @@
 #include "wav2prg_api.h"
 #include "wav2prg_core.h"
 #include "loaders.h"
-#include "display_interface.h"
+#include "wav2prg_display_interface.h"
 #include "wav2prg_block_list.h"
 #include "get_pulse.h"
 #include "observers.h"
@@ -35,7 +35,7 @@ struct wav2prg_context {
   struct wav2prg_raw_block raw_block;
   struct block_syncs **current_syncs;
   uint32_t *current_num_of_syncs;
-  struct display_interface *display_interface;
+  struct wav2prg_display_interface *wav2prg_display_interface;
   struct display_interface_internal *display_interface_internal;
   enum wav2prg_bool using_opposite_waveform;
 };
@@ -49,7 +49,7 @@ static enum wav2prg_bool get_pulse(struct wav2prg_context* context, struct wav2p
   static int ncalls = 0;
 
   if (((ncalls++) % 4096) == 0)
-    context->display_interface->progress(context->display_interface_internal, context->input->get_pos(context->input_object));
+    context->wav2prg_display_interface->progress(context->display_interface_internal, context->input->get_pos(context->input_object));
 
   if (ret == wav2prg_false)
     return wav2prg_false;
@@ -197,7 +197,7 @@ static void add_byte_to_block(struct wav2prg_context *context, struct wav2prg_ra
     uint16_t pos = block->filling == first_to_last
       ? block->location_of_current_byte
       : block->location_of_first_byte + block->location_of_last_byte - block->location_of_current_byte;
-    context->display_interface->block_progress(context->display_interface_internal, pos);
+    context->wav2prg_display_interface->block_progress(context->display_interface_internal, pos);
   }
 }
 
@@ -361,7 +361,7 @@ static enum wav2prg_checksum_state check_checksum_func(struct wav2prg_context* c
     }
   }
   end_pos = context->input->get_pos(context->input_object);
-  context->display_interface->checksum(context->display_interface_internal, res, start_pos, end_pos, loaded_checksum, computed_checksum);
+  context->wav2prg_display_interface->checksum(context->display_interface_internal, res, start_pos, end_pos, loaded_checksum, computed_checksum);
   return res;
 }
 
@@ -600,7 +600,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
                              enum wav2prg_bool keep_broken_blocks,
                              struct wav2prg_input_object *input_object,
                              struct wav2prg_input_functions *input,
-                             struct display_interface *display_interface,
+                             struct wav2prg_display_interface *wav2prg_display_interface,
                              struct display_interface_internal *display_interface_internal)
 {
   const struct wav2prg_loaders* current_loader;
@@ -645,7 +645,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
     },
     NULL,
     NULL,
-    display_interface,
+    wav2prg_display_interface,
     display_interface_internal,
     wav2prg_false
   };
@@ -710,7 +710,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       input->invert(input_object);
     }
 
-    context.display_interface->try_sync(context.display_interface_internal, loader_name, observation);
+    context.wav2prg_display_interface->try_sync(context.display_interface_internal, loader_name, observation);
     *pointer_to_current_block = new_block_list_element(conf->num_pulse_lengths, conf->thresholds);
     current_block = *pointer_to_current_block;
     context.current_syncs = &current_block->syncs;
@@ -762,7 +762,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
               : wav2prg_true;
       }
       if(res != wav2prg_true){
-        context.display_interface->sync(
+        context.wav2prg_display_interface->sync(
           context.display_interface_internal,
           context.input->get_pos(context.input_object),
           NULL);
@@ -772,7 +772,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
 
       current_block->block_status = block_sync_invalid_info;
       if(current_block->block.info.end <= current_block->block.info.start && current_block->block.info.end != 0){
-        context.display_interface->sync(
+        context.wav2prg_display_interface->sync(
           context.display_interface_internal,
           context.input->get_pos(context.input_object),
           NULL);
@@ -784,7 +784,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       /* collect data for the block */
       current_block->block_status = block_error_before_end;
       current_block->end_of_info = context.input->get_pos(context.input_object);
-      context.display_interface->sync(
+      context.wav2prg_display_interface->sync(
         context.display_interface_internal,
         current_block->end_of_info,
         &current_block->block.info);
@@ -816,7 +816,7 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
           block_checksum_expected_but_missing : block_complete;
       }
       current_block->syncs[current_block->num_of_syncs - 1].end = context.input->get_pos(context.input_object);
-      context.display_interface->end(context.display_interface_internal,
+      context.wav2prg_display_interface->end(context.display_interface_internal,
                                    res == wav2prg_true,
                                    current_block->state,
                                    conf->checksum_computation != wav2prg_do_not_compute_checksum,
@@ -896,6 +896,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       current_recognition.no_gaps_allowed = wav2prg_false;
     }
   }
-  context.display_interface->progress(context.display_interface_internal, context.input->get_pos(context.input_object));
+  context.wav2prg_display_interface->progress(context.display_interface_internal, context.input->get_pos(context.input_object));
   return blocks;
 }

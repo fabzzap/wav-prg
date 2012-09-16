@@ -8,7 +8,7 @@
 
 #include "wav2prg_core.h"
 #include "loaders.h"
-#include "display_interface.h"
+#include "wav2prg_display_interface.h"
 #include "wav2prg_api.h"
 #include "write_cleaned_tap.h"
 #include "write_prg.h"
@@ -90,7 +90,7 @@ static void end(struct display_interface_internal *internal, unsigned char valid
     printf("loader does not have checksum, no errors detected\n");
 }
 
-static struct display_interface text_based_display = {
+static struct wav2prg_display_interface text_based_display = {
   try_sync,
   sync,
   progress,

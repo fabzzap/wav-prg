@@ -21,6 +21,7 @@
 #include "resource.h"
 #include "audiotap.h"
 #include "wav2prg_gui.h"
+#include "prg2wav_gui.h"
 #include "../loaders.h"
 
 HINSTANCE instance;
@@ -73,6 +74,56 @@ LPARAM lParam        // second message parameter
   }
 }
 
+static INT_PTR CALLBACK dialog_control(HWND hwnd, //handle of window
+UINT uMsg, //message identifier
+WPARAM wParam, //first message parameter
+LPARAM lParam // second message parameter
+){
+  switch (uMsg) {
+  case WM_INITDIALOG:
+    {
+      RECT desktop_rect, main_window_rect;
+      GetWindowRect(GetDesktopWindow(), &desktop_rect);
+      GetWindowRect(hwnd, &main_window_rect);
+      SetWindowPos(hwnd, 0,
+                   (desktop_rect.right - main_window_rect.right) / 2,
+                   (desktop_rect.bottom - main_window_rect.bottom) / 2,
+                   0, 0, SWP_NOSIZE | SWP_NOZORDER);
+    }
+    CheckRadioButton(hwnd, IDC_WAV2PRG, IDC_PRG2WAV, IDC_WAV2PRG);
+    SendMessage(hwnd, WM_SETICON, 1, (LPARAM)LoadIcon(instance, (LPCTSTR)IDI_ICON));
+    return FALSE;
+  case WM_COMMAND:
+    if (LOWORD(wParam) == IDOK) {
+      if (IsDlgButtonChecked(hwnd, IDC_WAV2PRG))
+        DialogBox(instance, MAKEINTRESOURCE(IDD_WAV2PRG), hwnd,
+                  wav2prg_dialog_proc);
+      else
+        DialogBox(instance, MAKEINTRESOURCE(IDD_PRG2WAV), hwnd,
+                  prg2wav_dialog_proc);
+    }
+    else if (LOWORD(wParam) == IDC_ABOUT) {
+      DialogBox(instance, MAKEINTRESOURCE(IDD_ABOUT), hwnd, about_proc);
+    }
+    return TRUE;
+#ifdef HAVE_HTMLHELP
+  case WM_HELP:
+    HtmlHelpA(hwnd, "docs\\wavprg.chm", HH_DISPLAY_TOC, 0);
+    return TRUE;
+#endif
+  case WM_CLOSE:
+    DestroyWindow(hwnd);
+    return TRUE;
+  case WM_DESTROY:
+    /* The window is being destroyed, close the application
+     * (the child button gets destroyed automatically). */
+    PostQuitMessage(0);
+    return TRUE;
+  default:
+    return 0;
+  }
+}
+
 int WINAPI
 WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         LPSTR lpCmdLine, int nCmdShow){
@@ -103,8 +154,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   register_loaders();
   free(current_directory);
 
-  DialogBox(instance, MAKEINTRESOURCE(IDD_WAV2PRG), NULL,
-                  wav2prg_dialog_proc);
+  DialogBox(instance, MAKEINTRESOURCE(IDD_MAIN), NULL,
+                  dialog_control);
   cleanup_loaders_and_observers();
   audiotap_terminate_lib();
   return 0;

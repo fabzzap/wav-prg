@@ -28,7 +28,7 @@
 #include "../wav2prg_api.h"
 #include "../loaders.h"
 #include "../wav2prg_core.h"
-#include "../display_interface.h"
+#include "../wav2prg_display_interface.h"
 #include "../audiotap_interface.h"
 #include "../create_t64.h"
 #include "../write_cleaned_tap.h"
@@ -296,7 +296,7 @@ static void end(struct display_interface_internal *internal, unsigned char valid
   }
 }
 
-static struct display_interface windows_display = {
+static struct wav2prg_display_interface windows_display = {
   try_sync,
   sync,
   progress,
@@ -750,6 +750,7 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
       EnableWindow(hwndDlg, FALSE);
       selected = SHBrowseForFolderA(&bi);
       EnableWindow(hwndDlg, TRUE);
+      SetFocus(hwndDlg);
       if (selected != NULL) {
         succeeded = SHGetPathFromIDListA(selected, dir_name);
         /*
@@ -797,6 +798,7 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
       EnableWindow(hwndDlg, FALSE);
       selected = SHBrowseForFolderA(&bi);
       EnableWindow(hwndDlg, TRUE);
+      SetFocus(hwndDlg);
       if (selected != NULL) {
         succeeded = SHGetPathFromIDListA(selected, dir_name);
         /*

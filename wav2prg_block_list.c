@@ -20,3 +20,27 @@ void free_block_list_element(struct block_list_element* block){
   free(block->loader_name);
   free(block);
 }
+
+void add_simple_block_list_element(struct simple_block_list_element **before_this)
+{
+  struct simple_block_list_element *new_element = (struct simple_block_list_element *)malloc(sizeof(*new_element));
+
+  new_element->next = *before_this;
+  *before_this = new_element;
+}
+
+void remove_simple_block_list_element(struct simple_block_list_element **remove_here)
+{
+  struct simple_block_list_element *new_next = (*remove_here)->next;
+
+  free(*remove_here);
+  *remove_here = new_next;
+}
+
+void remove_all_simple_block_list_elements(struct simple_block_list_element **remove_here)
+{
+  while (*remove_here)
+  {
+    remove_simple_block_list_element(remove_here);
+  }
+}
