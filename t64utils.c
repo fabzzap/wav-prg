@@ -90,17 +90,28 @@ filetype detect_type(FILE *infile){
 }
 
 int get_total_entries(FILE *infile){
-  unsigned char byte;
-  int entries;
-  if (fseek(infile, 34, SEEK_SET) != 0)
+  switch (detect_type(infile)) {
+  case t64:
+    {
+      unsigned char byte;
+      int entries;
+
+      if (fseek(infile, 34, SEEK_SET) != 0)
+        return 0;
+      if (fread(&byte, 1, 1, infile) < 1)
+        return 0;
+      entries = byte;
+      if (fread(&byte, 1, 1, infile) < 1)
+        return 0;
+      entries = byte * 256 + entries;
+      return entries;
+    }
+  case prg:
+  case p00:
+    return 1;
+  default:
     return 0;
-  if (fread(&byte, 1, 1, infile) < 1)
-    return 0;
-  entries = byte;
-  if (fread(&byte, 1, 1, infile) < 1)
-    return 0;
-  entries = byte * 256 + entries;
-  return entries;
+  }
 }
 
 int get_used_entries(FILE *infile){

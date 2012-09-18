@@ -31,7 +31,6 @@
 #include "../prg2wav_core.h"
 #include "../prg2wav_utils.h"
 #include "audiotap.h"
-//#include "../wav2prg_blocks.h"
 #include "../block_list.h"
 #include "../prg2wav_display_interface.h"
 #include "../name_utils.h"
@@ -220,7 +219,7 @@ static UINT_PTR APIENTRY frompc_hook_proc(HWND hwnd, UINT uimsg, WPARAM wparam, 
               }
             }
             if (*block == NULL)
-              add_all_entries_from_t64(block, fd);
+              add_all_entries_from_file(block, fd);
 
             if (*block == NULL)
               MessageBoxA(hwnd, "You chose a T64 file with no entries",
@@ -709,6 +708,36 @@ INT_PTR CALLBACK prg2wav_dialog_proc(HWND hwndDlg,      //handle to dialog box
     default:
       return FALSE;
     }
+  case WM_DROPFILES:
+    {
+      UINT numfiles = DragQueryFileA((HDROP)wParam, 0xFFFFFFFF, NULL, 0);
+      UINT i;
+      struct prg2wav_params params;
+      struct simple_block_list_element **current_block = &params.program;
+
+      params.program = NULL;
+
+      for (i = 0; i < numfiles; i++)
+      {
+        UINT filenamesize = DragQueryFile((HDROP)wParam, i, NULL, 0);
+        LPSTR filename;
+        FILE* fd;
+        filenamesize++; /* for the null termination */
+        filename = (LPSTR)malloc(filenamesize);
+        DragQueryFileA((HDROP)wParam, i, filename, filenamesize);
+        if ((fd = fopen(filename, "rb")) != NULL){
+          struct simple_block_list_element **new_current_block = add_all_entries_from_file(current_block, fd);
+          if (detect_type(fd) == prg)
+            put_filename_in_entryname(filename, (*current_block)->block.info.name);
+          fclose(fd);
+          current_block = new_current_block;
+        }
+        free(filename);
+      }
+      DragFinish((HDROP)wParam);
+      choose_destination_file_and_convert(hwndDlg, &params);
+    }
+    return TRUE;
 #ifdef HAVE_HTMLHELP
   case WM_HELP:
     HtmlHelpA(hwndDlg, "docs\\wavprg.chm::/prg2wav_main.htm",
