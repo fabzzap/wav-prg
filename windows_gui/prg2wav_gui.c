@@ -280,6 +280,8 @@ static UINT_PTR APIENTRY tap_save_hook_proc(HWND hdlg,
                 (LPARAM) "Version 0");
     SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0,
                 (LPARAM) "Version 1");
+    SendMessageA(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_ADDSTRING, 0,
+                (LPARAM) "Version 2");
     SendMessage(GetDlgItem(hdlg, IDC_CHOOSE_TAP_VERSION), CB_SETCURSEL,
                 (WPARAM) 1, 0);
   }
