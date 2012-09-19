@@ -13,6 +13,7 @@
  */
 
 struct program_block;
+struct program_block_info;
 
 typedef enum {
   not_a_valid_file,

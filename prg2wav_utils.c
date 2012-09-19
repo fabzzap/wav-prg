@@ -5,8 +5,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#ifndef _MSC_VER
+#include <libgen.h>
+#endif
 
-static char* get_basename(const char *filename)
+static char* get_basename(const char *filename, char *output_name, int outlen)
 {
 #ifdef _MSC_VER
   char fname[_MAX_FNAME];
@@ -14,12 +17,12 @@ static char* get_basename(const char *filename)
   char *dest;
 
   _splitpath(filename, NULL, NULL, fname, ext);
-  dest = (char *)malloc(strlen(fname) + strlen(ext) + 1);
-  strcpy(dest, fname);
-  strcat(dest,ext);
-  return dest;
+  strncpy(output_name, fname, outlen);
+  strncat(output_name, ext, outlen);
+  return output_name;
 #else
-  return strdup(basename(filename));
+  strncpy(output_name, filename, outlen);
+  return basename(output_name);
 #endif
 }
 
@@ -45,7 +48,8 @@ void put_filename_in_entryname(const char *filename, char *entryname){
   int i;
   int maxchar;
   /* first, strip off path from filename */
-  char *stripped = get_basename(filename);
+  char buffer[256];
+  char *stripped = get_basename(filename, buffer, sizeof(buffer));
 
   /* then ignore .prg at end if present */
   maxchar = strlen(stripped);
@@ -61,5 +65,4 @@ void put_filename_in_entryname(const char *filename, char *entryname){
     else
       entryname[i] = ' ';
   entryname[16] = 0;
-  free(stripped);
 }

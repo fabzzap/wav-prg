@@ -3,6 +3,7 @@
 
 #include "program_block.h"
 #include "checksum_state.h"
+#include "wavprg_types.h"
 
 struct block_syncs {
   uint32_t start_sync;
@@ -50,3 +51,4 @@ void remove_all_simple_block_list_elements(struct simple_block_list_element **re
 
 
 #endif //ndef BLOCK_SYNCS_H
+

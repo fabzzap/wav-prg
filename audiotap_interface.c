@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stddef.h>
 #include "wav2prg_input.h"
 #include "audiotap.h"
 

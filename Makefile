@@ -6,7 +6,7 @@ wav2prg: wav2prg_core.o \
          write_cleaned_tap.o \
          write_prg.o \
          yet_another_getopt.o \
-         wav2prg_block_list.o \
+         block_list.o \
          create_t64.o \
          audiotap_interface.o
 
@@ -18,12 +18,13 @@ wav2prg.exe: wav2prg_core.o \
              write_cleaned_tap.o \
              write_prg.o \
              yet_another_getopt.o \
-             wav2prg_block_list.o \
+             block_list.o \
              create_t64.o \
-             audiotap_interface.o
+             audiotap_interface.o \
+             name_utils.o
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
-wavprg.exe:LDLIBS+=-lcomdlg32
+wavprg.exe:LDLIBS+=-lcomdlg32 -lole32
 wavprg.exe:LDFLAGS+=-mwindows
 wavprg.exe: wav2prg_core.o \
             loaders.o \
@@ -32,36 +33,21 @@ wavprg.exe: wav2prg_core.o \
             write_cleaned_tap.o \
             write_prg.o \
             yet_another_getopt.o \
-            wav2prg_block_list.o \
+            block_list.o \
             create_t64.o \
             audiotap_interface.o \
+            t64utils.o \
+            name_utils.o \
+            prg2wav_core.o \
+            prg2wav_utils.o \
             windows_gui/wav2prg_gui.o \
+            windows_gui/prg2wav_gui.o \
             windows_gui/wavprg.o \
             windows_gui/wavprg-resources.o
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
 windows_gui/wavprg-resources.o: windows_gui/wavprg.rc
 	$(WINDRES) --include=windows_gui -o $@ $^
-
-t.o: wavprg.rc
-	windres $(CPPFLAGS) -o $@ $^
-
-t: CPPFLAGS = -D_WIN32_IE=0x0400
-t: LDLIBS = -lcomctl32
-
-t: gui_main.o \
-   t.o \
-   loaders.o \
-   dependency_tree.o \
-   turbotape.o \
-   kernal.o \
-   novaload.o \
-   audiogenic.o \
-   pavlodapenetrator.o \
-   pavlodaold.o \
-   pavloda.o \
-   connection.o \
-   rackit.o
 
 ifdef AUDIOTAP_HDR
   CFLAGS+=-I $(AUDIOTAP_HDR)
