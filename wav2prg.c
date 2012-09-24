@@ -425,9 +425,7 @@ int main(int argc, char** argv)
     return 2;
   }
 
-  blocks = wav2prg_analyse(
-    wav2prg_adaptively_tolerant,
-    selected_loader.loader_name ? selected_loader.loader_name : "Default C64",
+  blocks = wav2prg_analyse(selected_loader.loader_name ? selected_loader.loader_name : "Default C64",
     NULL,
     keep_broken,
     &input_object,
@@ -466,6 +464,7 @@ int main(int argc, char** argv)
   free(dump);
   while (blocks != NULL){
     struct block_list_element *new_next = blocks->next;
+
     free_block_list_element(blocks);
     blocks = new_next;
   }

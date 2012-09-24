@@ -29,7 +29,6 @@ struct wav2prg_context {
   wav2prg_get_byte_func get_loaded_checksum_func;
   wav2prg_get_sync_check get_sync_check;
   struct wav2prg_functions subclassed_functions;
-  enum wav2prg_tolerance_type tolerance_type;
   struct tolerances *tolerances;
   uint8_t checksum;
   uint32_t extended_checksum;
@@ -55,10 +54,7 @@ static enum wav2prg_bool get_pulse(struct wav2prg_context* context, struct wav2p
   if (ret == wav2prg_false)
     return wav2prg_false;
 
-  switch(context->tolerance_type){
-  case wav2prg_tolerant           : return get_pulse_tolerant           (raw_pulse, conf, pulse);
-  case wav2prg_adaptively_tolerant: return get_pulse_adaptively_tolerant(raw_pulse, conf->num_pulse_lengths, context->tolerances, pulse);
-  }
+  return get_pulse_adaptively_tolerant(raw_pulse, conf->num_pulse_lengths, context->tolerances, pulse);
 }
 
 static enum wav2prg_bool get_bit_default(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, uint8_t* bit)
@@ -595,14 +591,13 @@ static enum wav2prg_bool recognize_new_loader(wav2prg_recognize_block recognize_
 
 /* Main analysis function */
 
-struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance_type,
-                             const char* start_loader,
-                             struct wav2prg_plugin_conf* start_conf,
-                             enum wav2prg_bool keep_broken_blocks,
-                             struct wav2prg_input_object *input_object,
-                             struct wav2prg_input_functions *input,
-                             struct wav2prg_display_interface *wav2prg_display_interface,
-                             struct display_interface_internal *display_interface_internal)
+struct block_list_element* wav2prg_analyse(const char* start_loader,
+                                           struct wav2prg_plugin_conf* start_conf,
+                                           enum wav2prg_bool keep_broken_blocks,
+                                           struct wav2prg_input_object *input_object,
+                                           struct wav2prg_input_functions *input,
+                                           struct wav2prg_display_interface *wav2prg_display_interface,
+                                           struct display_interface_internal *display_interface_internal)
 {
   const struct wav2prg_loaders* current_loader;
   struct block_list_element *blocks, **pointer_to_current_block = &blocks, *current_block;
@@ -632,7 +627,6 @@ struct block_list_element* wav2prg_analyse(enum wav2prg_tolerance_type tolerance
       number_to_name,
       add_byte_to_block
     },
-    tolerance_type,
     NULL,
     0,
     0,

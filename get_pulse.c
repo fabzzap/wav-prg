@@ -5,15 +5,6 @@
 #include <limits.h>
 #include <string.h>
 
-enum wav2prg_bool get_pulse_tolerant(uint32_t raw_pulse, struct wav2prg_plugin_conf* conf, uint8_t* pulse)
-{
-  for (*pulse = 0; *pulse < conf->num_pulse_lengths - 1; (*pulse)++) {
-    if (raw_pulse < conf->thresholds[*pulse])
-      return wav2prg_true;
-  }
-  return wav2prg_true;
-}
-
 struct tolerance {
   uint16_t min;
   uint16_t max;
@@ -27,11 +18,8 @@ struct tolerances {
 };
 
 static struct {
-  struct
-  {
-    uint8_t num_pulse_lengths;
-    uint16_t *thresholds;
-  };
+  uint8_t num_pulse_lengths;
+  uint16_t *thresholds;
   struct tolerances *tolerances;
 } *store = NULL;
 static uint32_t store_size = 0;
@@ -39,8 +27,10 @@ static uint32_t store_size = 0;
 void reset_tolerances(void)
 {
   uint32_t i;
-  for(i = 0; i < store_size; i++)
+  for(i = 0; i < store_size; i++){
+    free(store[i].thresholds);
     free(store[i].tolerances);
+  }
   free(store);
   store_size = 0;
   store = NULL;
@@ -96,14 +86,10 @@ struct tolerances* get_tolerances(uint8_t num_pulse_lengths, const uint16_t *thr
       tolerances[i].statistics = 0;
     }
     tolerances[0].range.min = (uint16_t)(thresholds[0] * 0.51);
-    tolerances[0].range.max = (uint16_t)(thresholds[0] * 0.96);
-    for(i = 1; i < num_pulse_lengths - 1; i++){
-      tolerances[i].range.min =
-        (uint16_t)(thresholds[i - 1] *  .92 + thresholds[i] * .08);
-      tolerances[i].range.max =
-        (uint16_t)(thresholds[i - 1] *  .08 + thresholds[i] * .92);
+    for (i = 0; i < num_pulse_lengths - 1; i++){
+      tolerances[i    ].range.max = thresholds[i]    ;
+      tolerances[i + 1].range.min = thresholds[i] + 1;
     }
-    tolerances[num_pulse_lengths - 1].range.min = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.04);
     tolerances[num_pulse_lengths - 1].range.max = (uint16_t)(thresholds[num_pulse_lengths - 2] * 1.58);
   }
 
@@ -247,18 +233,6 @@ enum wav2prg_bool get_pulse_adaptively_tolerant(uint32_t raw_pulse, uint8_t num_
     update_statistics(raw_pulse, tolerances + *pulse);
 
   return res;
-}
-
-enum wav2prg_bool get_pulse_intolerant(uint32_t raw_pulse, struct tolerances *tolerances, uint8_t num_pulse_lengths, uint8_t* pulse)
-{
-  for(*pulse = 0; *pulse < num_pulse_lengths; (*pulse)++){
-    if (is_this_pulse_right_intolerant(raw_pulse, &tolerances[*pulse].range))
-    {
-      update_statistics(raw_pulse, tolerances + *pulse);
-      return wav2prg_true;
-    }
-  }
-  return wav2prg_false;
 }
 
 enum wav2prg_bool get_pulse_in_measured_ranges(uint32_t raw_pulse, const struct tolerances *tolerances, uint8_t num_pulse_lengths, uint8_t* pulse)

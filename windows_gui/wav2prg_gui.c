@@ -323,14 +323,13 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
   else
     SetDlgItemTextA(p->window, IDC_FILE_TEXT, "Progress indicator");
   SendMessage(GetDlgItem(p->window, IDC_FILE_PROGRESS), PBM_SETRANGE32, 0, file_size);
-  blocks = wav2prg_analyse(wav2prg_adaptively_tolerant,
-                    p->loader_name,
-                    NULL,
-                    p->include_broken_files,
-                    &p->file,
-                    &input_functions,
-                    &windows_display,
-                    &internal);
+  blocks = wav2prg_analyse(p->loader_name,
+                           NULL,
+                           p->include_broken_files,
+                           &p->file,
+                           &input_functions,
+                           &windows_display,
+                           &internal);
   if(!audiotap_is_terminated(p->file.object)){
     OPENFILENAMEA file;
     char output_filename[1024] = {0};
