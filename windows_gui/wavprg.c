@@ -22,6 +22,7 @@
 #include "audiotap.h"
 #include "wav2prg_gui.h"
 #include "prg2wav_gui.h"
+#include "../get_pulse.h"
 #include "../loaders.h"
 
 HINSTANCE instance;
@@ -157,6 +158,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   DialogBox(instance, MAKEINTRESOURCE(IDD_MAIN), NULL,
                   dialog_control);
   cleanup_loaders_and_observers();
+  reset_tolerances();
   audiotap_terminate_lib();
   return 0;
 }
