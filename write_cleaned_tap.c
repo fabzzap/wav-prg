@@ -22,7 +22,7 @@ void write_cleaned_tap(struct block_list_element* blocks,
 {
   /* tolerance = NULL, need_new_tolerances = true: nothing is being cleaned at this time
      tolerance = NULL, need_new_tolerances = false: we are between two syncs in the middle of one block
-     tolerance not NULL, need_new_tolerances = false: we are between cleaning one block
+     tolerance not NULL, need_new_tolerances = false: we are cleaning one block
      tolerance not NULL, need_new_tolerances = true: we finished cleaning one block and we are cleaning its trailing tone
      When need_new_tolerances = true, current_block points to the block which will be cleaned next */
   struct block_list_element* current_block;
