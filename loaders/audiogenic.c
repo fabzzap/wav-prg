@@ -65,7 +65,7 @@ static enum wav2prg_sync_result audiogenic_sync(struct wav2prg_context* context,
   return wav2prg_true;
 }
 
-static enum wav2prg_bool audiogenic_specialagent_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool audiogenic_specialagent_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;
   if(state->state != audiogenic_synced && functions->get_byte_func(context, functions, conf, &state->last_block_loaded) == wav2prg_false)
@@ -134,7 +134,7 @@ enum wav2prg_bool recognize_itself(struct wav2prg_observer_context *observer_con
 
 static enum wav2prg_bool recognize_hc(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct{
     enum wav2prg_bool register_filled;
