@@ -1,6 +1,6 @@
 #include "wav2prg_api.h"
 
-static enum wav2prg_bool snakeload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool snakeload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t fileid;
 
@@ -19,7 +19,7 @@ static uint8_t snakeload_pilot_sequence[]={'e','i','l','y','K'};
 
 static enum wav2prg_bool recognize_snakeload(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   uint16_t i, blocklen = block->info.end - block->info.start;
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);

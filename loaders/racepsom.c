@@ -15,7 +15,7 @@ enum wav2prg_sync_result racepsom_get_first_sync(struct wav2prg_context* context
   return pilots >= conf->min_pilots ? wav2prg_sync_success : wav2prg_sync_failure;
 }
 
-enum wav2prg_bool racepsom_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+enum wav2prg_bool racepsom_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t i;
   uint8_t unused_byte;
@@ -38,7 +38,7 @@ enum wav2prg_bool racepsom_get_block_info(struct wav2prg_context* context, const
   return wav2prg_true;
 }
 
-enum wav2prg_bool lotus_data_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+enum wav2prg_bool lotus_data_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   info->start = 0xa9dc;
   return racepsom_get_block_info(context, functions, conf, info);
@@ -125,7 +125,7 @@ static enum wav2prg_bool check_location(const uint8_t *data, uint8_t low_byte, e
 
 static enum wav2prg_bool recognize_racepsom(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point)
 {
   uint16_t i, start;

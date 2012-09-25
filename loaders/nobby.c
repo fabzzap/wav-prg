@@ -39,7 +39,7 @@ static enum wav2prg_sync_result nobby_get_sync(struct wav2prg_context* context, 
   return wav2prg_sync_success;
 }
 
-static enum wav2prg_bool nobby_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info *info)
+static enum wav2prg_bool nobby_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info *info)
 {
   uint32_t i;
   uint8_t byte;

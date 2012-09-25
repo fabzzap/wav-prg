@@ -2,7 +2,7 @@
 
 static enum wav2prg_bool recognize_opera_dc(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   if (block->info.start == 0x801
    && block->info.end == 0x9ff) {

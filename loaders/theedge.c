@@ -51,7 +51,7 @@ static enum wav2prg_sync_result theedge_get_sync(struct wav2prg_context* context
   return byte == 0 ? wav2prg_sync_success : wav2prg_sync_failure;
 }
 
-static enum wav2prg_bool theedge_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info *info)
+static enum wav2prg_bool theedge_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info *info)
 {
   uint32_t i;
   uint8_t byte;

@@ -20,7 +20,7 @@ static struct wav2prg_generate_private_state empire_generate_private_state = {
   &empire_private_state_model
 };
 
-static enum wav2prg_bool empire_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool empire_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   struct empire_private_state *state = (struct empire_private_state *)conf->private_state;
 
@@ -92,7 +92,7 @@ WAV2PRG_LOADER(empire, 1, 0, "Empire", empire_functions)
 
 static enum wav2prg_bool recognize_empire(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   if (block->info.start == 0x801
    && block->info.end == 0x8e8

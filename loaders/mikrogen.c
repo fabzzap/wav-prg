@@ -26,7 +26,7 @@ static uint8_t mikrogen_compute_checksum_step(struct wav2prg_plugin_conf *conf, 
 
 static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_observer_context *observer_context,
                                          const struct wav2prg_observer_functions *observer_functions,
-                                         const struct wav2prg_block *block,
+                                         const struct program_block *block,
                                          uint16_t start_point){
   uint16_t i, j;
 
@@ -67,7 +67,7 @@ static enum wav2prg_bool recognize_mikrogen_old(struct wav2prg_observer_context 
 
 static enum wav2prg_bool recognize_mikrogen_new(struct wav2prg_observer_context *observer_context,
                                          const struct wav2prg_observer_functions *observer_functions,
-                                         const struct wav2prg_block *block,
+                                         const struct program_block *block,
                                          uint16_t start_point){
   uint16_t i;
 

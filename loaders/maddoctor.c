@@ -48,7 +48,7 @@ static enum wav2prg_bool maddoctor_get_block(struct wav2prg_context* context, co
 
 static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   if (block->info.start == 828
    && block->info.end == 1020
@@ -79,7 +79,7 @@ static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_observer_context 
 
 static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   uint16_t i;
 

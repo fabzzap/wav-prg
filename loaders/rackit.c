@@ -33,7 +33,7 @@ static uint8_t rackit_postprocess_data_byte(struct wav2prg_plugin_conf *conf, ui
   return byte ^ state->xor_value;
 }
 
-static enum wav2prg_bool rackit_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool rackit_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
   uint8_t byte;
@@ -61,7 +61,7 @@ static enum wav2prg_bool rackit_get_block_info(struct wav2prg_context* context, 
 
 static enum wav2prg_bool is_rackit(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   struct rackit_private_state* state = (struct rackit_private_state*)conf->private_state;
@@ -160,7 +160,7 @@ static enum wav2prg_bool is_rackit(struct wav2prg_observer_context *observer_con
 
 static enum wav2prg_bool keep_doing_rackit(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   return (block->info.start != 0xfffc || block->info.end != 0xfffe);
 }

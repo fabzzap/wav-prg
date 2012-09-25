@@ -25,7 +25,7 @@ static uint8_t pavlodapenetrator_compute_checksum_step(struct wav2prg_plugin_con
   return old_checksum + byte + 1;
 }
 
-static enum wav2prg_bool pavlodapenetrator_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool pavlodapenetrator_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   if(functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
     return wav2prg_false;

@@ -17,7 +17,7 @@ enum wav2prg_sync_result novaload_get_first_sync(struct wav2prg_context* context
   return functions->get_sync_sequence(context, functions, conf);
 }
 
-enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+enum wav2prg_bool novaload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t i;
   uint8_t namelen;

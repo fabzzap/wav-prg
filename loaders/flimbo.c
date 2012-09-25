@@ -59,7 +59,7 @@ static enum wav2prg_sync_result flimbo_first_get_sync(struct wav2prg_context* co
   return wav2prg_sync_success;
 }
 
-static enum wav2prg_bool flimbo_first_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info *info)
+static enum wav2prg_bool flimbo_first_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info *info)
 {
   uint16_t entry_point;
   if (functions->get_word_func(context, functions, conf, &info->start) == wav2prg_false)
@@ -71,7 +71,7 @@ static enum wav2prg_bool flimbo_first_get_block_info(struct wav2prg_context *con
   return wav2prg_true;
 }
 
-static enum wav2prg_bool flimbo_following_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool flimbo_following_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t blockid;
   struct flimbo_private_state *state = (struct flimbo_private_state*)conf->private_state;

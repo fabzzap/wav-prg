@@ -1,6 +1,6 @@
 #include "wav2prg_api.h"
 
-static enum wav2prg_bool snake_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct wav2prg_block_info* info)
+static enum wav2prg_bool snake_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)
 {
   uint8_t fileid;
 
@@ -49,7 +49,7 @@ static enum wav2prg_bool snake_detect(uint8_t *snakeblock, uint16_t blocklen, ui
 
 static enum wav2prg_bool snake_unencrypted(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point)
 {
   uint16_t i;
@@ -96,7 +96,7 @@ static enum wav2prg_bool snake_unencrypted(struct wav2prg_observer_context *obse
 
 static enum wav2prg_bool snake_encrypted(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point)
 {
   uint8_t snakeblock[1024];
@@ -138,7 +138,7 @@ static enum wav2prg_bool snake_encrypted(struct wav2prg_observer_context *observ
 
 static enum wav2prg_bool recognize_snake_swiv(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   uint16_t offset, i, blocklen;

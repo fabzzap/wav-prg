@@ -4,6 +4,7 @@
 #include "block_list.h"
 
 #include <stdint.h>
+#include <stddef.h>
 
 enum wav2prg_plugin_endianness {
   lsbf,

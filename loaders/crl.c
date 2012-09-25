@@ -43,7 +43,7 @@ static enum wav2prg_sync_result crl_get_sync(struct wav2prg_context* context, co
 
 static enum wav2prg_bool recognize_crl_hc(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   uint16_t i, start, length_of_base_entry;
   uint8_t where_is_start_of_base;
@@ -103,7 +103,7 @@ static enum wav2prg_bool recognize_crl_hc(struct wav2prg_observer_context *obser
 
 static enum wav2prg_bool recognize_crl_self(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   uint16_t i;
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context); 

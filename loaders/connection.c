@@ -2,7 +2,7 @@
 
 static enum wav2prg_bool is_connection(struct wav2prg_observer_context *observer_context,
                                          const struct wav2prg_observer_functions *observer_functions,
-                                         const struct wav2prg_block *datachunk_block,
+                                         const struct program_block *datachunk_block,
                                          uint16_t start_point)
 {
   uint16_t connection_thresholds[]={263};
