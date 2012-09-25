@@ -8,6 +8,7 @@ wav2prg: wav2prg_core.o \
          yet_another_getopt.o \
          block_list.o \
          create_t64.o \
+         name_utils.o \
          audiotap_interface.o
 
 wav2prg.exe: wav2prg_core.o \
