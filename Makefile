@@ -25,6 +25,16 @@ wav2prg.exe: wav2prg_core/wav2prg_core.o \
          common_core/yet_another_getopt.o
 	$(LINK.o) $^ $(LDLIBS) -o $@
 
+cmdline/prg2wav: prg2wav_core/prg2wav_core.o \
+         prg2wav_core/t64utils.o \
+         prg2wav_core/prg2wav_utils.o \
+         common_core/name_utils.o \
+         common_core/block_list.o \
+         common_core/yet_another_getopt.o \
+         cmdline/progressmeter.o \
+         cmdline/process_input_files.o \
+         cmdline/prg2wav.o
+
 wavprg.exe:LDLIBS+=-lcomdlg32 -lole32
 wavprg.exe:LDFLAGS+=-mwindows
 wavprg.exe: wav2prg_core/wav2prg_core.o \
@@ -53,6 +63,7 @@ windows_gui/wavprg-resources.o: windows_gui/wavprg.rc
 CFLAGS=-I common_core
 
 cmdline/wav2prg.o:CFLAGS+=-I wav2prg_core
+cmdline/prg2wav.o cmdline/process_input_files.o cmdline/progressmeter.o:CFLAGS+=-I prg2wav_core
 wav2prg_core/%.o:CFLAGS+=-I wav2prg_core
 windows_gui/%.o:CFLAGS+=-I wav2prg_core -I prg2wav_core
 
