@@ -19,7 +19,7 @@
 #include <errno.h>
 
 #include "create_t64.h"
-#include "block_list.h"
+#include "wav2prg_block_list.h"
 
 enum wav2prg_bool include_block(struct block_list_element *blocks)
 {

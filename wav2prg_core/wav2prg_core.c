@@ -2,7 +2,7 @@
 #include "wav2prg_core.h"
 #include "loaders.h"
 #include "wav2prg_display_interface.h"
-#include "block_list.h"
+#include "wav2prg_block_list.h"
 #include "get_pulse.h"
 #include "observers.h"
 #include "wav2prg_input.h"

@@ -1,0 +1,6 @@
+*.o
+*.dll
+*.exe
+*.so
+wav2prg
+prg2wav

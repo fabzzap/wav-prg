@@ -18,7 +18,7 @@
 #include "audiotap_interface.h"
 #include "audiotap.h"
 #include "observers.h"
-#include "block_list.h"
+#include "wav2prg_block_list.h"
 #include "name_utils.h"
 
 static void try_sync(struct display_interface_internal* internal, const char* loader_name, const char* observation)

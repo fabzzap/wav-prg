@@ -121,7 +121,7 @@ static enum wav2prg_bool audiogenic_specialagent_get_block(struct wav2prg_contex
 
 enum wav2prg_bool recognize_itself(struct wav2prg_observer_context *observer_context,
                                              const struct wav2prg_observer_functions *observer_functions,
-                                             const struct wav2prg_block *block,
+                                             const struct program_block *block,
                                              uint16_t start_point){
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   struct audiogenic_private_state *state =(struct audiogenic_private_state *)conf->private_state;

@@ -1,7 +1,6 @@
 #include "wavprg_types.h"
 #include "program_block.h"
 #include "checksum_state.h"
-#include "block_list.h"
 
 #include <stdint.h>
 #include <stddef.h>

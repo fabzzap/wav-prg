@@ -27,13 +27,13 @@
 #include <htmlhelp.h>
 #endif
 #include "resource.h"
-#include "../t64utils.h"
-#include "../prg2wav_core.h"
-#include "../prg2wav_utils.h"
+#include "t64utils.h"
+#include "prg2wav_core.h"
+#include "prg2wav_utils.h"
 #include "audiotap.h"
-#include "../block_list.h"
-#include "../prg2wav_display_interface.h"
-#include "../name_utils.h"
+#include "block_list.h"
+#include "prg2wav_display_interface.h"
+#include "name_utils.h"
 
 struct prg2wav_params {
   struct audiotap *file;
@@ -425,8 +425,6 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
     tapdec_params.volume = 254;
   if (tapdec_params.volume < 1)
     tapdec_params.volume = 1;
-  if (tapdec_params.volume > 255)
-    tapdec_params.volume = 255;
   tapdec_params.inverted = (IsDlgButtonChecked(hwnd, IDC_INVERTED) == BST_CHECKED);
   selected_clock =
     SendMessage(GetDlgItem(hwnd, IDC_MACHINE_TO), CB_GETCURSEL, 0, 0);

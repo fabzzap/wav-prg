@@ -22,8 +22,8 @@
 #include "audiotap.h"
 #include "wav2prg_gui.h"
 #include "prg2wav_gui.h"
-#include "../get_pulse.h"
-#include "../loaders.h"
+#include "get_pulse.h"
+#include "loaders.h"
 
 HINSTANCE instance;
 struct audiotap_init_status audiotap_startup_status;
