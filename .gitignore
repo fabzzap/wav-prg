@@ -4,3 +4,4 @@
 *.so
 wav2prg
 prg2wav
+*.tap

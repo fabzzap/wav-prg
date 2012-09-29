@@ -251,6 +251,8 @@ int main(int numarg, char **argo){
     tap2audio_close(file);
   }
 
+  remove_all_simple_block_list_elements(&blocks);
+  audiotap_terminate_lib();
   return 0;
 }
 
