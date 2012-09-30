@@ -106,7 +106,7 @@ progress_handle_sigwinch (int sig);
 
 static void progressmeter_set_totalbytes(struct display_interface_internal *bp, uint32_t length, const char* name, uint32_t index, uint32_t total)
 {
-  char caption[128], ascii_name[17];
+  char ascii_name[17];
 
 #ifdef SIGWINCH
   signal(SIGWINCH, progress_handle_sigwinch);
@@ -115,7 +115,7 @@ static void progressmeter_set_totalbytes(struct display_interface_internal *bp, 
   if (length > 65535)
     length = 65535;
   convert_petscii_string(name, ascii_name, wav2prg_true);
-  snprintf(caption, sizeof(caption), "Converting %s (%u of %u)", ascii_name, index, total);
+  printf("Converting %s (%u of %u)\n", ascii_name, index, total);
 
   bp->initial_length = 0;
   bp->count          = 0;
@@ -183,7 +183,6 @@ progressmeter_finish(struct display_interface_internal *bp)
   if (isatty (fileno (stdout)))
     fputs("\n",stdout);
   free(bp->buffer);
-  free(bp);
 }
 
 #define APPEND_LITERAL(s) do {			\

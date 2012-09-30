@@ -12,10 +12,12 @@
  * This file is part of the command-line version of WAV-PRG
  */
 
+#include <stdint.h>
+
 struct simple_block_list_element *
 process_input_files(int numarg
                     ,char **argo
                     ,char list_only
-                    ,char use_filename_as_c64_name
-                    ,char get_whole_t64
+                    ,uint8_t use_filename_as_c64_name
+                    ,uint8_t get_whole_t64
 );

@@ -214,8 +214,8 @@ static int list_contents(const char *filename, FILE *infile, char verbose){
 struct simple_block_list_element *process_input_files(int numarg
                          ,char **argo
                          ,char list_only
-                         ,char use_filename_as_c64_name
-                         ,char get_whole_t64
+                         ,uint8_t use_filename_as_c64_name
+                         ,uint8_t get_whole_t64
 ){
   FILE *infile;
   struct simple_block_list_element *files_to_convert = NULL, **current_block = &files_to_convert;
@@ -234,7 +234,7 @@ struct simple_block_list_element *process_input_files(int numarg
       /* Only the used one will be converted */
       if (used_entries == 1 || get_whole_t64) {
         struct simple_block_list_element **new_current_block = add_all_entries_from_file(current_block, infile);
-        if (detect_type(infile) == prg)
+        if (use_filename_as_c64_name && detect_type(infile) == prg)
           put_filename_in_entryname(*argo, (*current_block)->block.info.name);
         current_block = new_current_block;
       }
