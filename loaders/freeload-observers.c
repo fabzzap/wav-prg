@@ -302,6 +302,56 @@ static enum wav2prg_bool recognize_ode(struct wav2prg_observer_context *observer
   return wav2prg_false;
 }
 
+static enum wav2prg_bool recognize_genuine(struct wav2prg_observer_context *observer_context,
+                                           const struct wav2prg_observer_functions *observer_functions,
+                                           const struct program_block *block,
+                                           uint16_t start_point){
+  struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
+
+  if (block->info.start == 0x2a7
+   && block->info.end == 0x334
+   && block->data[0x2ac -0x2a7] == 0xA9
+   && block->data[0x2ad -0x2a7] == 0x1F
+   && block->data[0x2ae -0x2a7] == 0x8D
+   && block->data[0x2af -0x2a7] == 0x0D
+   && block->data[0x2b0 -0x2a7] == 0xDC
+   && block->data[0x2b1 -0x2a7] == 0xAD
+   && block->data[0x2b2 -0x2a7] == 0x0D
+   && block->data[0x2b3 -0x2a7] == 0xDC
+   && block->data[0x2b4 -0x2a7] == 0xA9
+   && block->data[0x2b6 -0x2a7] == 0x8D
+   && block->data[0x2b7 -0x2a7] == 0x04
+   && block->data[0x2b8 -0x2a7] == 0xDC
+   && block->data[0x2b9 -0x2a7] == 0xA9
+   && block->data[0x2bb -0x2a7] == 0x8D
+   && block->data[0x2bc -0x2a7] == 0x05
+   && block->data[0x2bd -0x2a7] == 0xDC
+   && block->data[0x2be -0x2a7] == 0xA9
+   && block->data[0x2bf -0x2a7] == 0x90
+   && block->data[0x2c0 -0x2a7] == 0x8D
+   && block->data[0x2c1 -0x2a7] == 0x0D
+   && block->data[0x2c2 -0x2a7] == 0xDC
+   && block->data[0x2c3 -0x2a7] == 0xA9
+   && block->data[0x2c4 -0x2a7] == 0x51
+   && block->data[0x2c5 -0x2a7] == 0x8D
+   && block->data[0x2c6 -0x2a7] == 0xFE
+   && block->data[0x2c7 -0x2a7] == 0xFF
+   && block->data[0x2c8 -0x2a7] == 0xA9
+   && block->data[0x2c9 -0x2a7] == 0x03
+   && block->data[0x2ca -0x2a7] == 0x8D
+   && block->data[0x2cb -0x2a7] == 0xFF
+   && block->data[0x2cc -0x2a7] == 0xFF
+  ){
+    conf->thresholds[0] = (block->data[0x2ba - 0x2a7] << 8) + block->data[0x2b5 - 0x2a7];
+    if (conf->thresholds[0] > 0x600)
+      conf->thresholds[0] -= 0x600;
+    else
+      conf->thresholds[0] -= 0x200;
+    return wav2prg_true;
+  }
+  return wav2prg_false;
+}
+
 static const struct wav2prg_observers freeload_observers[] = {
   {"Default C64", {"Freeload", "fast", recognize_fast_freeload}},
   {"Default C64", {"Freeload", "Turbo Tape 64-like sync", recognize_freeload_with_turbotape_sync}},
@@ -310,6 +360,7 @@ static const struct wav2prg_observers freeload_observers[] = {
   {"Default C64", {"Freeload", "Algasoft/Magnifici 7", recognize_algasoft}},
   {"Null loader", {"Freeload", "Catalypse", recognize_catalypse}},
   {"Default C64", {"Freeload", "odeLOAD", recognize_ode}},
+  {"Kernal data chunk", {"Freeload", "genuine", recognize_genuine}},
   {NULL, {NULL, NULL, NULL}}
 };
 
