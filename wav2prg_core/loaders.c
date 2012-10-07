@@ -1,7 +1,7 @@
 #include "wav2prg_api.h"
 
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "loaders.h"

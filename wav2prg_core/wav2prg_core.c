@@ -7,7 +7,7 @@
 #include "observers.h"
 #include "wav2prg_input.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 

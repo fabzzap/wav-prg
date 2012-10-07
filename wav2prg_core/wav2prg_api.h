@@ -171,7 +171,7 @@ struct wav2prg_all_observers {
   } *observers;
 };
 
-#if defined WIN32 || defined __CYGWIN__ || defined linux
+#if defined WIN32 || defined __CYGWIN__ || defined linux || defined __APPLE__
 #define DYNAMIC_LOADING
 #endif
 
