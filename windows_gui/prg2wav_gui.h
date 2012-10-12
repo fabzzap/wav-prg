@@ -7,9 +7,6 @@
  * See file LICENSE.TXT for details.
  *
  * prg2wav_gui.h : header file for prg2wav_gui.c
- *
- * This file belongs to the prg->wav part
- * This file is part of the Windows graphical user interface version of WAV-PRG
  */
 
 INT_PTR CALLBACK prg2wav_dialog_proc(

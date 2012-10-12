@@ -1,3 +1,13 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2011-2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * write_prg.h : write PRG and P00 files
+ */
 #ifndef WRITE_PRG_H_INCLUDED
 #define WRITE_PRG_H_INCLUDED
 

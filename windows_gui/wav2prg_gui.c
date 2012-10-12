@@ -1,7 +1,7 @@
 /* WAV-PRG: a program for converting C64 tapes into files suitable
  * for emulators and back.
  *
- * Copyright (c) Fabrizio Gennari, 1998-2003
+ * Copyright (c) Fabrizio Gennari, 2003-2012
  *
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
@@ -12,9 +12,6 @@
  * the meantime, it checks if the user presses CANCEL. If the thread is
  * still alive, it signals the core processing to interrupt and hopes
  * it obeys...
- *
- * This file belongs to the wav->prg part
- * This file is part of the Windows graphical user interface version of WAV-PRG
  */
 
 #include <windows.h>

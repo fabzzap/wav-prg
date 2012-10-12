@@ -1,3 +1,15 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2003-2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * resource.h : just a list of identifiers for all the elements
+ * of the graphical user interface. IDC_* are controls (buttons,
+ * edit boxes...), IDD_* are whole dialog windows, IDI_* are icons
+ */
 #define IDI_ICON                        101
 #define IDD_ABOUT                       101
 #define IDD_STATUS                      102

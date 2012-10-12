@@ -1,3 +1,16 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2010-2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * get_pulse.c : read duration of a pulse from a tape, and convert to one of
+ * the possible pulses in the current format. The possible pulses are numbered
+ * from 0 (the shortest)
+ */
+
 #include "wav2prg_api.h"
 #include "get_pulse.h"
 

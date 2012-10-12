@@ -1,15 +1,13 @@
 /* WAV-PRG: a program for converting C64 tapes into files suitable
  * for emulators and back.
  * 
- * Copyright (c) Fabrizio Gennari, 1998-2003
+ * Copyright (c) Fabrizio Gennari, 2003-2012
  * 
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
  * 
  * prg2wav.c : the main function of prg2wav, parses options and calls
  * the core processing function with the right arguments
- * This file belongs to the prg->wav part
- * This file is part of the command-line version of WAV-PRG
  */
 
 #include <unistd.h>

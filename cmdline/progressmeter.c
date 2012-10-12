@@ -1,15 +1,12 @@
 /* WAV-PRG: a program for converting C64 tapes into files suitable
  * for emulators and back.
  *
- * Copyright (c) Fabrizio Gennari, 1998-2003
+ * Copyright (c) Fabrizio Gennari, 2003-2012
  *
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
  *
  * progressmeter.c : command-line progress bar
- *
- * This file is shared between the wav->prg part and the prg->wav part
- * This file is part of the command-line version of WAV-PRG
  *
  * Based on implementation of "bar" progress bar of GNU Wget,
  * Copyright (C) 2001, 2002 Free Software Foundation, Inc.
