@@ -1,0 +1,60 @@
+WAV-PRG is a program which tries to extract binary data from Commodore tapes,
+and converts binary data into Commodore tapes.
+
+It uses the Audiotap library to access Commodore tapes (the Audiotap library
+can read TAP, DMP and some kinds of audio files including WAV, and can write
+TAP and WAV files).
+
+In order to build it, GNU make and a compiler are needed. Unix systems
+typically have such an environment ready, while, on Windows, MinGW
+(http://www.mingw.org/) will do. To build, type "make" followed by the target
+name (not needed for the default target) and the optional modifiers.
+
+The possible targets are:
+* wavprg.exe (the default target), the Windows GUI executable
+* wav2prg.exe, the Windows command-line tape extractor
+* prg2wav.exe, the Windows command-line tape creator
+* cmdline/wav2prg, the Unix command-line tape extractor
+* cmdline/prg2wav, the Unix command-line tape creator
+
+The dependency on the Audiotap library means that:
+1. at compile time, the compiler must be able to find audiotap.h
+2. at link time, the linker must be able to find audiotap.lib (Windows)
+   libaudiotap.so (Unix)
+3. at run time, the executable must be able to find audiotap.dll (Windows)
+   libaudiotap.so (Unix)
+In order to achieve that:
+1. One solution is to deploy audiotap.h in the compiler's environment
+   (e.g. /usr/include). Alternatively, the modifier AUDIOTAP_HDR can be used,
+   with the path where audiotap.h is (not including audiotap.h). Example:
+   >make cmdline/wav2prg AUDIOTAP_HDR=path/to/audiotap.h/
+2. One solution is to deploy audiotap.lib or libaudiotap.so in the
+   library path (e.g. /usr/lib). Alternatively, the modifier AUDIOTAP_LIB can
+   be used, with the path where audiotap.lib or libaudiotap.so is.
+   Example:
+   >make cmdline/wav2prg AUDIOTAP_HDR=path/to/audiotap.h/ AUDIOTAP_LIB=/path/to/libaudiotap/
+3. On Windows, just make sure audiotap.dll is in the same folder as the
+   executable. On Unix, one solution is to deploy libaudiotap.so in the
+   library path (e.g. /usr/lib). Alternatively, the modifier USE_RPATH can be
+   used along with AUDIOTAP_LIB. If USE_RPATH is set to 1, the path to the
+   library will be hard-coded in the executable's library search path. In this
+   case it is recommended to specify an absolute path in AUDIOTAP_LIB.
+   Example:
+   >make cmdline/wav2prg AUDIOTAP_HDR=path/to/audiotap.h/ AUDIOTAP_LIB=/path/to/libaudiotap/ USE_RPATH=1
+
+Other modifiers are:
+* DEBUG: set to 1 to produce an executable that can be debugged with gdb. Example:
+  >make wavprg.exe DEBUG=1
+* CC: changes the compiler. Examples:
+  >make CC=gcc
+   needed if your installation does not provide cc.
+  >make CC=clang
+   if you want to use LLVM instead of gcc (and LLVM is installed).
+  >make CC=i586-mingw32msvc-gcc
+   if you are running Linux and you want to produce Windows DLLs (and you have
+   the MinGW cross-compiler installed)
+* WINDRES: changes the Windows resource compiler. Only needed when building
+  the Windows GUI version and the Windows resource compiler has a non-standard
+  name . Example:
+  >make CC=i586-mingw32msvc-gcc WINDRES=i586-mingw32msvc-windres
+
