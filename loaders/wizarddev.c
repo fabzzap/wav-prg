@@ -6,7 +6,8 @@
  * The program is distributed under the GNU General Public License.
  * See file LICENSE.TXT for details.
  *
- * wizarddev.c : Wizard Development format
+ * wizarddev.c : format used by International Karate)
+ * (text in loader says "only for use by Wizard Development")
  */
 
 #include "wav2prg_api.h"
