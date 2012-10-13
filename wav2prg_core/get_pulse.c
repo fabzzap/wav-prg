@@ -141,7 +141,7 @@ static enum {
   limited_distance_from_average
 } mode = limited_increment;
 
-static uint32_t distance = 32;
+static uint32_t distance = 48;
 
 void set_pulse_retrieval_mode(uint32_t new_distance, enum wav2prg_bool use_distance_from_average)
 {
