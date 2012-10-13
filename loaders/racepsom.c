@@ -1,3 +1,14 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * racepsom.c : RAC Epsom (found on some Gremlin games, e.g. Switchblade and Lotus)
+ */
+
 #include "wav2prg_api.h"
 
 static uint16_t racepsom_thresholds[]={0x1b3,0x300};

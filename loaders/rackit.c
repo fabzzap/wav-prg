@@ -1,3 +1,14 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * rackit.c : format found in many Rack-It games
+ */
+
 #include "wav2prg_api.h"
 
 struct rackit_private_state {

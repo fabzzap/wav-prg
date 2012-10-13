@@ -1,3 +1,15 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * audiogenic.c : decodes Audiogenic format and the variant found in Strike Force Cobra
+ * and in Special Agent
+ */
+
 #include "wav2prg_api.h"
 
 struct audiogenic_private_state {

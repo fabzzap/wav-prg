@@ -1,3 +1,14 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * snakeload.c : decodes tapes in Snakeload v5.0, a format by Steve Snake
+ */
+
 #include "wav2prg_api.h"
 
 static enum wav2prg_bool snakeload_get_block_info(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info* info)

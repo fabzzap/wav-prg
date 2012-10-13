@@ -1,3 +1,16 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * null.c : a non-specific loader.
+ * Used as a base by other loaders, which detect start and end addresses from
+ * a preceding block, and do not need any special operations
+ */
+
 #include "wav2prg_api.h"
 
 static uint16_t null_thresholds[]={263};
