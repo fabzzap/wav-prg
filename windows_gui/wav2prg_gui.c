@@ -168,13 +168,13 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
 
   if (!info /*&& !dependencies*/) {
     _snprintf(text, sizeof(text), "Found start of block using %s but with no valid block", internal->loader_name);
-     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-     return;
+    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    return;
   }
   if (!info) {
     _snprintf(text, sizeof(text), "Found start of block using %s but could not determine block info", internal->loader_name);
-     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-     return;
+    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    return;
   }
 
   if (internal->observation_name)
@@ -311,6 +311,120 @@ static struct wav2prg_display_interface windows_display = {
   end
 };
 
+struct pulse_types{
+  HTREEITEM tree;
+  struct block_list_element *block;
+};
+
+static void add_pulse_type_to_summary(struct block_list_element *block,
+                                      struct pulse_types *pulse_type,
+                                      HWND hwnd,
+                                      HTREEITEM pulse_root,
+                                      LPTVINSERTSTRUCTA is)
+{
+  const struct tolerances* tolerances = get_existing_tolerances(block->num_pulse_lengths, block->thresholds);
+  int i;
+
+  is->hParent = pulse_root;
+  pulse_type->block = block;
+  sprintf(is->item.pszText, "Used by");
+  pulse_type->tree = TreeView_InsertItem(hwnd, is);
+  is->hParent = pulse_type->tree;
+  sprintf(is->item.pszText, block->loader_name);
+  TreeView_InsertItem(hwnd, is);
+  is->hParent = pulse_root;
+  sprintf(is->item.pszText, "Thresholds");
+  is->hParent = TreeView_InsertItem(hwnd, is);
+  for (i = 0; i < block->num_pulse_lengths - 1; i++){
+    sprintf(is->item.pszText, "%u", block->thresholds[i]);
+    TreeView_InsertItem(hwnd, is);
+  }
+  for (i = 0; i < block->num_pulse_lengths; i++){
+    is->hParent = pulse_root;
+    sprintf(is->item.pszText, "Pulse %u", i);
+    is->hParent = TreeView_InsertItem(hwnd, is);
+    sprintf(is->item.pszText, "Min measured: %u", get_min_measured(tolerances, i));
+    TreeView_InsertItem(hwnd, is);
+    sprintf(is->item.pszText, "Max measured: %u", get_max_measured(tolerances, i));
+    TreeView_InsertItem(hwnd, is);
+    sprintf(is->item.pszText, "Average: %u", get_average(tolerances, i));
+    TreeView_InsertItem(hwnd, is);
+  }
+}
+
+static void display_summary(struct block_list_element *blocks, HWND hwnd)
+{
+  struct block_list_element *block;
+  int good_blocks = 0, bad_blocks = 0;
+  char text[1024];
+  TVINSERTSTRUCTA is = {NULL,TVI_LAST,{TVIF_TEXT,NULL,0,0,text, sizeof(text)}};
+  HTREEITEM parent_item;
+
+  for (block = blocks; block != NULL; block = block->next)
+  {
+    if (block->block_status == block_complete)
+      good_blocks++;
+    else
+      bad_blocks++;
+  }
+  _snprintf(text, sizeof(text), "%u program%s found", good_blocks, good_blocks != 1 ? "s" : "");
+  parent_item = TreeView_InsertItem(hwnd, &is);
+  is.hParent = parent_item;
+  if (bad_blocks != 0){
+    _snprintf(text, sizeof(text), "%u program%s had load errors", bad_blocks, bad_blocks != 1 ? "s" : "");
+    TreeView_InsertItem(hwnd, &is);
+  }
+
+  if(good_blocks + bad_blocks > 0){
+    int num_filled = 0;
+    int i;
+    struct pulse_types *pulse_types = NULL;
+
+    for(block = blocks; block != NULL; block = block->next){
+      char match_found = 0;
+      for(i = 0; i < num_filled; i++){
+        if(block->num_pulse_lengths == pulse_types[i].block->num_pulse_lengths){
+          int j;
+          match_found = 1;
+          for(j = 0; j < block->num_pulse_lengths - 1; j++){
+            if(block->thresholds[j] != pulse_types[i].block->thresholds[j]){
+              match_found = 0;
+            }
+          }
+          if(match_found)
+            break;
+        }
+      }
+      if(match_found){
+        HTREEITEM item;
+
+        match_found = 0;
+        for(item = TreeView_GetNextItem(hwnd, pulse_types[i].tree, TVGN_CHILD); item != NULL; item = TreeView_GetNextSibling(hwnd, item)){
+          TVITEM is2 = {TVIF_TEXT, item, 0, 0, text, sizeof(text)};
+          TreeView_GetItem(hwnd, &is2);
+          if(!strcmp(block->loader_name, text))
+            match_found = 1;
+        }
+        if(!match_found){
+          is.hParent = pulse_types[i].tree;
+          _snprintf(text, sizeof(text), block->loader_name);
+          TreeView_InsertItem(hwnd, &is);
+        }
+      }
+      else{
+        HTREEITEM pulse_root;
+
+        is.hParent = parent_item;
+        _snprintf(text, sizeof(text), "Pulse type %u", num_filled);
+        pulse_root = TreeView_InsertItem(hwnd, &is);
+        pulse_types = realloc(pulse_types, sizeof(*pulse_types) * (num_filled + 1));
+        add_pulse_type_to_summary(block, pulse_types + num_filled++, hwnd, pulse_root, &is);
+      }
+    }
+    free(pulse_types);
+  }
+}
+
 static DWORD WINAPI wav2prg_thread(LPVOID tparams){
   struct thread_params *p = (struct thread_params *)tparams;
   HWND close_button = GetDlgItem(p->window, IDCANCEL);
@@ -336,6 +450,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
                            &input_functions,
                            &windows_display,
                            &internal);
+  display_summary(blocks, GetDlgItem(p->window, IDC_FOUND));
   if(!audiotap_is_terminated(p->file.object)){
     OPENFILENAMEA file;
     char output_filename[1024] = {0};

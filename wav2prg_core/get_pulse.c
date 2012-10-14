@@ -262,3 +262,13 @@ uint16_t get_average(const struct tolerances *tolerance, uint8_t pulse)
   return (uint16_t)((tolerance+pulse)->average);
 }
 
+uint16_t get_min_measured(const struct tolerances *tolerance, uint8_t pulse)
+{
+  return (uint16_t)((tolerance+pulse)->measured.min);
+}
+
+uint16_t get_max_measured(const struct tolerances *tolerance, uint8_t pulse)
+{
+  return (uint16_t)((tolerance+pulse)->measured.max);
+}
+
