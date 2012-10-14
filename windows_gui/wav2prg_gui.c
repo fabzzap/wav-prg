@@ -36,6 +36,13 @@
 #include "name_utils.h"
 #include "checksum_state.h"
 
+#if (!defined SetWindowLongPtr && !defined _WIN64)
+typedef long LONG_PTR;
+#define SetWindowLongPtr SetWindowLong
+#define GetWindowLongPtr GetWindowLong
+#define GWLP_USERDATA GWL_USERDATA
+#endif
+
 char conversion_dir[MAX_PATH];
 extern HINSTANCE instance;
 extern struct audiotap_init_status audiotap_startup_status;
@@ -488,14 +495,26 @@ static enum wav2prg_bool try_open_file(struct audiotap **origin_file
   return wav2prg_true;
 }
 
-static void initialise_open(HWND hwnd
+static char initialise_open(HWND hwnd
                            ,struct tapenc_params *tapenc_params
                            ,uint8_t *machine
                            ,uint8_t *videotype
                            ,uint8_t *halfwaves
+                           ,char **loader_name
                            ){
   BOOL success;
   LRESULT selected_clock;
+  LRESULT selected_loader = SendMessage(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETCURSEL, 0, 0);
+  LRESULT loader_name_len;
+
+  if (selected_loader == CB_ERR) {
+    MessageBoxA(hwnd, "No plug-in selected!", "Cannot start conversion",
+               MB_ICONERROR);
+    return 0;
+  }
+  loader_name_len = SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXTLEN, selected_loader, 0);
+  *loader_name = (char*)malloc(loader_name_len + 1);
+  SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXT, selected_loader, (LPARAM)*loader_name);
 
   tapenc_params->min_duration = 0;
   tapenc_params->sensitivity = GetDlgItemInt(hwnd, IDC_MIN_HEIGHT, &success, FALSE);
@@ -531,10 +550,13 @@ static void initialise_open(HWND hwnd
     *videotype = TAP_VIDEOTYPE_NTSC;
     break;
   }
+
+  return 1;
 }
 
 static void start_converting(HWND hwnd
                             ,struct audiotap *origin_file
+                            ,char *loader_name
                             ,uint8_t machine
                             ,uint8_t videotype
                             ,uint8_t halfwaves_available
@@ -543,7 +565,7 @@ static void start_converting(HWND hwnd
   {
     IsDlgButtonChecked(hwnd, IDC_BROKEN),
     IsDlgButtonChecked(hwnd, IDC_INCLUDE_ALL),
-    NULL,
+    loader_name,
     {origin_file},
     hwnd,
     IsDlgButtonChecked(hwnd, IDC_TO_TAP) == BST_CHECKED ? tap_checked :
@@ -555,17 +577,7 @@ static void start_converting(HWND hwnd
     videotype,
     halfwaves_available
   };
-  LRESULT selected_loader = SendMessage(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETCURSEL, 0, 0);
-  LRESULT loader_name_len;
 
-  if (selected_loader == CB_ERR) {
-    MessageBoxA(hwnd, "No plug-in selected!", "Cannot start conversion",
-               MB_ICONERROR);
-    return;
-  }
-  loader_name_len = SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXTLEN, selected_loader, 0);
-  tparams.loader_name = (char*)malloc(loader_name_len + 1);
-  SendMessageA(GetDlgItem(hwnd, IDC_PLUGINS), CB_GETLBTEXT, selected_loader, (LPARAM)tparams.loader_name);
   DialogBoxParam(instance, MAKEINTRESOURCE(IDD_STATUS), hwnd, status_proc,
                  (LPARAM) &tparams);
   audio2tap_close(origin_file);
@@ -579,10 +591,11 @@ void start_converting_from_file(HWND hwnd, const char *input_filename)
   uint8_t machine;
   uint8_t videotype;
   uint8_t halfwaves;
+  char *loader_name;
 
-  initialise_open(hwnd, &tapenc_params, &machine, &videotype, &halfwaves);
-  if(try_open_file(&origin_file, input_filename, &tapenc_params, &machine, &videotype, &halfwaves, hwnd))
-    start_converting(hwnd, origin_file, machine, videotype, halfwaves);
+  if (initialise_open(hwnd, &tapenc_params, &machine, &videotype, &halfwaves, &loader_name)
+   && try_open_file(&origin_file, input_filename, &tapenc_params, &machine, &videotype, &halfwaves, hwnd))
+    start_converting(hwnd, origin_file, loader_name, machine, videotype, halfwaves);
 }
 
 void start_converting_from_user_chosen_input(HWND hwnd)
@@ -593,8 +606,10 @@ void start_converting_from_user_chosen_input(HWND hwnd)
   uint8_t videotype;
   uint8_t halfwaves;
   char input_filename[1024];
+  char *loader_name;
 
-  initialise_open(hwnd, &tapenc_params, &machine, &videotype, &halfwaves);
+  if (initialise_open(hwnd, &tapenc_params, &machine, &videotype, &halfwaves, &loader_name) == 0)
+    return;
 
   if (IsDlgButtonChecked(hwnd, IDC_FROM_FILE) == BST_CHECKED) {
     OPENFILENAMEA file;
@@ -636,7 +651,7 @@ void start_converting_from_user_chosen_input(HWND hwnd)
     }
     halfwaves = 1;
   }
-  start_converting(hwnd, origin_file, machine, videotype, halfwaves);
+  start_converting(hwnd, origin_file, loader_name, machine, videotype, halfwaves);
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData){
