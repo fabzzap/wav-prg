@@ -1,5 +1,48 @@
+/* WAV-PRG: a program for converting C64 tapes into files suitable
+ * for emulators and back.
+ *
+ * Copyright (c) Fabrizio Gennari, 2003-2012
+ *
+ * The program is distributed under the GNU General Public License.
+ * See file LICENSE.TXT for details.
+ *
+ * wavprg.rc : Windows resource file
+ */
 #include "resource.h"
+#include "version.h"
 #include <windows.h>
+
+VS_VERSION_INFO		VERSIONINFO
+  FILEVERSION		WAVPRG_MAJOR,WAVPRG_MINOR,WAVPRG_REV,0
+  PRODUCTVERSION	WAVPRG_MAJOR,WAVPRG_MINOR,WAVPRG_REV,0
+  FILEFLAGSMASK		VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+  FILEFLAGS		VS_FF_DEBUG | VS_FF_PRERELEASE
+#else
+  FILEFLAGS		VS_FF_PRERELEASE
+#endif
+  FILEOS		VOS__WINDOWS32
+  FILETYPE		VFT_APP
+  FILESUBTYPE		0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "CompanyName", "Fabrizio Gennari\0"
+      VALUE "FileDescription", "WAV-PRG, a program to read and write Commodore tapes\0"
+      VALUE "FileVersion", WAVPRG_VERSION "\0"
+      VALUE "InternalName", "wavprg\0"
+      VALUE "OriginalFilename",	"wavprg.exe\0"
+      VALUE "ProductName",	"WAV-PRG\0"
+      VALUE "ProductVersion", WAVPRG_VERSION "\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0809, 1252
+  END
+END
 
 IDD_ADVANCED DIALOG DISCARDABLE  0, 0, 201, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
@@ -139,7 +182,7 @@ CAPTION "About WAV-PRG"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,52,153,50,14
-    CTEXT           "WAV-PRG 3.6",IDC_STATIC,0,7,155,8
+    CTEXT           "WAV-PRG 4.0",IDC_STATIC,0,7,155,8
     CTEXT           "Copyright (C) Fabrizio Gennari 1998-2011",IDC_STATIC,0,
                     18,155,8
     CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",
