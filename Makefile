@@ -90,7 +90,11 @@ endif
 
 wav2prg:LDLIBS+=-ldl
 
+HHC=hhc
+
+docs\wavprg.chm: docs\wavprg-doc.hhp docs\contacts.htm docs\credits.htm docs\intro.htm docs\license.htm docs\main.htm docs\main.png docs\prg2wav.png docs\prg2wav_intro.htm docs\prg2wav_main.htm docs\wav2prg.png docs\wav2prg_intro.htm docs\wav2prg_main.htm
+	$(HHC) $<
+	
 clean:
 	rm -f common_core/*.o wav2prg_core/*.o prg2wav_core/*.o windows_gui/*.o cmdline/*.o \
 	common_core/*~ wav2prg_core/*~ prg2wav_core/*~ windows_gui/*~ cmdline/*~
-

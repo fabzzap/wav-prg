@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<Title>Creating emulator files from Commodore 64 tapes</Title>
+</HEAD>
+<BODY>
+When you want to create emulator files, this window is shown.
+<p>
+<img src="wav2prg.png" alt="WAV2PRG window">
+<p>
+<b>Plug-in directory</b>: this is the directory where plug-ins are. A WAV-PRG plug-in is a .dll file
+which allows WAV-PRG to support one loader. The default is the subdirectory <i>plugins</i> of the current
+directory. If the plug-in you want to use is somewhere else, click on <i>Change</i> and choose another
+directory<br>
+<b>Use loader</b>: this allows to choose a loader among the ones supported by the installed plug-ins.
+If you choose "Default C64" or "Default C16" (as appropriate for the tape, note
+that "Default C64" is also appropriate for Vic20), an attempt will be made to
+auto-detect the formats used in the rest of the tape. Otherwise, choose the loader
+used in the tape you want to convert (if known, and if supported).<br>
+<b>Advanced</b>: only recommended for advanced users. In general, a higher number
+makes the program more tolerant, so it will tend not to stop when it finds suspicious pulses.<br>
+<b>Origin</b>: check <i>File</i> if the input is a WAV or TAP file. Check <i>Sound card</i> if the input comes
+from the sound card input, which is connected to the output of a tape player. The <i>Sound
+card</i> button is disabled if any of the files <i>tapencoder.dll</i> and <i>libportaudio-2.dll</i>
+are not present in the same directory as the main executable (<i>wavprg.exe</i>).
+Those files are distributed with Audiotap.
+<br>
+<b>Advanced options</b>: these will be ignored if the input is  a TAP file.<br>
+<b>Inverted waveform</b>: some sound cards invert the signal, that is they turn negative values of the
+waveform into positive ones and vice versa. If the input is such a sound card, or a .WAV
+file generated with such a sound card, invalid data will come from the tape and no programs
+will be converted. In these cases, check this box. In general, if you get the message
+"0 programs converted", try toggling this box and start again.<br>
+<b>Input frequency</b>: Frequency of sound coming from sound card. As long as the frequency
+is supported by the sound card, the higher, the better. 44100 Hz is the default,
+because it is almost universally supported. Yet, many modern sound cards support 96000 Hz: if yours does,
+it is recommended to use that. This parameter is ignored if the input is an
+audio file: in those cases, frequency will be taken form the file itself.<br>
+<b>Sensitivity</b>: with sensitivity 0, maximums and minimums are ignored in case they
+come before the trigger has fired. There can be cases, however, in which such maximums and minimums
+have to be considered. If the sensitivity is > 0 but low, maximums a little below the trigger level
+and minimums a little above the trigger lever will be considered as well. As the sensitivity increases,
+more maximums and minimums will be considered. If the sensitivity is 100, all maximums and minimums
+will be considered. It is only recommended to use high values of sensitivity with bad tapes, in
+presence of sudden sound level changes, otherwise better keep this low.<br>
+<b>Use clock</b>: Different models have different clock frequencies. Duration of a pulse in samples
+is converted to duration in clock cycles. This affect the conversion factor between the two units.<br>
+<b>Destination</b>: choose whether to create a cleaned TAP file, multiple .PRG,
+multiple .P00 or a single .T64 file, or not to create any files (useful if you
+just want to analyse the contents without saving them).<br>
+<b>Include broken and incomplete files</b>: if a file has a load error, or if the tape ends before a file
+has been fully extracted, by default the file will not be saved. Check this box in order to save those files
+too<br>
+<b>Include all slow-loading files</b>: when choosing "Default C64" or "Default C16",
+slow non-turbo files will be detected. If the tape uses a turbo loader, those files
+will typically contain the loader code and little else, so those are filtered out
+by default. By checking this box, those files will be saved as well.<br>
+<b>Folder for PRG/P00</b>: if you choose to create .PRG or .P00 files, they will be saved
+in this directory. Click on <i>Change</i> to choose the directory.<br> If you
+choose <i>Clean TAP</i>, <i>T64</i> or <i>Test only</i> as destination, this will be ignored.<br>
+</BODY>
+</HTML>

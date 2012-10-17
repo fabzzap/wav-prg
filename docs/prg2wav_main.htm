@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<Title>Creating Commodore 64 tapes from emulator files</Title>
+</HEAD>
+<BODY>
+When you want to create Commodore 64 tapes, this window is shown.
+<p>
+<img src="prg2wav.png" alt="PRG2WAV window">
+<p>
+<i>Output format</i> section:
+<ul>
+<li><b>Fast</b>: this will use the Turbo Tape 64 format, fast and well tested. This is the recommended setting.
+<li><b>Slow</b>: this will use the slow (kernel loader) format, built in the ROM of the Commodore computers.
+WARNING: this loader is VERY slow and creates VERY long tapes. It is only
+recommended to use it for very short input files only.
+</ul>
+The <i>average bit duration</i> affects the speed of the Turbo Tape part. A zero bit will be 20% shorter than
+the average, while an one bit will be 30% longer than the average. A shorter value means faster, but more
+unreliable, loading. 263 is the recommended value: it will create programs compatible with the standard Turbo
+Tape 64, a loader that proved fast and reliable since 1983. It is only recommended to use values
+lesser than 263 when creating TAP files to be loaded by emulators: it is unlikely those programs will load
+on a real datassette. Values greater than 263 will give a slower, but more reliable loading.<br>
+<p><b>Raw mode</b> will not write a fast loader before the program in fast mode (meaning that the program will
+not be loadable with a simple LOAD, in order to load it you need to load a Turbo Tape 64-compatible loader yourself),
+and will not write a header chunk with name, start address and end address before the data chunk in slow
+mode. Only recommended to expert users. Everyone else, better keep this unchecked.
+<p><b>Machine</b> lets you choose the model you intend to load the tape on. If you choose VIC20, only the slow option will be available.
+<p>
+<i>Output to</i> section:
+<ul>
+<li><b>TAP file</b>: can be used with many emulators, and can be put to an actual tape with many programs
+(Audiotap, ptap, 64TAPVOC...)
+<li><b>WAV file</b>: can be played by every sound playing program, can be recorded on audio CD's... This button
+is disabled if any of the files <i>tapdecoder.dll</i> and <i>libaudiofile-0.dll</i> are not present in the
+same directory as the main executable (<i>wavprg.exe</i>). Those files are distributed with Audiotap.
+<li><b>Sound card</b>: the sound will be played right away from the sound card. If you have a tape recorder
+whose input is connected to the sound card output, you can record the sound to a tape. This button
+is disabled if the files <i>tapdecoder.dll</i> and <i>libportaudio-2.dll</i> are not present in the same
+directory as the main executable (<i>wavprg.exe</i>). Those files are distributed with Audiotap.
+</ul>
+<i>Advanced options</i> section: these settings will be ignored if output is a TAP file
+<ul>
+<li><b>Inverted waveform</b>: some sound cards invert the signal, that is they turn negative values of the
+waveform into positive ones and vice versa. If your sound card is one of those, your Commodore will be unable to
+load the tape. In these cases, check this box. If your C64 does not load the tape you recorded, try toggling
+this box and start again.<br>
+<li><b>Frequency</b>: the frequency of the output WAV file or sound. Note that this value must be supported by
+the sound card, or the sound will be distorted. Otherwise, the higher the better. 44100 Hz is
+recommended because is supported by virtually all sound cards.
+<li><b>Volume</b>: the volume of the output WAV file or sound. The higher, the better.
+<li><b>Waveform</b>: you can choose among square, triangle and sine waves.
+</ul>
+After you chose the right values for the options (or if you are satisfied with the defaults) press OK. You will be
+asked the input PRG, P00 or T64 file. If the T64 file has more than one entry, you will have to choose the
+entry too. After that, if the output you chose was a TAP or WAV file, you will have to choose its name.
+Then the conversion will start: press <i>Cancel</i> to stop it, or wait until the end.
+</BODY>
+</HTML>

@@ -1,0 +1,22 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<Title>Creating emulator files from Commodore 64 tapes</Title>
+</HEAD>
+<BODY>
+First of all, the Commodore 64 tape must be ported to the PC. There are three ways to do so:
+<ul>
+<li>create a .TAP file from the tape. There are some programs which do so: Audiotap, mtap,
+TAPir, 64VOCTAP, Tape64... Or download a .TAP file from the Internet
+<li>sample the tape into a .WAV file or another supported audio file format. This can be done with any sound editor. Recommended format is uncompressed WAV at the highest supported frequency (44100 Hz is widely supported, 96000 Hz is recommended if your hardware supports it).
+<li>put the tape into a normal tape player, and connect the output of it (for example, the headphone output) to the input of the sound card
+</ul>
+In order to perform the latter two, some additional files are required: <i>tapencoder.dll</i> (for both), <i>libaudiofile-0.dll</i> (for the second one only), <i>libportaudio-2.dll</i> (for the third one only). Those files are not distributed with WAV-PRG. They are distributed with Audiotap. Download Audiotap and put the above files in the same directory where the file wavprg.exe is.
+<p>
+Emulator files (.PRG, .P00, .T64) contain binary data, the same loaded into the Commodore 64's memory. In order to create them, WAV-PRG must know how those data are stored in the tape. Each loader has its own way to store data in tapes.
+In order to support those various formats, WAV-PRG uses plug-ins. Each plug-in is specific for one format. So, in order to create emulator files, the right plug-in must be chosen: otherwise no data, or the wrong data, will be extracted. However, there is no guarantee that the right plug-in exists for a format. In that case, it is impossible to create emulator files for that tape (and therefore, hackers are kindly requested to write plug-ins for the formats that do not have one!)
+<p>
+<a href="wav2prg_main.htm">How to create emulator files</a>
+</BODY>
+</HTML>
