@@ -17,7 +17,10 @@
 static int32_t get_pos_from_audiotap(struct wav2prg_input_object *object)
 {
   struct audiotap *audiotap = (struct audiotap *)object->object;
-  return (int32_t)audio2tap_get_current_pos(audiotap);
+  int pos = audio2tap_get_current_pos(audiotap);
+  if (pos == -1)
+    pos = audio2tap_get_current_sound_level(audiotap);
+  return (int32_t)pos;
 }
 
 static enum wav2prg_bool get_pulse_from_audiotap(struct wav2prg_input_object *object, uint32_t* pulse)

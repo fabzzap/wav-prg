@@ -54,7 +54,7 @@ struct thread_params {
   struct wav2prg_input_object file;
   HWND window;
   enum{nothing_checked,t64_checked, tap_checked, prg_checked, p00_checked} destination;
-  uint8_t machine, videotype, halfwaves;
+  uint8_t machine, videotype, halfwaves, will_stop_at_end;
 };
 
 static void list_plugins(HWND combobox){
@@ -435,7 +435,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
   internal.window = p->window;
   internal.loader_name = NULL;
   internal.current_item = NULL;
-  file_size = audio2tap_get_total_len(p->file.object);
+  file_size = audio2tap_get_total_len((struct audiotap*)p->file.object);
   if (file_size == -1) {
     file_size = INT32_MAX;
     SetDlgItemTextA(p->window, IDC_FILE_TEXT, "Sound level");
@@ -451,7 +451,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
                            &windows_display,
                            &internal);
   display_summary(blocks, GetDlgItem(p->window, IDC_FOUND));
-  if(!audiotap_is_terminated(p->file.object)){
+  if(blocks != NULL && (!p->will_stop_at_end || !audiotap_is_terminated(p->file.object))){
     OPENFILENAMEA file;
     char output_filename[1024] = {0};
     char t64_name[25];
@@ -543,7 +543,7 @@ static INT_PTR CALLBACK status_proc(HWND hwnd,  //handle of window
       struct status_proc_params *params;
 
       tparams->window = hwnd;
-      SetWindowTextA(GetDlgItem(hwnd, IDCANCEL), "Cancel");
+      SetWindowTextA(GetDlgItem(hwnd, IDCANCEL), tparams->will_stop_at_end ? "Cancel" : "Finish");
       SetWindowPos(GetDlgItem(hwnd, IDC_ENTRY_TEXT), 0, 0, 0, 0, 0,
                    SWP_HIDEWINDOW | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
       SetWindowPos(GetDlgItem(hwnd, IDC_ENTRY_PROGRESS), 0, 0, 0, 0, 0,
@@ -675,6 +675,7 @@ static void start_converting(HWND hwnd
                             ,uint8_t machine
                             ,uint8_t videotype
                             ,uint8_t halfwaves_available
+                            ,uint8_t will_stop_at_end
                             ){
   struct thread_params tparams =
   {
@@ -690,7 +691,8 @@ static void start_converting(HWND hwnd
     nothing_checked,
     machine,
     videotype,
-    halfwaves_available
+    halfwaves_available,
+    will_stop_at_end
   };
 
   DialogBoxParam(instance, MAKEINTRESOURCE(IDD_STATUS), hwnd, status_proc,
@@ -710,7 +712,7 @@ void start_converting_from_file(HWND hwnd, const char *input_filename)
 
   if (initialise_open(hwnd, &tapenc_params, &machine, &videotype, &halfwaves, &loader_name)
    && try_open_file(&origin_file, input_filename, &tapenc_params, &machine, &videotype, &halfwaves, hwnd))
-    start_converting(hwnd, origin_file, loader_name, machine, videotype, halfwaves);
+    start_converting(hwnd, origin_file, loader_name, machine, videotype, halfwaves, 1);
 }
 
 void start_converting_from_user_chosen_input(HWND hwnd)
@@ -720,6 +722,7 @@ void start_converting_from_user_chosen_input(HWND hwnd)
   uint8_t machine;
   uint8_t videotype;
   uint8_t halfwaves;
+  uint8_t will_stop_at_end = 1;
   char input_filename[1024];
   char *loader_name;
 
@@ -765,8 +768,9 @@ void start_converting_from_user_chosen_input(HWND hwnd)
       return;
     }
     halfwaves = 1;
+    will_stop_at_end = 0;
   }
-  start_converting(hwnd, origin_file, loader_name, machine, videotype, halfwaves);
+  start_converting(hwnd, origin_file, loader_name, machine, videotype, halfwaves, will_stop_at_end);
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData){
