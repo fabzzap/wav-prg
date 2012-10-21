@@ -180,7 +180,6 @@ static enum wav2prg_bool version(const char *arg, void *options){
   printf("PRG2WAV (part of WAV-PRG) version " WAVPRG_VERSION "\n");
   printf("(C) by Fabrizio Gennari, 1998-2012\n");
   printf("This program is distributed under the GNU General Public License\n");
-  printf("Read the file LICENSE.TXT for details\n");
   exit(0);
 }
 
