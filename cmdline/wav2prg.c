@@ -32,6 +32,7 @@
 #include "observers.h"
 #include "wav2prg_block_list.h"
 #include "name_utils.h"
+#include "version.h"
 
 static void try_sync(struct display_interface_internal* internal, const char* loader_name, const char* observation)
 {
@@ -257,6 +258,14 @@ static enum wav2prg_bool set_distance_from_current_average(const char* v, void *
   return wav2prg_true;
 }
 
+static enum wav2prg_bool version(const char *arg, void *options){
+  printf("WAV2PRG (part of WAV-PRG) version " WAVPRG_VERSION "\n");
+  printf("(C) by Fabrizio Gennari, 1998-2012\n");
+  printf("This program is distributed under the GNU General Public License\n");
+  printf("Read the file LICENSE.TXT for details\n");
+  exit(0);
+}
+
 int main(int argc, char** argv)
 {
   struct wav2prg_selected_loader selected_loader = {NULL, NULL};
@@ -271,6 +280,7 @@ int main(int argc, char** argv)
   enum wav2prg_bool keep_broken = wav2prg_false;
   const char *o1names[]={"s", "single", "single-loader", NULL};
   const char *help_names[]={"h", "help", NULL};
+  const char *version_names[]={"V", "version", NULL};
   const char *option_tap_names[]={"t", "tap", NULL};
   const char *option_prg_names[]={"p", "prg", NULL};
   const char *option_t64_names[]={"6", "t64", NULL};
@@ -325,6 +335,14 @@ int main(int argc, char** argv)
       "Show help",
       help_callback,
       options,
+      wav2prg_false,
+      option_no_argument
+    },
+    {
+      version_names,
+      "Show version",
+      version,
+      NULL,
       wav2prg_false,
       option_no_argument
     },

@@ -29,6 +29,7 @@
 #include "block_list.h"
 #include "progressmeter.h"
 #include "yet_another_getopt.h"
+#include "version.h"
 
 static struct audiotap_init_status audiotap_startup_status;
 
@@ -176,12 +177,10 @@ static enum wav2prg_bool select_waveform(const char *optarg, void *options)
 }
 
 static enum wav2prg_bool version(const char *arg, void *options){
-  printf("PRG2WAV (part of WAV-PRG) version 3.4\n");
-  printf("(C) by Fabrizio Gennari, 1998-2008\n");
+  printf("PRG2WAV (part of WAV-PRG) version " WAVPRG_VERSION "\n");
+  printf("(C) by Fabrizio Gennari, 1998-2012\n");
   printf("This program is distributed under the GNU General Public License\n");
   printf("Read the file LICENSE.TXT for details\n");
-  printf("This product includes software developed by the NetBSD\n");
-  printf("Foundation, Inc. and its contributors\n");
   exit(0);
 }
 

@@ -49,7 +49,7 @@ WINDRES=windres
 wavprg.exe:LDLIBS+=-lcomdlg32 -lole32
 wavprg.exe:LDFLAGS+=-mwindows
 windows_gui/wavprg-resources.o: windows_gui/wavprg.rc
-	$(WINDRES) --include=windows_gui -o $@ $^
+	$(WINDRES) --include=common_core -o $@ $^
 ifdef HTMLHELP
   windows_gui/%.o:CFLAGS += -DHAVE_HTMLHELP -I"$(HTMLHELP)/include"
   wavprg.exe:LDLIBS += -lhtmlhelp -L"$(HTMLHELP)/lib"
