@@ -96,7 +96,8 @@ CAPTION "Conversion to PRG, P00 or T64"
 FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,221,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,172,222,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,221,50,14
+    LTEXT           "F1: help",IDC_STATIC,100,225,30,12
     COMBOBOX        IDC_PLUGINS,61,7,114,150,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "Advanced",IDC_ADVANCED_OPTIONS,184,7,37,12,WS_GROUP
@@ -151,7 +152,7 @@ EXSTYLE WS_EX_ACCEPTFILES
 CAPTION "Conversion from PRG, P00 or T64"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "Output format",IDC_STATIC,5,6,177,80
+    GROUPBOX        "Output format",IDC_STATIC,6,6,177,80
     CONTROL         "Fast",IDC_FAST,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,9,19,46,10
     CONTROL         "Slow",IDC_SLOW,"Button",BS_AUTORADIOBUTTON,9,31,46,10
     CONTROL         "Raw mode",IDC_RAW_MODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,48,50,10
@@ -160,20 +161,21 @@ BEGIN
     COMBOBOX        IDC_MACHINE_TO,45,69,133,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Machine",IDC_STATIC,9,71,32,8
     LTEXT           "Average bit duration (clock cycles, 160-1600, 263: standard Turbo Tape)",IDC_STATIC,61,22,75,33
-    GROUPBOX        "Output to",IDC_STATIC,6,94,175,27
+    GROUPBOX        "Output to",IDC_STATIC,6,94,177,27
     CONTROL         "TAP file",IDC_TO_TAP,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,11,105,54,10
     CONTROL         "WAV file",IDC_TO_WAV,"Button",BS_AUTORADIOBUTTON,63,105,54,10
     CONTROL         "Sound card",IDC_TO_SOUND,"Button",BS_AUTORADIOBUTTON,123,105,54,10
-    GROUPBOX        "Advanced options (ignored if output is TAP file)",IDC_STATIC,3,125,181,46
-    CONTROL         "Inverted waveform",IDC_INVERTED,"Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,7,135,76,12
+    GROUPBOX        "Advanced options (ignored if output is TAP file)",IDC_STATIC,6,125,177,46
+    CONTROL         "Inverted waveform",IDC_INVERTED,"Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,9,135,76,12
     LTEXT           "Waveform",IDC_STATIC,85,135,44,12,0,WS_EX_RIGHT
     COMBOBOX        IDC_WAVEFORM,133,135,48,45,CBS_DROPDOWNLIST | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Frequency (Hz)",IDC_STATIC,7,153,53,12
+    LTEXT           "Frequency (Hz)",IDC_STATIC,9,153,53,12
     EDITTEXT        IDC_FREQ,58,152,32,12,ES_AUTOHSCROLL | WS_DISABLED
     LTEXT           "Volume (1-255)",IDC_STATIC,93,153,51,12
     EDITTEXT        IDC_VOL,145,153,32,12,ES_AUTOHSCROLL | ES_NUMBER | WS_DISABLED
+    LTEXT           "F1: help",IDC_STATIC,80,179,30,12
     PUSHBUTTON      "Cancel",IDCANCEL,134,175,49,15
-    PUSHBUTTON      "OK",IDOK,4,175,49,15
+    PUSHBUTTON      "OK",IDOK,6,175,49,15
 END
 
 IDD_ABOUT DIALOGEX 0, 0, 155, 174
@@ -233,6 +235,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,153,37,50,14,WS_GROUP
     DEFPUSHBUTTON   "About",IDC_ABOUT,7,37,50,14,WS_GROUP
+    LTEXT           "F1: help",IDC_STATIC,90,41,30,12
     CONTROL         "Convert a sound or a TAP or WAV file to PRG, P00 or T64",IDC_WAV2PRG,
                     "Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,7,199,9
     CONTROL         "Convert a PRG, P00 or T64 file to a sound or TAP or WAV",IDC_PRG2WAV,
