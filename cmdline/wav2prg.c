@@ -266,6 +266,12 @@ static enum wav2prg_bool version(const char *arg, void *options){
   exit(0);
 }
 
+void exit_with_error(const char *progname)
+{
+  printf("%s -h\nshows help\n", progname);
+  exit(1);
+}
+
 int main(int argc, char** argv)
 {
   struct wav2prg_selected_loader selected_loader = {NULL, NULL};
@@ -433,7 +439,7 @@ int main(int argc, char** argv)
   register_loaders();
 
   if(!yet_another_getopt(options, (uint32_t*)&argc, argv))
-    return 1;
+    exit_with_error(argv[0]);
 
   if (show_list)
     display_list_of_loaders();
@@ -441,7 +447,7 @@ int main(int argc, char** argv)
     display_list_of_loaders_with_dependencies();
 
   if(argc != 2)
-    return 1;
+    exit_with_error(argv[0]);
 
   audiotap_initialize2();
 
