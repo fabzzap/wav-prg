@@ -440,10 +440,14 @@ int main(int argc, char** argv)
   if(!yet_another_getopt(options, (uint32_t*)&argc, argv))
     exit_with_error(argv[0]);
 
-  if (show_list)
+  if (show_list){
     display_list_of_loaders();
-  if (show_list_dependent)
+    exit(0);
+  }
+  if (show_list_dependent){
     display_list_of_loaders_with_dependencies();
+    exit(0);
+  }
 
   if(argc != 2)
     exit_with_error(argv[0]);

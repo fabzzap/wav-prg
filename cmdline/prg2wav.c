@@ -260,17 +260,9 @@ int main(int numarg, char **argo){
     },
     {
       tap_names,
-      "Create a TAP file with name. Only recommended for small programs or VIC20 programs",
+      "Create a TAP file with name",
       create_tap,
       &create_wav_struct.create_tap_struct,
-      wav2prg_false,
-      option_must_have_argument
-    },
-    {
-      slow_names,
-      "Create non-turbo WAV or TAP file. Only recommended for small programs or VIC20 programs",
-      create_wav,
-      &create_wav_struct,
       wav2prg_false,
       option_must_have_argument
     },
