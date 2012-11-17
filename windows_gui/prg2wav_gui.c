@@ -732,7 +732,8 @@ INT_PTR CALLBACK prg2wav_dialog_proc(HWND hwndDlg,      //handle to dialog box
         free(filename);
       }
       DragFinish((HDROP)wParam);
-      choose_destination_file_and_convert(hwndDlg, &params);
+      if (params.program != NULL)
+        choose_destination_file_and_convert(hwndDlg, &params);
     }
     return TRUE;
 #ifdef HAVE_HTMLHELP
