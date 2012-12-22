@@ -15,7 +15,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#ifndef _MSC_VER
 #include <libgen.h>
+#endif
 #include <errno.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -220,7 +222,6 @@ struct simple_block_list_element *process_input_files(int numarg
   FILE *infile;
   struct simple_block_list_element *files_to_convert = NULL, **current_block = &files_to_convert;
   int used_entries;
-  unsigned int offset;
 
   for (; numarg; numarg--, argo++) {
     if ((infile = fopen(argo[0], "rb")) == NULL) {

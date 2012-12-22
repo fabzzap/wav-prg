@@ -16,7 +16,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <signal.h>
 #ifndef WIN32
 #include <sys/ioctl.h>

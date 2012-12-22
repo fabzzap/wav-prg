@@ -10,7 +10,9 @@
  * the core processing function with the right arguments
  */
 
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -33,9 +35,9 @@
 
 static struct audiotap_init_status audiotap_startup_status;
 
-static void help(const struct get_option *options, const char *progname, int errorcode){
-  printf("%s -h|-v\n", progname);
-  printf("%s -[options] input_file [input file...]\n", progname);
+ __declspec(noreturn) static void help(const struct get_option *options, const char *progname, int errorcode){
+  printf("%s -h|-V\n", progname);
+  printf("%s [options] input_file [input file...]\n", progname);
   list_options(options);
   exit(errorcode);
 }
@@ -79,43 +81,55 @@ static enum wav2prg_bool set_uint8_to_0(const char *arg, void *options){
   return wav2prg_true;
 }
 
-static enum wav2prg_bool set_uint8_to_2(const char *arg, void *options){
-  *(uint8_t*)options = 2;
-  return wav2prg_true;
-}
-
 struct create_tap_struct{
-  struct audiotap *file;
   uint8_t tap_version;
+};
+
+struct create_wav_struct{
+  struct tapdec_params params;
+  uint32_t freq;
+};
+
+struct create_tapwav_struct {
+  struct create_tap_struct create_tap_struct;
+  struct create_wav_struct create_wav_struct;
+  struct audiotap *file;
   uint8_t machine;
   uint8_t videotype;
-  uint8_t c64c16selector;
 };
 
 static enum wav2prg_bool create_tap(const char *arg, void *options)
 {
-  struct create_tap_struct *create_tap_struct = (struct create_tap_struct *)options;
+  struct create_tapwav_struct *create_tap_struct = (struct create_tapwav_struct *)options;
   if (create_tap_struct->file != NULL){
-    printf("You cannot use -w more than once, or -t and -w together\n");
+    printf("You can only use one of any of -w, -t, -0 or -2\n");
     return wav2prg_false;
   }
-  if (tap2audio_open_to_tapfile3(&create_tap_struct->file, arg, create_tap_struct->tap_version, create_tap_struct->machine, create_tap_struct->videotype) != AUDIOTAP_OK) {
+  if (tap2audio_open_to_tapfile3(&create_tap_struct->file, arg, create_tap_struct->create_tap_struct.tap_version, create_tap_struct->machine, create_tap_struct->videotype) != AUDIOTAP_OK) {
     printf("Error creating TAP file %s\n", arg);
     return wav2prg_false;
   }
   return wav2prg_true;
 }
 
-struct create_wav_struct{
-  struct create_tap_struct create_tap_struct;
-  struct tapdec_params params;
-  uint32_t freq;
-};
+static enum wav2prg_bool create_tap_v2(const char *arg, void *options)
+{
+  struct create_tapwav_struct *create_tap_struct = (struct create_tapwav_struct *)options;
+  create_tap_struct->create_tap_struct.tap_version = 2;
+  return create_tap(arg, options);
+}
+
+static enum wav2prg_bool create_tap_v0(const char *arg, void *options)
+{
+  struct create_tapwav_struct *create_tap_struct = (struct create_tapwav_struct *)options;
+  create_tap_struct->create_tap_struct.tap_version = 0;
+  return create_tap(arg, options);
+}
 
 static enum wav2prg_bool create_wav(const char *arg, void *options)
 {
-  struct create_wav_struct *create_wav_struct = (struct create_wav_struct *)options;
-  if (create_wav_struct->create_tap_struct.file != NULL){
+  struct create_tapwav_struct *create_wav_struct = (struct create_tapwav_struct *)options;
+  if (create_wav_struct->file != NULL){
     printf("You cannot use -w more than once, or -t and -w together\n");
     return wav2prg_false;
   }
@@ -123,7 +137,7 @@ static enum wav2prg_bool create_wav(const char *arg, void *options)
     printf("Cannot use audio files or sound card, library tapdecoder is missing or invalid\n");
     return wav2prg_false;
   }
-  if (tap2audio_open_to_wavfile4(&create_wav_struct->create_tap_struct.file, arg, &create_wav_struct->params, create_wav_struct->freq, create_wav_struct->create_tap_struct.machine, create_wav_struct->create_tap_struct.videotype) != AUDIOTAP_OK) {
+  if (tap2audio_open_to_wavfile4(&create_wav_struct->file, arg, &create_wav_struct->create_wav_struct.params, create_wav_struct->create_wav_struct.freq, create_wav_struct->machine, create_wav_struct->videotype) != AUDIOTAP_OK) {
     printf("Error creating WAV file %s\n", arg);
     return wav2prg_false;
   }
@@ -132,7 +146,7 @@ static enum wav2prg_bool create_wav(const char *arg, void *options)
 
 static enum wav2prg_bool select_machine(const char *optarg, void *options)
 {
-  struct create_tap_struct *create_tap_struct = (struct create_tap_struct *)options;
+  struct create_tapwav_struct *create_tap_struct = (struct create_tapwav_struct *)options;
   if (!strcmp(optarg, "c64ntsc")) {
     create_tap_struct->machine = TAP_MACHINE_C64;
     create_tap_struct->videotype = TAP_VIDEOTYPE_NTSC;
@@ -148,12 +162,10 @@ static enum wav2prg_bool select_machine(const char *optarg, void *options)
   } else if (!strcmp(optarg, "c16pal")) {
     create_tap_struct->machine = TAP_MACHINE_C16;
     create_tap_struct->videotype = TAP_VIDEOTYPE_PAL;
-    create_tap_struct->c64c16selector = 1;
     return wav2prg_true;
   } else if (!strcmp(optarg, "c16ntsc")) {
     create_tap_struct->machine = TAP_MACHINE_C16;
     create_tap_struct->videotype = TAP_VIDEOTYPE_NTSC;
-    create_tap_struct->c64c16selector = 1;
     return wav2prg_true;
   }
   printf("Wrong machine selected\n");
@@ -194,11 +206,11 @@ int main(int numarg, char **argo){
   uint16_t threshold = 263;
   uint8_t include_t64_fully = 1;
   struct display_interface_internal* display_interface_internal = get_cmdline_display_interface();
-  struct create_wav_struct create_wav_struct =
+  struct create_tapwav_struct create_wav_struct =
   {
-    {NULL, 1, TAP_MACHINE_C64, TAP_VIDEOTYPE_PAL, 0},
-    {254, 0, AUDIOTAP_WAVE_SQUARE},
-    44100
+    {1},
+    {{254, 0, AUDIOTAP_WAVE_SQUARE},44100},
+    NULL, TAP_MACHINE_C64, TAP_VIDEOTYPE_PAL
   };
   const char *help_names[]={"h", "help", NULL};
   const char *version_names[]={"V", "version", NULL};
@@ -211,8 +223,8 @@ int main(int numarg, char **argo){
   const char *volume_names[]={"v", "volume", NULL};
   const char *threshold_names[]={"T", "threshold", NULL};
   const char *freq_names[]={"f", "freq", "frequency", NULL};
-  const char *v2_names[]={"2", "v2", "version-2", NULL};
-  const char *v0_names[]={"0", "v0", "version-0", NULL};
+  const char *v2_names[]={"2", "v2", "version-2", "tapv2", "tap-version-2", NULL};
+  const char *v0_names[]={"0", "v0", "version-0", "tapv0", "tap-version-0", NULL};
   const char *machine_names[]={"m", "machine", NULL};
   const char *waveform_names[]={"waveform", NULL};
   const char *choose_t64_entries_names[]={"choose-entries", NULL};
@@ -246,7 +258,7 @@ int main(int numarg, char **argo){
       inverted_names,
       "Create a WAV file with inveretd waveform (ignored when creating TAP file)",
       set_uint8_to_1,
-      &create_wav_struct.params.inverted,
+      &create_wav_struct.create_wav_struct.params.inverted,
       wav2prg_false,
       option_no_argument
     },
@@ -260,9 +272,17 @@ int main(int numarg, char **argo){
     },
     {
       tap_names,
-      "Create a TAP file with name",
+      "Create a TAP file with name <argument>",
       create_tap,
-      &create_wav_struct.create_tap_struct,
+      &create_wav_struct,
+      wav2prg_false,
+      option_must_have_argument
+    },
+    {
+      wav_names,
+      "Create a WAV file with name <argument>",
+      create_wav,
+      &create_wav_struct,
       wav2prg_false,
       option_must_have_argument
     },
@@ -278,7 +298,7 @@ int main(int numarg, char **argo){
       volume_names,
       "Set volume (1-255, ignored in case of TAP)",
       set_uint8,
-      &create_wav_struct.params.volume,
+      &create_wav_struct.create_wav_struct.params.volume,
       wav2prg_false,
       option_must_have_argument
     },
@@ -294,31 +314,31 @@ int main(int numarg, char **argo){
       freq_names,
       "Set frequency (ignored if TAP)",
       set_uint32,
-      &create_wav_struct.freq,
+      &create_wav_struct.create_wav_struct.freq,
       wav2prg_false,
       option_must_have_argument
     },
     {
       v2_names,
-      "Create a version 2 TAP file (ignored if WAV)",
-      set_uint8_to_2,
+      "Create a version 2 TAP file of name <argument>",
+      create_tap_v2,
       &create_wav_struct.create_tap_struct.tap_version,
       wav2prg_false,
-      option_no_argument
+      option_must_have_argument
     },
     {
       v0_names,
-      "Create a version 0 TAP file (ignored if WAV)",
-      set_uint8_to_0,
+      "Create a version 0 TAP file of name <argument>",
+      create_tap_v0,
       &create_wav_struct.create_tap_struct.tap_version,
       wav2prg_false,
-      option_no_argument
+      option_must_have_argument
     },
     {
       machine_names,
       "Choose machine: c64ntsc, vicpal, vicntsc, c16pal, c16ntsc. Default: C64 PAL",
       select_machine,
-      &create_wav_struct.create_tap_struct,
+      &create_wav_struct,
       wav2prg_false,
       option_must_have_argument
     },
@@ -326,7 +346,7 @@ int main(int numarg, char **argo){
       waveform_names,
       "Choose waveform: sine, square, triangle (ignored if TAP)",
       select_waveform,
-      &create_wav_struct.params,
+      &create_wav_struct.create_wav_struct.params,
       wav2prg_false,
       option_must_have_argument
     },
@@ -359,20 +379,20 @@ int main(int numarg, char **argo){
     printf("No input files specified!\n");
     help(options, argo[0], 1);
   }
-  if (create_wav_struct.create_tap_struct.file == NULL && !list_asked) {
+  if (create_wav_struct.file == NULL && !list_asked) {
     if (audiotap_startup_status.portaudio_init_status != LIBRARY_OK) {
       printf("Cannot use sound card, library portaudio is missing or invalid\n");
       exit(1);
     }
-    if (tap2audio_open_to_soundcard4(&create_wav_struct.create_tap_struct.file, &create_wav_struct.params, create_wav_struct.freq, create_wav_struct.create_tap_struct.machine, create_wav_struct.create_tap_struct.videotype) != AUDIOTAP_OK) {
+    if (tap2audio_open_to_soundcard4(&create_wav_struct.file, &create_wav_struct.create_wav_struct.params, create_wav_struct.create_wav_struct.freq, create_wav_struct.machine, create_wav_struct.videotype) != AUDIOTAP_OK) {
       printf("Could not open sound card\n");
       exit(1);
     }
   }
   blocks = process_input_files(numarg - 1, argo + 1, list_asked, use_filename_as_c64_name, include_t64_fully);
-  if (create_wav_struct.create_tap_struct.file != NULL){
-    prg2wav_convert(blocks, create_wav_struct.create_tap_struct.file, fast, raw, threshold, create_wav_struct.create_tap_struct.c64c16selector, &cmdline_display_interface, display_interface_internal);
-    tap2audio_close(create_wav_struct.create_tap_struct.file);
+  if (create_wav_struct.file != NULL){
+    prg2wav_convert(blocks, create_wav_struct.file, fast, raw, threshold, create_wav_struct.machine == 2, &cmdline_display_interface, display_interface_internal);
+    tap2audio_close(create_wav_struct.file);
     free(display_interface_internal);
   }
 
