@@ -35,7 +35,12 @@
 
 static struct audiotap_init_status audiotap_startup_status;
 
- __declspec(noreturn) static void help(const struct get_option *options, const char *progname, int errorcode){
+#ifdef __GNUC__
+ __attribute__((noreturn))
+#else
+ __declspec(noreturn)
+#endif
+static void help(const struct get_option *options, const char *progname, int errorcode){
   printf("%s -h|-V\n", progname);
   printf("%s [options] input_file [input file...]\n", progname);
   list_options(options);
