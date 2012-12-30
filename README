@@ -57,4 +57,9 @@ Other modifiers are:
   the Windows GUI version and the Windows resource compiler has a non-standard
   name . Example:
   >make CC=i586-mingw32msvc-gcc WINDRES=i586-mingw32msvc-windres
-
+* HTMLHELP: adds support for invoking help by pressing F1 in the Windows GUI
+  version. Requires Microsoft HTML Help Workshop
+  (http://www.microsoft.com/en-us/download/details.aspx?id=21138) to be
+  installed. Argument to HTMLHELP is HTML Help Workshop's installation path.
+  Example:
+  >make AUDIOTAP_HDR=..\libaudiotap AUDIOTAP_LIB=..\libaudiotap DEBUG=1 HTMLHELP="c:\Programmi\HTML Help Workshop"
