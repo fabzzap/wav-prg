@@ -129,17 +129,14 @@ static enum wav2prg_bool keep_doing_visiload(struct wav2prg_observer_context *ob
   else if (block->info.start == 0x03bb){
     if (block->info.end == 0x3db){
       int i;
-      for(i=0x3bb;i<0x3db;i++)
-        printf("%02x ",block->data[i-0x3bb]);
-      printf("\n");
-if ((block->data[20]!=0x60 || block->data[22]!=0x45)
-&& (block->data[20]!=0x36 || block->data[22]!=0xc7)
-&& (block->data[20]!=0 || block->data[22]!=0x80)
-&& (block->data[20]!=0 || block->data[22]!=0xd0)
-&& (block->data[20]!=0 || block->data[22]!=0x48)
-&& (block->data[20]!=0x41 || block->data[22]!=0xff)
-&& (block->data[20]!=0 || block->data[22]!=0xc4)
-)
+      if ((block->data[20]!=0x60 || block->data[22]!=0x45)
+       && (block->data[20]!=0x36 || block->data[22]!=0xc7)
+       && (block->data[20]!=0    || block->data[22]!=0x80)
+       && (block->data[20]!=0    || block->data[22]!=0xd0)
+       && (block->data[20]!=0    || block->data[22]!=0x48)
+       && (block->data[20]!=0x41 || block->data[22]!=0xff)
+       && (block->data[20]!=0    || block->data[22]!=0xc4)
+      )
         return wav2prg_false;
     }
     state->synced_state = wav2prg_false;
