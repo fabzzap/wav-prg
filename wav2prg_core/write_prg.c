@@ -243,8 +243,9 @@ void write_prg(struct block_list_element *blocks, const char *dirname, enum wav2
          blocks->real_start       & 0xFF,
         (blocks->real_start >> 8) & 0xFF
       };
+      uint16_t block_size = blocks->real_end - blocks->real_start;
       write(fildes, start_addr, sizeof(start_addr));
-      write(fildes, blocks->block.data, blocks->real_end - blocks->real_start);
+      write(fildes, blocks->block.data, block_size);
       close(fildes);
     }
     free(fullpathname);
