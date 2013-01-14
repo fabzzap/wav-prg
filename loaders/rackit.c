@@ -221,5 +221,5 @@ static const struct wav2prg_loaders rackit_functions[] =
   {NULL}
 };
 
-WAV2PRG_LOADER(rackit, 1, 0, "Rack-It loader", rackit_functions)
+WAV2PRG_LOADER(rackit, 1, 1, "Rack-It loader", rackit_functions)
 WAV2PRG_OBSERVER(1,0, rackit_observed_loaders)
