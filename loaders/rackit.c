@@ -67,6 +67,8 @@ static enum wav2prg_bool rackit_get_block_info(struct wav2prg_context* context, 
   if(functions->get_byte_func(context, functions, conf, &byte) == wav2prg_false)
     return wav2prg_false;
   functions->number_to_name_func(byte, info->name);
+  if(conf->endianness == lsbf)
+    functions->reset_checksum_to_func(context, 0x80);
   return wav2prg_true;
 }
 
