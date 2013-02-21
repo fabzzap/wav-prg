@@ -13,6 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
 
 #include "loaders.h"
 #include "observers.h"
@@ -221,7 +222,7 @@ void register_loaders(void) {
   free(search_path);
 #else //!WIN32
   DIR *plugindir = opendir(dirname);
-  struct dirent direntry;
+  char direntry[sizeof(struct dirent) + NAME_MAX];
   struct dirent *dirresult;
   int i;
 
@@ -229,14 +230,14 @@ void register_loaders(void) {
     return;
   }
   do {
-    if (readdir_r(plugindir, &direntry, &dirresult)) {
+    if (readdir_r(plugindir, (struct dirent *)direntry, &dirresult)) {
       break;
     }
 
     if (dirresult == NULL)
       break;
 
-    register_dynamic_loader(direntry.d_name);
+    register_dynamic_loader(dirresult->d_name);
   } while (1);
   closedir(plugindir);
 #endif //WIN32
