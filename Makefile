@@ -80,7 +80,7 @@ ifdef USE_RPATH
   endif
 endif
 
-wav2prg:LDLIBS+=-ldl
+cmdline/wav2prg:LDLIBS+=-ldl
 
 HHC=hhc
 
