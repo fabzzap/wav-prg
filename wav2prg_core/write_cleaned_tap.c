@@ -52,9 +52,35 @@ void write_cleaned_tap(struct block_list_element* blocks,
     min_length_non_noise_pulse /= 2;
     max_length_non_pause_pulse /= 2;
   }
+  if (!audio2tap_seek_to_beginning(input_handle))
+    return;
+
+  audio2tap_enable_disable_halfwaves(input_handle, need_v2);
+  /* When using WAV files and halfwaves, in some corner cases the first halfwave can be later
+     than the beginning of the first block */
+  if (need_v2 && current_block != NULL && current_block->syncs[0].start_sync > 0){
+    uint32_t raw_pulse, even_more_raw_pulse;
+    int32_t pos;
+    /* Check first halfwave */
+    if (audio2tap_get_pulses(input_handle, &raw_pulse, &even_more_raw_pulse) != AUDIOTAP_OK)
+      return;
+    /* Check where first halfwave ends */
+    pos = audio2tap_get_current_pos(input_handle);
+    /* Rewind to the beginning of file. This has the side effect of disabling halfwave reading */
+    if (!audio2tap_seek_to_beginning(input_handle))
+      return;
+    if (pos <= current_block->syncs[0].start_sync)
+    /* Normal situation, restore halfwave reading. */
+      audio2tap_enable_disable_halfwaves(input_handle, 1);
+    else{
+    /* the first halfwave is later than the beginning of the first block, do not restore halfwave reading
+       and read first full wave, thus moving to the beginning of the first block. */
+      if (audio2tap_get_pulses(input_handle, &raw_pulse, &even_more_raw_pulse) != AUDIOTAP_OK)
+        return;
+    }
+  }
   if (tap2audio_open_to_tapfile3(&output_handle, filename, need_v2 ? 2 : 1, machine, videotype) != AUDIOTAP_OK)
     return;
-  audio2tap_enable_disable_halfwaves(input_handle, 1);
   while(!audio2tap_is_eof(input_handle)){
     int32_t pos = audio2tap_get_current_pos(input_handle);
     uint32_t raw_pulse, even_more_raw_pulse;

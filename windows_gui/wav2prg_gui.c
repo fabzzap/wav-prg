@@ -456,7 +456,7 @@ static DWORD WINAPI wav2prg_thread(LPVOID tparams){
     char output_filename[1024] = {0};
     char t64_name[25];
 
-    if (p->destination == tap_checked && audio2tap_seek_to_beginning((struct audiotap*)p->file.object)) {
+    if (p->destination == tap_checked) {
       memset(&file, 0, sizeof(file));
        file.lStructSize = sizeof(file);
       file.hwndOwner = p->window;

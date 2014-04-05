@@ -472,21 +472,14 @@ int main(int argc, char** argv)
     &text_based_display,
     NULL
     );
-  audio2tap_close(input_object.object);
 
   for(current_dump = dump; current_dump->name != NULL; current_dump++)
   {
     switch(current_dump->dump_type){
     case dump_to_tap:
       {
-        struct audiotap *file_to_clean;
-        enum wav2prg_bool requested_use_halfwaves = machine == TAP_MACHINE_C16;
-        uint8_t actual_use_halfwaves = requested_use_halfwaves ? 1 : 0;
-
-        open_status = audio2tap_open_from_file3(&file_to_clean, argv[1], &tparams, &machine, &videotype, &actual_use_halfwaves);
         if(open_status == AUDIOTAP_OK){
-          write_cleaned_tap(blocks, file_to_clean, requested_use_halfwaves && actual_use_halfwaves, current_dump->name, machine, videotype, &text_based_display, NULL);
-          audio2tap_close(file_to_clean);
+          write_cleaned_tap(blocks, input_object.object, machine == TAP_MACHINE_C16 && halfwaves != 0, current_dump->name, machine, videotype, &text_based_display, NULL);
         }
       }
       break;
@@ -500,6 +493,7 @@ int main(int argc, char** argv)
       break;
     }
   }
+  audio2tap_close(input_object.object);
   free(dump);
   while (blocks != NULL){
     struct block_list_element *new_next = blocks->next;
