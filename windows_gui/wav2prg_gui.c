@@ -991,10 +991,14 @@ INT_PTR CALLBACK wav2prg_dialog_proc(HWND hwndDlg,      //handle to dialog box
       EnableWindow(GetDlgItem(hwndDlg, IDC_CHANGE_CONVERSION_DIR), FALSE);
       return TRUE;
     case IDC_FROM_SOUND:
-      EnableWindow(GetDlgItem(hwndDlg, IDC_FREQ), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_FREQ  ), TRUE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_TO_TAP), FALSE);
+      if(IsDlgButtonChecked(hwndDlg, IDC_TO_TAP) == BST_CHECKED)
+        CheckRadioButton(hwndDlg, IDC_TO_PRG, IDC_TO_TAP, IDC_DO_NOT_SAVE);
       return TRUE;
     case IDC_FROM_FILE:
-      EnableWindow(GetDlgItem(hwndDlg, IDC_FREQ), FALSE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_FREQ  ), FALSE);
+      EnableWindow(GetDlgItem(hwndDlg, IDC_TO_TAP), TRUE);
       return TRUE;
     case IDC_ADVANCED_OPTIONS:
       DialogBox(instance, MAKEINTRESOURCE(IDD_ADVANCED), hwndDlg, advanced_proc);
