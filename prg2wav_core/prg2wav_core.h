@@ -24,7 +24,7 @@ void prg2wav_convert(struct simple_block_list_element *program,
                      char fast,
                      char raw,
                      uint16_t threshold,
-                     int machine,
+                     uint8_t machine,
                      struct prg2wav_display_interface *display_interface,
                      struct display_interface_internal *internal);
 

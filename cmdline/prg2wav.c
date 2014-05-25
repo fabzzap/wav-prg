@@ -396,7 +396,7 @@ int main(int numarg, char **argo){
   }
   blocks = process_input_files(numarg - 1, argo + 1, list_asked, use_filename_as_c64_name, include_t64_fully);
   if (create_wav_struct.file != NULL){
-    prg2wav_convert(blocks, create_wav_struct.file, fast, raw, threshold, create_wav_struct.machine == 2, &cmdline_display_interface, display_interface_internal);
+    prg2wav_convert(blocks, create_wav_struct.file, fast, raw, threshold, create_wav_struct.machine, &cmdline_display_interface, display_interface_internal);
     tap2audio_close(create_wav_struct.file);
     free(display_interface_internal);
   }

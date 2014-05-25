@@ -55,7 +55,7 @@ static int slow_convert(struct audiotap *file,
              int size,
              uint32_t *statusbar_len,
              int leadin_len,
-             int machine,
+             int machine_is_c16,
              struct prg2wav_display_interface *display_interface,
              struct display_interface_internal *display_interface_internal){
   unsigned char i;
@@ -67,59 +67,59 @@ static int slow_convert(struct audiotap *file,
   };
 
   for (num = 0; num < leadin_len; num++)
-    if (tap2audio_set_pulse(file, pulse_length[machine][0]))
+    if (tap2audio_set_pulse(file, pulse_length[machine_is_c16][0]))
       return -1;
 
   for (i = 137; i > 128; i--)
-    if (slow_write_byte(file, i, pulse_length[machine]))
+    if (slow_write_byte(file, i, pulse_length[machine_is_c16]))
       return -1;
   for (num = 0; num < size; num++) {
-    if (slow_write_byte(file, data[num], pulse_length[machine]))
+    if (slow_write_byte(file, data[num], pulse_length[machine_is_c16]))
       return -1;
     checksum ^= data[num];
     *statusbar_len = (*statusbar_len) + 1;
     if ((*statusbar_len % 100) == 0)
       display_interface->update(display_interface_internal, *statusbar_len);
   }
-  if (slow_write_byte(file, checksum, pulse_length[machine]))
+  if (slow_write_byte(file, checksum, pulse_length[machine_is_c16]))
     return -1;
 
   /* C16 files end with long-medium, C64 and VIC20 files end with long-short */
-  if (tap2audio_set_pulse(file, pulse_length[machine][2]))
+  if (tap2audio_set_pulse(file, pulse_length[machine_is_c16][2]))
     return -1;
-  if (machine == 2) {
+  if (machine_is_c16) {
     if (tap2audio_set_pulse(file, pulse_length[2][1]))
       return -1;
-  } else if (tap2audio_set_pulse(file, pulse_length[machine][0]))
+  } else if (tap2audio_set_pulse(file, pulse_length[0][0]))
     return -1;
 
   for (num = 0; num < 79; num++)
-    if (tap2audio_set_pulse(file, pulse_length[machine][0]))
+    if (tap2audio_set_pulse(file, pulse_length[machine_is_c16][0]))
       return -1;
 
   for (i = 9; i > 0; i--)
-    if (slow_write_byte(file, i, pulse_length[machine]))
+    if (slow_write_byte(file, i, pulse_length[machine_is_c16]))
       return -1;
   for (num = 0; num < size; num++) {
-    if (slow_write_byte(file, data[num], pulse_length[machine]))
+    if (slow_write_byte(file, data[num], pulse_length[machine_is_c16]))
       return -1;
     *statusbar_len = (*statusbar_len) + 1;
     if ((*statusbar_len % 100) == 0)
       display_interface->update(display_interface_internal, *statusbar_len);
   }
-  if (slow_write_byte(file, checksum, pulse_length[machine]))
+  if (slow_write_byte(file, checksum, pulse_length[machine_is_c16]))
     return -1;
 
-  if (tap2audio_set_pulse(file, pulse_length[machine][2]))
+  if (tap2audio_set_pulse(file, pulse_length[machine_is_c16][2]))
     return -1;
-  if (machine == 2) {
+  if (machine_is_c16) {
     if (tap2audio_set_pulse(file, pulse_length[2][1]))
       return -1;
-  } else if (tap2audio_set_pulse(file, pulse_length[machine][0]))
+  } else if (tap2audio_set_pulse(file, pulse_length[0][0]))
     return -1;
 
   for (num = 0; num < 200; num++)
-    if (tap2audio_set_pulse(file, pulse_length[machine][0]))
+    if (tap2audio_set_pulse(file, pulse_length[machine_is_c16][0]))
       return -1;
 
   return 0;
@@ -209,7 +209,7 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
                      char fast,
                      char raw,
                      uint16_t threshold,
-                     int machine,
+                     uint8_t machine,
                      struct prg2wav_display_interface *display_interface,
                      struct display_interface_internal *display_interface_internal){
   unsigned char c64_header_chunk[] = {
@@ -301,12 +301,53 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
     0x23, 0x04, 0x20, 0x56, 0x04, 0xa0, 0x80, 0x8c, 0xfc, 0x07,
     0xa9, 0x6e, 0x8d, 0x19, 0xff, 0x4c, 0x65, 0xe5
   };
-  unsigned char *header_chunk = (machine == 0 ? c64_header_chunk : c16_header_chunk);
-  unsigned char *name = header_chunk + 5;
-  int size_of_header_chunk = (machine == 0 ? sizeof(c64_header_chunk) : sizeof(c16_header_chunk));
+  unsigned char vic20_header_chunk[] = {
+    0x03, 0x2c, 0x03, 0x3c, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  , 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x8a, 0xff, 0xa2, 0x01, 0x78, 0xad, 0x1b, 0x91, 0x29, 0x3f
+  , 0x8d, 0x1b, 0x91, 0xa9, 0x07, 0x8d, 0x16, 0x91, 0x20, 0xb3, 0x03, 0x20, 0xd4, 0x03, 0x85, 0xac
+  , 0x20, 0xd4, 0x03, 0x85, 0xad, 0x20, 0xd4, 0x03, 0x85, 0xae, 0x20, 0xd4, 0x03, 0x85, 0xaf, 0x84
+  , 0xab, 0x20, 0xb3, 0x03, 0x20, 0xd4, 0x03, 0x91, 0xac, 0x24, 0x10, 0x18, 0x45, 0xab, 0x85, 0xab
+  , 0x20, 0x1b, 0xfd, 0x20, 0x11, 0xfd, 0x90, 0xec, 0x20, 0xd4, 0x03, 0x8c, 0xa0, 0x02, 0x20, 0xcf
+  , 0xfc, 0xa5, 0xfb, 0x8d, 0x1c, 0x91, 0x58, 0x85, 0xc0, 0x20, 0x42, 0xf6, 0x86, 0x2d, 0x84, 0x2e
+  , 0xa5, 0xbd, 0xc5, 0xab, 0x4c, 0x9a, 0xe1, 0x20, 0xe4, 0x03, 0x26, 0xbd, 0xa9, 0x02, 0xc5, 0xbd
+  , 0xd0, 0xf5, 0x85, 0x7b, 0xa0, 0x09, 0x20, 0xd4, 0x03, 0xc9, 0x02, 0xf0, 0xf9, 0xc4, 0xbd, 0xd0
+  , 0xe6, 0x20, 0xd4, 0x03, 0x88, 0xd0, 0xf6, 0x60, 0xa9, 0x08, 0x85, 0xa3, 0x20, 0xe4, 0x03, 0x26
+  , 0xbd, 0xc6, 0xa3, 0xd0, 0xf7, 0xa5, 0xbd, 0x60, 0xa9, 0x02, 0x2c, 0x2d, 0x91, 0xf0, 0xfb, 0xad
+  , 0x1d, 0x91, 0x48, 0xad, 0x21, 0x91, 0x8e, 0x15, 0x91, 0x68, 0x0a, 0x0a, 0x60, 0   , 0   , 0
+  };
+  const unsigned char vic20_data_chunk[] = {
+    0x2e, 0x03, 0xad, 0x1c, 0x91, 0x85, 0xfb, 0x09, 0x0c, 0x29, 0xfd, 0x8d, 0x1c, 0x91, 0xd0, 0x15
+  };
+  unsigned char *header_chunk;
+  const unsigned char *data_chunk;
+  int size_of_header_chunk;
+  uint32_t size_of_data_chunk;
+  unsigned char *name;
   struct simple_block_list_element *block;
   uint32_t nblocks = 0, current_block_num = 0;
 
+  switch (machine){
+  case TAP_MACHINE_C64:
+    header_chunk = c64_header_chunk;
+    data_chunk = c64_data_chunk;
+    size_of_header_chunk = sizeof(c64_header_chunk);
+    size_of_data_chunk = sizeof(c64_data_chunk);
+    break;
+  case TAP_MACHINE_C16:
+    header_chunk = c16_header_chunk;
+    data_chunk = c16_data_chunk;
+    size_of_header_chunk = sizeof(c16_header_chunk);
+    size_of_data_chunk = sizeof(c16_data_chunk);
+    break;
+  case TAP_MACHINE_VIC:
+    header_chunk = vic20_header_chunk;
+    data_chunk = vic20_data_chunk;
+    size_of_header_chunk = sizeof(vic20_header_chunk);
+    size_of_data_chunk = sizeof(vic20_data_chunk);
+    break;
+  }
+
+  name = header_chunk + 5;
   for (block = block_list; block != NULL; block = block->next)
   {
     nblocks++;
@@ -318,6 +359,8 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
     c64_header_chunk[145] = threshold >> 8;
     c16_header_chunk[153] = (threshold + 0x80) & 255;
     c16_header_chunk[158] = (threshold + 0x80) >> 8;
+    vic20_header_chunk[36] = threshold & 255;
+    vic20_header_chunk[25] = threshold >> 8;
   }
   else
   {
@@ -328,8 +371,9 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
 
   for (block = block_list; block != NULL; block = block->next)
   {
-    uint32_t total_len = block->block.info.end - block->block.info.start, statusbar_len = 0;
-    uint32_t size_of_data_chunk = !fast ? total_len : machine == 0 ? sizeof(c64_data_chunk) : sizeof(c16_data_chunk);
+    uint32_t block_len = block->block.info.end - block->block.info.start;
+    uint32_t total_len = block_len;
+    uint32_t statusbar_len = 0;
     char is_last_block = block->next == NULL;
 
     if (!raw){
@@ -357,7 +401,7 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
         header_chunk[4] = (block->block.info.end   >> 8) & 0xFF;
       }
 
-      if (slow_convert(file, header_chunk, size_of_header_chunk, &statusbar_len, 20000, machine, display_interface, display_interface_internal))
+      if (slow_convert(file, header_chunk, size_of_header_chunk, &statusbar_len, 20000, machine == TAP_MACHINE_C16 ? 1 : 0, display_interface, display_interface_internal))
         break;
       if (tap2audio_set_pulse(file, 200000))
         break;
@@ -366,13 +410,11 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
       /* slow mode: write block data as slow block */
       /* fast mode: write turbo loader as slow block */
       if (slow_convert(file
-                    , !fast        ? block->block.data
-                    : machine == 0 ? c64_data_chunk
-                    :                c16_data_chunk
-                    ,size_of_data_chunk
+                    ,!fast ? block->block.data : data_chunk
+                    ,!fast ? block_len : size_of_data_chunk
                     ,&statusbar_len
                     ,5000
-                    ,machine
+                    ,machine == TAP_MACHINE_C16 ? 1 : 0
                     ,display_interface
                     ,display_interface_internal))
         break;
