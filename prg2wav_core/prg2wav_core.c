@@ -88,7 +88,7 @@ static int slow_convert(struct audiotap *file,
   if (tap2audio_set_pulse(file, pulse_length[machine_is_c16][2]))
     return -1;
   if (machine_is_c16) {
-    if (tap2audio_set_pulse(file, pulse_length[2][1]))
+    if (tap2audio_set_pulse(file, pulse_length[1][1]))
       return -1;
   } else if (tap2audio_set_pulse(file, pulse_length[0][0]))
     return -1;
@@ -113,7 +113,7 @@ static int slow_convert(struct audiotap *file,
   if (tap2audio_set_pulse(file, pulse_length[machine_is_c16][2]))
     return -1;
   if (machine_is_c16) {
-    if (tap2audio_set_pulse(file, pulse_length[2][1]))
+    if (tap2audio_set_pulse(file, pulse_length[1][1]))
       return -1;
   } else if (tap2audio_set_pulse(file, pulse_length[0][0]))
     return -1;
