@@ -35,7 +35,7 @@
 struct prg2wav_params {
   struct audiotap *file;
   struct simple_block_list_element *program;
-  int machine;
+  uint8_t machine;
   HWND status_window;
 };
 
@@ -410,7 +410,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
   DWORD thread_id;
   MSG msg;
   BOOL end_found = FALSE;
-  uint8_t machine, videotype;
+  uint8_t videotype;
   LRESULT selected_clock, selected_waveform;
 
   name[0] = 0;
@@ -427,34 +427,28 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
     SendMessage(GetDlgItem(hwnd, IDC_MACHINE_TO), CB_GETCURSEL, 0, 0);
   switch(selected_clock){
     default:
-      machine = TAP_MACHINE_C64;
+      params->machine = TAP_MACHINE_C64;
       videotype = TAP_VIDEOTYPE_PAL;
-      params->machine = 0;
       break;
     case 1:
-      machine = TAP_MACHINE_C64;
+      params->machine = TAP_MACHINE_C64;
       videotype = TAP_VIDEOTYPE_NTSC;
-      params->machine = 0;
       break;
     case 2:
-      machine = TAP_MACHINE_VIC;
+      params->machine = TAP_MACHINE_VIC;
       videotype = TAP_VIDEOTYPE_PAL;
-      params->machine = 0;
       break;
     case 3:
-      machine = TAP_MACHINE_VIC;
+      params->machine = TAP_MACHINE_VIC;
       videotype = TAP_VIDEOTYPE_NTSC;
-      params->machine = 0;
       break;
     case 4:
-      machine = TAP_MACHINE_C16;
+      params->machine = TAP_MACHINE_C16;
       videotype = TAP_VIDEOTYPE_PAL;
-      params->machine = 1;
       break;
     case 5:
-      machine = TAP_MACHINE_C16;
+      params->machine = TAP_MACHINE_C16;
       videotype = TAP_VIDEOTYPE_NTSC;
-      params->machine = 1;
       break;
   }
   selected_waveform =
@@ -496,7 +490,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
       return;
     }
     if (tap2audio_open_to_wavfile4(&file, name, &tapdec_params, freq,
-                            machine, videotype) != AUDIOTAP_OK) {
+                            params->machine, videotype) != AUDIOTAP_OK) {
       MessageBoxA(hwnd, "Error opening file", "WAV-PRG error", MB_ICONERROR);
       remove_all_simple_block_list_elements(&params->program);
       return;
@@ -511,7 +505,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
       return;
     }
     if (tap2audio_open_to_soundcard4(&file, &tapdec_params, freq,
-                            machine, videotype)  != AUDIOTAP_OK) {
+                            params->machine, videotype)  != AUDIOTAP_OK) {
       MessageBoxA(hwnd, "Error opening sound card", "WAV-PRG error",
                  MB_ICONERROR);
       remove_all_simple_block_list_elements(&params->program);
@@ -543,7 +537,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
       remove_all_simple_block_list_elements(&params->program);
       return;
     }
-    if (tap2audio_open_to_tapfile3(&file, name, version, machine, videotype) !=
+    if (tap2audio_open_to_tapfile3(&file, name, version, params->machine, videotype) !=
         AUDIOTAP_OK) {
       MessageBoxA(hwnd, "Error opening TAP file", "WAV-PRG error",
                  MB_ICONERROR);
@@ -689,19 +683,6 @@ INT_PTR CALLBACK prg2wav_dialog_proc(HWND hwndDlg,      //handle to dialog box
     case IDCANCEL:
       EndDialog(hwndDlg, 0);
       return TRUE;
-    case IDC_MACHINE_TO:
-      if(HIWORD(wParam)==CBN_SELCHANGE){
-        LRESULT selected_machine = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
-        if (selected_machine == 2 || selected_machine == 3){
-          CheckRadioButton(hwndDlg, IDC_FAST, IDC_SLOW, IDC_SLOW);
-          EnableWindow(GetDlgItem(hwndDlg, IDC_FAST), FALSE);
-          EnableWindow(GetDlgItem(hwndDlg, IDC_THRESHOLD), FALSE);
-        }
-        else
-          EnableWindow(GetDlgItem(hwndDlg, IDC_FAST), TRUE);
-        return TRUE;
-      }
-      return FALSE;
     default:
       return FALSE;
     }
