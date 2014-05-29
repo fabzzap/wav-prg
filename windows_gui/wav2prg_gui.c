@@ -599,7 +599,7 @@ static enum wav2prg_bool try_open_file(struct audiotap **origin_file
   }
   if (init_status == AUDIOTAP_LIBRARY_UNAVAILABLE) {
     MessageBoxA(hwnd,
-                 "Cannot deal with files other than TAP, because libaudiofile-0.dll and/or tapencoder.dll are not present or incorrect",
+                 "Cannot deal with files other than TAP, because libaudiofile-1.dll and/or tapencoder.dll are not present or incorrect",
                  "Cannot convert", MB_ICONERROR);
     return wav2prg_false;
   }
