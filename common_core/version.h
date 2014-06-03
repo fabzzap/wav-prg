@@ -1,6 +1,6 @@
 #define WAVPRG_MAJOR 4
 #define WAVPRG_MINOR 0
-#define WAVPRG_REV 1
+#define WAVPRG_REV 9
 
 #define STR(x) #x
 #define MACROSTR(x) STR(x)
