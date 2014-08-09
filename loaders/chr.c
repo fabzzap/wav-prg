@@ -70,7 +70,9 @@ enum wav2prg_bool chr_recognize_itself(struct wav2prg_observer_context *observer
   struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
   struct chr_private_state *state =(struct chr_private_state *)conf->private_state;
 
-  return state->header[2] != 0 || state->header[3] == 0;
+  return state->header[2] != 0;
+  // state->header[3] == 0 means that the program starts with RUN
+  // state->header[3] != 0 means that the program starts by jumping at the address stored at state->header[0] and state->header[1] (little-endian)
 }
 
 static enum wav2prg_bool chr_recognize_hc(struct wav2prg_observer_context *observer_context,
@@ -140,5 +142,5 @@ static const struct wav2prg_loaders chr[] =
   {NULL}
 };
 
-WAV2PRG_LOADER(chr,1,0,"Cauldron/Hewson/Rainbird loader", chr);
+WAV2PRG_LOADER(chr,1,1,"Cauldron/Hewson/Rainbird loader", chr);
 WAV2PRG_OBSERVER(1,0, chr_observed_loaders);
