@@ -161,7 +161,7 @@ BEGIN
     CONTROL         "",IDC_THRESHOLD_SPIN,"msctls_updown32",UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_NOTHOUSANDS,167,25,11,14
     COMBOBOX        IDC_MACHINE_TO,45,69,133,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Machine",IDC_STATIC,9,71,32,8
-    LTEXT           "Average bit duration (clock cycles, 160-1600, 263: standard Turbo Tape)",IDC_STATIC,61,22,75,33
+    LTEXT           "Average bit duration (clock cycles, 102-1600, 263: standard Turbo Tape)",IDC_STATIC,61,22,75,33
     GROUPBOX        "Output to",IDC_STATIC,6,94,177,27
     CONTROL         "TAP file",IDC_TO_TAP,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,11,105,54,10
     CONTROL         "WAV file",IDC_TO_WAV,"Button",BS_AUTORADIOBUTTON,63,105,54,10

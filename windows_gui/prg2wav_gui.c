@@ -352,10 +352,6 @@ static DWORD WINAPI prg2wav_thread(LPVOID p){
   uint16_t threshold = GetDlgItemInt(main_prg2wav_window, IDC_THRESHOLD, &success, FALSE);
   if (!success)
     threshold = 263;
-  if (threshold < 160)
-    threshold = 160;
-  if (threshold > 1600)
-    threshold = 1600;
 
   prg2wav_convert(params->program,
                   params->file,
@@ -652,7 +648,7 @@ INT_PTR CALLBACK prg2wav_dialog_proc(HWND hwndDlg,      //handle to dialog box
       (LPARAM) "Sine");
     SendMessageA(GetDlgItem(hwndDlg, IDC_WAVEFORM), CB_SETCURSEL, 1, 0);
     SendMessageA(GetDlgItem(hwndDlg, IDC_THRESHOLD_SPIN), UDM_SETRANGE, 
-      0, MAKELONG(1600, 160));
+      0, MAKELONG(1600, 102));
     SendMessage(GetDlgItem(hwndDlg, IDC_THRESHOLD_SPIN), UDM_SETPOS, 
       0, 263);
     return TRUE;
