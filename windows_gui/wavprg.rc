@@ -185,7 +185,7 @@ CAPTION "About WAV-PRG"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,52,153,50,14
-    CTEXT           "WAV-PRG 4.0.9",IDC_STATIC,0,7,155,8
+    CTEXT           "WAV-PRG 4.1.0",IDC_STATIC,0,7,155,8
     CTEXT           "Copyright (C) Fabrizio Gennari 1998-2014",IDC_STATIC,0,
                     18,155,8
     CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",
