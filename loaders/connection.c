@@ -50,8 +50,6 @@ static enum wav2prg_bool is_connection(struct wav2prg_observer_context *observer
     return wav2prg_false;
     
   if (datachunk_block->data[707-698] == 173 && datachunk_block->data[712-698] == 173) {
-    uint8_t j, sbyte;
-
     observer_functions->set_info_func(observer_context,
                                       start,
                                       datachunk_block->data[780-698]*256+datachunk_block->data[787-698],
