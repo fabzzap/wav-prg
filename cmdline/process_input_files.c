@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #ifndef _MSC_VER
 #include <libgen.h>
 #endif
@@ -33,7 +34,7 @@
    on the T64. If there are any duplicates in the range, they are not added to
    the list. */
 
-static struct simple_block_list_element ** set_range(int lower, int upper, FILE *infile, struct simple_block_list_element **files_to_convert){
+static void set_range(int lower, int upper, FILE *infile, struct simple_block_list_element **files_to_convert){
   int count;
 
   for (count = lower; count <= upper; count++)
@@ -46,43 +47,17 @@ static struct simple_block_list_element ** set_range(int lower, int upper, FILE 
       remove_simple_block_list_element(files_to_convert);
     }
   }
-
-  return files_to_convert;
 }
 
-/* extract_range scans the string buffer from position *pointerb and copies
-   it to the string range until it encounters a comma, an end of string, a
-   newline or an invalid character. The above characters are not copied. Thus,
-   range only contains digits and '-''s. *pointerb is updated. */
+static int extract_number(char *range, int *pointer) {
+	int number = 0;
+  char letter;
+  while (isdigit(letter = range[*pointer])) {
+    number = number * 10 + letter - '0';
+    (*pointer)++;
+  }
 
-static void extract_range(char *buffer, char *range, int *pointerb, int *end_of_line, int *invalid_character){
-  char lettera;
-  int end_of_range = 0;
-  int pointer = 0;
-  
-  *end_of_line = *invalid_character = 0;
-  do {
-    lettera = buffer[*pointerb];
-    if (isdigit(lettera) || lettera == '-')
-      range[pointer] = lettera;
-    else {
-      range[pointer] = 0;
-      switch (lettera) {
-      case 0:
-      case '\n':
-        *end_of_line = 1;
-        break;
-      case ',':
-        end_of_range = 1;
-        break;
-      default:
-        printf("Invalid character: %c\n", lettera);
-        *invalid_character = 1;
-      }
-    }
-    pointer++;
-    (*pointerb)++;
-  } while ((!*end_of_line) && (!*invalid_character) && (!end_of_range));
+  return number;
 }
 
 /* extract_numbers takes the string range (extracted with extract_range),
@@ -90,72 +65,68 @@ static void extract_range(char *buffer, char *range, int *pointerb, int *end_of_
    files_to_convert accordingly via the set_range function. If range is empty,
    it does nothing. */
 
-static struct simple_block_list_element ** extract_numbers(char *range, int *invalid_character, FILE *infile, struct simple_block_list_element **files_to_convert){
-  char  lettera;
-  int pointer = -1;
-  int end_pointer;
+static _Bool extract_numbers(char *range, FILE *infile, struct simple_block_list_element **files_to_convert) {
+  int pointer = 0;
   int start = 0;
   int end = 0;
   int max_entries = get_total_entries(infile);
-
-  while (isdigit(lettera = range[++pointer]))
-    start = start * 10 + lettera - 48;
-  if (!lettera) { /* range is empty or does not contain '-' signs */
-    if (!pointer)
-      return; /* empty range */
-    if (start < 1)
-      start = 1;
-    if (start > 65536)
-      start = 65536;
-    return set_range(start, start, infile, files_to_convert);        /* range is a single number */
-  } /* range contains a '-' sign' */
-  if (!pointer)
-    start = 1; /* '-' is the first char */
-  end_pointer = pointer + 1;
-  while (isdigit(lettera = range[++pointer]))
-    end = end * 10 + lettera - 48;
-  if (lettera) {
-    printf("Too many '-' signs in range %s\n", range);
-    *invalid_character = 1;
-    return files_to_convert;
-  }
-  if (pointer == end_pointer)
-    end = max_entries; /* '-' is the last char */
-  if (start < 1)
-    start = 1;
-  if (start > 65536)
-    start = 65536;
-  if (end < 1)
-    end = 1;
-  if (end > 65536)
-    end = 65536;
-  if (end < start) {
-    printf("The range %s is invalid\n", range);
-    *invalid_character = 1;
-    return files_to_convert;
-  }
-  return set_range(start, end, infile, files_to_convert);
-}
-
-static struct simple_block_list_element ** get_range_from_keyboard(FILE *infile, struct simple_block_list_element **files_to_convert){
-  char buffer[100], range[100];
-  int end_of_line, invalid_character;
-  int pointer;
+  _Bool end_of_line = false;
 
   do {
-    pointer = 0;
-    printf("Enter the numbers of the games you want to convert:");
-    fgets(buffer, 100, stdin);
-    do {
-      extract_range(buffer, range, &pointer, &end_of_line, &invalid_character);
-      if (invalid_character)
-        break;
-      files_to_convert = extract_numbers(range, &invalid_character, infile, files_to_convert);
-      if (invalid_character)
-        break;
-    } while (!end_of_line);
-  } while (invalid_character);
-  return files_to_convert;
+    int pointer_initial = pointer;
+    start = extract_number(range, &pointer);
+    if (pointer == pointer_initial){
+      if (range[pointer] == '-')
+        start = 1;
+      else {
+        printf("Empty range\n");
+        return false; /* empty range */
+      }
+    }
+    if (range[pointer] == '-') {
+      pointer_initial = ++pointer;
+      end = extract_number(range, &pointer);
+      if (pointer == pointer_initial)
+        end = max_entries;
+    }
+    else
+      end = start;
+    if (!range[pointer] || range[pointer] == '\r' || range[pointer] == '\n')
+      end_of_line = true;
+    else if (range[pointer] != ',') {
+      printf("Invalid character %c\n", range[pointer]);
+      return false;
+    }
+    if (end < start) {
+      printf("The range %s is invalid\n", range);
+      return false;
+    }
+    if (start<1) {
+      printf("Invalid start %d\n", start);
+      return false;
+    }
+    if (start>max_entries) {
+      printf("Invalid start %d\n", start);
+      return false;
+    }
+    if (end>max_entries) {
+      printf("Invalid end %d\n", end);
+      return false;
+    }
+    set_range(start, end, infile, files_to_convert);
+    pointer++;
+  }while(!end_of_line);
+  return true;
+}
+
+static void get_range_from_keyboard(FILE *infile, struct simple_block_list_element **files_to_convert){
+  char buffer[100];
+
+  do {
+	  printf("Enter the numbers of the games you want to convert:");
+	  fgets(buffer, 100, stdin);
+    remove_all_simple_block_list_elements(files_to_convert);
+  } while (!extract_numbers(buffer, infile, files_to_convert));
 }
 
 static int list_contents(const char *filename, FILE *infile, char verbose){
@@ -220,7 +191,7 @@ struct simple_block_list_element *process_input_files(int numarg
                          ,uint8_t get_whole_t64
 ){
   FILE *infile;
-  struct simple_block_list_element *files_to_convert = NULL, **current_block = &files_to_convert;
+  struct simple_block_list_element *files_to_convert = NULL;
   int used_entries;
 
   for (; numarg; numarg--, argo++) {
@@ -234,14 +205,13 @@ struct simple_block_list_element *process_input_files(int numarg
       /* If there is only one used entry, */
       /* Only the used one will be converted */
       if (used_entries == 1 || get_whole_t64) {
-        struct simple_block_list_element **new_current_block = add_all_entries_from_file(current_block, infile);
+        add_all_entries_from_file(&files_to_convert, infile);
         if (use_filename_as_c64_name && detect_type(infile) == prg)
-          put_filename_in_entryname(*argo, (*current_block)->block.info.name);
-        current_block = new_current_block;
+          put_filename_in_entryname(*argo, files_to_convert->block.info.name);
       }
       else if (used_entries > 1)
         /* ask the user what to convert */
-        current_block = get_range_from_keyboard(infile, current_block);
+        get_range_from_keyboard(infile, &files_to_convert);
     }
     fclose(infile);
   }
