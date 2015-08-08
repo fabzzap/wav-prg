@@ -25,7 +25,6 @@ static char* get_basename(const char *filename, char *output_name, int outlen)
 #ifdef _MSC_VER
   char fname[_MAX_FNAME];
   char ext[_MAX_EXT];
-  char *dest;
 
   _splitpath(filename, NULL, NULL, fname, ext);
   strncpy(output_name, fname, outlen);

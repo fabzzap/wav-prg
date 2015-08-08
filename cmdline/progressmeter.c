@@ -25,10 +25,12 @@
 #include <termios.h>
 #else
 #include <windows.h>
+#include <io.h>
 #endif
 
 #include "progressmeter.h"
 #include "wavprg_types.h"
+#include "name_utils.h"
 
 /* "Thermometer" (bar) progress. */
 

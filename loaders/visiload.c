@@ -33,8 +33,6 @@ static uint8_t visiload_sync_sequence[]={0x16};
 static enum wav2prg_sync_result visiload_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
   struct visiload_private_state *state = (struct visiload_private_state *)conf->private_state;
-  uint8_t bit;
-  uint8_t num_zeros;
 
   if (state->synced_state)
     return wav2prg_sync_success;
@@ -128,7 +126,6 @@ static enum wav2prg_bool keep_doing_visiload(struct wav2prg_observer_context *ob
   }
   else if (block->info.start == 0x03bb){
     if (block->info.end == 0x3db){
-      int i;
       if ((block->data[20]!=0x60 || block->data[22]!=0x45)
        && (block->data[20]!=0x36 || block->data[22]!=0xc7)
        && (block->data[20]!=0    || block->data[22]!=0x80)

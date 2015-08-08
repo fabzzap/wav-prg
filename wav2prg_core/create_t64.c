@@ -62,7 +62,7 @@ void create_t64(struct block_list_element *list, const char *tape_name, const ch
   offset = (num_files + 2) * 32;
 
   if (tape_name != NULL) {
-    int count;
+    size_t count;
     for (count = 0; count < 24; count++)
       if (count < strlen(tape_name))
         t64_header[40 + count] = toupper(tape_name[count]);
