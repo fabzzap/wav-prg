@@ -366,6 +366,13 @@ static DWORD WINAPI prg2wav_thread(LPVOID p){
   return 0;
 }
 
+struct play_pause_stop {
+  BOOL pause;
+  HBITMAP play_icon;
+  HBITMAP pause_icon;
+  struct audiotap *file;
+};
+
 INT_PTR CALLBACK prg2wav_status_window_proc(HWND hwndDlg,
                                             //handle to dialog box
                                             UINT uMsg,
@@ -378,16 +385,31 @@ INT_PTR CALLBACK prg2wav_status_window_proc(HWND hwndDlg,
   switch (uMsg) {
   case WM_COMMAND:
     if (LOWORD(wParam) == IDCANCEL) {
-      struct audiotap *file =
-        (struct audiotap *)GetWindowLong(hwndDlg, GWL_USERDATA);
+      struct play_pause_stop *file =
+        (struct play_pause_stop *)GetWindowLong(hwndDlg, GWL_USERDATA);
       if (!file)
         MessageBoxA(hwndDlg, "Cannot stop operation", "WAV-PRG Error",
                    MB_ICONERROR);
-      else
-        audiotap_terminate(file);
+      else {
+        tap2audio_resume(file->file);
+        audiotap_terminate(file->file);
+      }
       return 1;
     }
-    return 0;
+    if (LOWORD(wParam) == IDC_PLAYPAUSE) {
+      struct play_pause_stop *icon = (struct play_pause_stop *)GetWindowLong(hwndDlg, GWL_USERDATA);
+      if (icon->pause){
+        tap2audio_resume(icon->file);
+        SendDlgItemMessage(hwndDlg, IDC_PLAYPAUSE, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)icon->pause_icon);
+      }
+      else {
+        tap2audio_pause(icon->file);
+        SendDlgItemMessage(hwndDlg, IDC_PLAYPAUSE, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)icon->play_icon);
+      }
+      icon->pause = !icon->pause;
+      return 1;
+    }
+  // fallback
   default:
     return 0;
   }
@@ -401,13 +423,14 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
   BOOL success;
   int freq;
   struct tapdec_params tapdec_params;
-  struct audiotap *file;
+  struct play_pause_stop play_pause_stop = { .pause = 0 };
   HANDLE thread;
   DWORD thread_id;
   MSG msg;
   BOOL end_found = FALSE;
   uint8_t videotype;
   LRESULT selected_clock, selected_waveform;
+  HBITMAP stop_icon;
 
   name[0] = 0;
   freq = GetDlgItemInt(hwnd, IDC_FREQ, &success, FALSE);
@@ -485,7 +508,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
       remove_all_simple_block_list_elements(&params->program);
       return;
     }
-    if (tap2audio_open_to_wavfile4(&file, name, &tapdec_params, freq,
+    if (tap2audio_open_to_wavfile4(&play_pause_stop.file, name, &tapdec_params, freq,
                             params->machine, videotype) != AUDIOTAP_OK) {
       MessageBoxA(hwnd, "Error opening file", "WAV-PRG error", MB_ICONERROR);
       remove_all_simple_block_list_elements(&params->program);
@@ -500,8 +523,8 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
       remove_all_simple_block_list_elements(&params->program);
       return;
     }
-    if (tap2audio_open_to_soundcard4(&file, &tapdec_params, freq,
-                            params->machine, videotype)  != AUDIOTAP_OK) {
+    if (tap2audio_open_to_soundcard4(&play_pause_stop.file, &tapdec_params, freq,
+                            params->machine, videotype) != AUDIOTAP_OK) {
       MessageBoxA(hwnd, "Error opening sound card", "WAV-PRG error",
                  MB_ICONERROR);
       remove_all_simple_block_list_elements(&params->program);
@@ -533,7 +556,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
       remove_all_simple_block_list_elements(&params->program);
       return;
     }
-    if (tap2audio_open_to_tapfile3(&file, name, version, params->machine, videotype) !=
+    if (tap2audio_open_to_tapfile3(&play_pause_stop.file, name, version, params->machine, videotype) !=
         AUDIOTAP_OK) {
       MessageBoxA(hwnd, "Error opening TAP file", "WAV-PRG error",
                  MB_ICONERROR);
@@ -542,7 +565,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
     }
   }
 
-  params->file = file;
+  params->file = play_pause_stop.file;
 
   params->status_window =
     CreateDialog(instance, MAKEINTRESOURCE(IDD_PRG2WAV_STATUS), hwnd,
@@ -550,8 +573,34 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
   EnableWindow(hwnd, FALSE);
   ShowWindow(params->status_window, SW_SHOWNORMAL);
   UpdateWindow(params->status_window);
-  SetWindowLong(params->status_window, GWL_USERDATA, (LONG)file);
+  SetWindowLong(params->status_window, GWL_USERDATA, (LONG)&play_pause_stop);
   thread = CreateThread(NULL, 0, prg2wav_thread, params, 0, &thread_id);
+  if (IsDlgButtonChecked(hwnd, IDC_TO_SOUND)) {
+    HWND stop_button = GetDlgItem(params->status_window, IDCANCEL);
+    RECT window_rect, play_pause_button_rect;
+    stop_icon = LoadBitmap(instance, MAKEINTRESOURCE(IDB_STOP));
+    play_pause_stop.play_icon = LoadBitmap(instance, MAKEINTRESOURCE(IDB_PLAY));
+    play_pause_stop.pause_icon = LoadBitmap(instance, MAKEINTRESOURCE(IDB_PAUSE));
+    /* make sure the pause button is visible and shows the pause icon*/
+    SendDlgItemMessage(params->status_window, IDC_PLAYPAUSE, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)play_pause_stop.pause_icon);
+    ShowWindow(GetDlgItem(params->status_window, IDC_PLAYPAUSE), SW_SHOW);
+    /* get width of window */
+    GetClientRect(params->status_window, &window_rect);
+    /* get absolute position of play-pause button */
+    GetWindowRect(GetDlgItem(params->status_window, IDC_PLAYPAUSE), &play_pause_button_rect);
+    /* get position of play-pause button within window */
+    MapWindowPoints(NULL, params->status_window, (LPPOINT)&play_pause_button_rect, 2);
+    /* make stop button as big as play-pause button, top-aligned and symmetrically placed */
+    MoveWindow(stop_button,
+      window_rect.right - play_pause_button_rect.right,
+      play_pause_button_rect.top,
+      play_pause_button_rect.right - play_pause_button_rect.left,
+      play_pause_button_rect.bottom - play_pause_button_rect.top,
+      TRUE);
+    /* make sure the stop button shows the stop icon instead of the word Cancel*/
+    SetWindowLongPtr(stop_button, GWL_STYLE, GetWindowLongPtr(stop_button, GWL_STYLE) | BS_BITMAP);
+    SendDlgItemMessage(params->status_window, IDCANCEL, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)stop_icon);
+  }
 
   while (1) {
     DWORD retval;
@@ -570,6 +619,11 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
 
   tap2audio_close(params->file);
   remove_all_simple_block_list_elements(&params->program);
+  if (IsDlgButtonChecked(hwnd, IDC_TO_SOUND)) {
+    DeleteObject(play_pause_stop.play_icon);
+    DeleteObject(play_pause_stop.pause_icon);
+    DeleteObject(stop_icon);
+  }
 }
 
 static void choose_file(HWND hwnd){

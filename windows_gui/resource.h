@@ -21,6 +21,9 @@
 #define IDD_CHOOSE_TAP_VERSION          109
 #define IDD_PRG2WAV_STATUS              110
 #define IDD_CONTENTS                    111
+#define IDB_STOP                        201
+#define IDB_PAUSE                       202
+#define IDB_PLAY                        203
 #define IDC_FILE_PROGRESS               1000
 #define IDC_ENTRY_PROGRESS              1001
 #define IDC_FILE_TEXT                   1002
@@ -72,5 +75,6 @@
 #define IDC_THRESHOLD_SPIN              1048
 #define IDC_CHOOSE_TAP_VERSION          1049
 #define IDC_PRG2WAV_CURRENT             1050
+#define IDC_PLAYPAUSE                   1051
 
 #define IDC_STATIC                      -1

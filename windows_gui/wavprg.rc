@@ -227,6 +227,7 @@ BEGIN
     LTEXT           "",IDC_PRG2WAV_CURRENT,5,7,170,11
     PUSHBUTTON      "Cancel",IDCANCEL,65,30,50,13
     CONTROL         "Progress1",IDC_ENTRY_PROGRESS,"msctls_progress32",WS_BORDER,5,18,170,11
+    PUSHBUTTON      "Button1",IDC_PLAYPAUSE,7,30,18,18,BS_BITMAP | NOT WS_VISIBLE
 END
 
 IDD_MAIN DIALOG  0, 0, 210, 58
@@ -244,3 +245,7 @@ BEGIN
 END
 
 IDI_ICON                ICON    DISCARDABLE     "wavprg.ico"
+
+IDB_STOP                BITMAP                  "stop.bmp"
+IDB_PLAY                BITMAP                  "play.bmp"
+IDB_PAUSE               BITMAP                  "pause.bmp"
