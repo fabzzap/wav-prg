@@ -47,6 +47,33 @@ static void help(const struct get_option *options, const char *progname, int err
   exit(errorcode);
 }
 
+#ifdef ENABLE_PAUSE
+#include <semaphore.h>
+#include <errno.h>
+#include <signal.h>
+
+sem_t sem;
+struct audiotap *pause_audiotap;
+
+static void sig_pause(int signum){
+  int semr;
+  sigset_t set;
+
+  tap2audio_pause(pause_audiotap);
+  sigemptyset(&set);
+  sigaddset (&set, SIGUSR2);
+  sigprocmask(SIG_UNBLOCK,&set,NULL);
+  do {
+    semr = sem_wait(&sem);
+  } while (semr == -1 && errno == EINTR);
+}
+
+static void sig_resume(int signum){
+  tap2audio_resume(pause_audiotap);
+  sem_post(&sem);
+}
+#endif
+
 struct help_option_struct
 {
   const struct get_option *options;
@@ -396,6 +423,22 @@ int main(int numarg, char **argo){
   }
   blocks = process_input_files(numarg - 1, argo + 1, list_asked, use_filename_as_c64_name, include_t64_fully);
   if (create_wav_struct.file != NULL){
+#ifdef ENABLE_PAUSE
+    struct sigaction pause_action, resume_action;
+    sigset_t set;
+
+    sem_init(&sem, 0, 0);
+    sigemptyset(&set);
+    sigaddset (&set, SIGUSR2);
+    sigprocmask(SIG_BLOCK,&set,NULL);
+    memset(&pause_action, 0, sizeof(pause_action));
+    memset(&resume_action, 0, sizeof(resume_action));
+    pause_action.sa_handler = sig_pause;
+    resume_action.sa_handler = sig_resume;
+    sigaction(SIGUSR1, &pause_action, NULL);
+    sigaction(SIGUSR2, &resume_action, NULL);
+    pause_audiotap = create_wav_struct.file;
+#endif
     prg2wav_convert(blocks, create_wav_struct.file, fast, raw, threshold, create_wav_struct.machine, &cmdline_display_interface, display_interface_internal);
     tap2audio_close(create_wav_struct.file);
     free(display_interface_internal);

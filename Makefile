@@ -80,6 +80,11 @@ ifdef USE_RPATH
   endif
 endif
 
+ifdef ENABLE_PAUSE
+  cmdline/prg2wav.o:CFLAGS+=-DENABLE_PAUSE
+  cmdline/prg2wav:LDLIBS += -pthread
+endif
+
 cmdline/wav2prg:LDLIBS+=-ldl
 
 HHC=hhc
