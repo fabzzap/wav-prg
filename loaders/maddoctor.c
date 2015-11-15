@@ -66,7 +66,6 @@ static enum wav2prg_bool recognize_maddoctor_hc(struct wav2prg_observer_context 
    && block->data[0] == 1
    && block->data[1] == 1
    && block->data[2] == 8
-   && block->data[3] == 101
    && block->data[4] == 8
    && block->data[0x35f - 0x33c] == 0xA9
    && block->data[0x361 - 0x33c] == 0x85
@@ -123,9 +122,39 @@ static enum wav2prg_bool recognize_maddoctor_self(struct wav2prg_observer_contex
   return wav2prg_false;
 }
 
+static enum wav2prg_bool recognize_creativesparks(struct wav2prg_observer_context *observer_context,
+                                             const struct wav2prg_observer_functions *observer_functions,
+                                             const struct program_block *block,
+                                             uint16_t start_point){
+  uint16_t i;
+
+  for (i = start_point; i + 11 < block->info.end - block->info.start; i++){
+    if(block->data[i    ] == 0xA9
+    && block->data[i + 2] == 0x85
+    && block->data[i + 3] == 0xfd
+    && block->data[i + 4] == 0xA9
+    && block->data[i + 6] == 0x85
+    && block->data[i + 7] == 0xfb
+    && block->data[i + 8] == 0xA9
+    && block->data[i + 10] == 0x85
+    && block->data[i + 11] == 0xfc
+    ){
+      uint16_t start = block->data[i + 5] + (block->data[i + 9] << 8);
+      observer_functions->set_info_func(observer_context,
+                                        start,
+                                        start + (block->data[i + 1] << 8),
+                                        NULL);
+      observer_functions->set_restart_point_func(observer_context, i + 12);
+      return wav2prg_true;
+    }
+  }
+  return wav2prg_false;
+}
+
 static const struct wav2prg_observers maddoctor_observed_loaders[] = {
   {"Default C64", {"Mad Doctor", NULL, recognize_maddoctor_hc}},
-  {"Mad Doctor" , {"Mad Doctor", NULL, recognize_maddoctor_self}},
+  {"Mad Doctor" , {"Mad Doctor", "Mad Doctor", recognize_maddoctor_self}},
+  {"Mad Doctor" , {"Mad Doctor", "Creative Sparks", recognize_creativesparks}},
   {NULL,NULL}
 };
 
@@ -164,6 +193,6 @@ static const struct wav2prg_loaders maddoctor_functions[] ={
   {NULL}
 };
 
-WAV2PRG_LOADER(maddoctor, 1, 0, "Mad Doctor loader", maddoctor_functions)
+WAV2PRG_LOADER(maddoctor, 1, 1, "Mad Doctor loader", maddoctor_functions)
 WAV2PRG_OBSERVER(1,0, maddoctor_observed_loaders)
 
