@@ -33,7 +33,7 @@ BEGIN
       VALUE "FileDescription", "WAV-PRG, a program to read and write Commodore tapes\0"
       VALUE "FileVersion", WAVPRG_VERSION "\0"
       VALUE "InternalName", "wavprg\0"
-	  VALUE "LegalCopyright", "Copyright (C) 2003-2014 Fabrizio Gennari"
+	  VALUE "LegalCopyright", "Copyright (C) 2003-2015 Fabrizio Gennari"
       VALUE "OriginalFilename",	"wavprg.exe\0"
       VALUE "ProductName",	"WAV-PRG\0"
       VALUE "ProductVersion", WAVPRG_VERSION "\0"
@@ -185,7 +185,7 @@ CAPTION "About WAV-PRG"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,52,153,50,14
-    CTEXT           "WAV-PRG 4.1.0",IDC_STATIC,0,7,155,8
+    CTEXT           "WAV-PRG 4.2",IDC_STATIC,0,7,155,8
     CTEXT           "Copyright (C) Fabrizio Gennari 1998-2014",IDC_STATIC,0,
                     18,155,8
     CTEXT           "Distributed under the GNU General Public License: see file LICENSE.TXT",

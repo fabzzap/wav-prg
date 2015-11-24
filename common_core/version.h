@@ -1,5 +1,5 @@
 #define WAVPRG_MAJOR 4
-#define WAVPRG_MINOR 1
+#define WAVPRG_MINOR 2
 #define WAVPRG_REV 0
 
 #define STR(x) #x
