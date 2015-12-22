@@ -431,6 +431,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
   uint8_t videotype;
   LRESULT selected_clock, selected_waveform;
   HBITMAP stop_icon;
+  BOOL is_to_sound;
 
   name[0] = 0;
   freq = GetDlgItemInt(hwnd, IDC_FREQ, &success, FALSE);
@@ -575,7 +576,8 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
   UpdateWindow(params->status_window);
   SetWindowLong(params->status_window, GWL_USERDATA, (LONG)&play_pause_stop);
   thread = CreateThread(NULL, 0, prg2wav_thread, params, 0, &thread_id);
-  if (IsDlgButtonChecked(hwnd, IDC_TO_SOUND)) {
+  is_to_sound = IsDlgButtonChecked(hwnd, IDC_TO_SOUND);
+  if (is_to_sound) {
     HWND stop_button = GetDlgItem(params->status_window, IDCANCEL);
     RECT window_rect, play_pause_button_rect;
     stop_icon = LoadBitmap(instance, MAKEINTRESOURCE(IDB_STOP));
@@ -609,6 +611,12 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
     if (retval == WAIT_OBJECT_0)
       break;
     while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+      if (is_to_sound && msg.message == WM_KEYDOWN) {
+        if (msg.wParam == VK_MEDIA_PLAY_PAUSE)
+          PostMessage (params->status_window, WM_COMMAND, IDC_PLAYPAUSE, 0);
+        else if (msg.wParam == VK_MEDIA_STOP)
+          PostMessage (params->status_window, WM_COMMAND, IDCANCEL, 0);
+      }
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
