@@ -63,7 +63,7 @@ wav2prg_core/%.o:CFLAGS+=-I wav2prg_core
 windows_gui/%.o:CFLAGS+=-I wav2prg_core -I prg2wav_core
 
 ifdef AUDIOTAP_HDR
-  CFLAGS+=-I $(AUDIOTAP_HDR)
+  CFLAGS+=-I"$(AUDIOTAP_HDR)"
 endif
 ifdef DEBUG
   CFLAGS+=-g
