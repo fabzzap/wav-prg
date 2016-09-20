@@ -1,0 +1,43 @@
+language: cpp
+
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq -y mingw32
+
+    - mkdir "deps"
+    - cd "deps"
+    - git clone https://github.com/fabzzap/libaudiotap.git
+    - cd "libaudiotap"
+    - make CC=i586-mingw32msvc-cc
+    - cd ..
+    - cd ..
+
+script:
+    - make
+        CC=i586-mingw32msvc-cc
+        WINDRES=i586-mingw32msvc-windres
+        AUDIOTAP_HDR=deps/libaudiotap
+        AUDIOTAP_LIB=deps/libaudiotap
+
+    - cd loaders
+    - make dlls
+        CC=i586-mingw32msvc-cc
+    - cd ..
+
+    - mkdir "Build"
+    - mkdir "Build"/"loaders"
+    - cp loaders/*.dll Build/loaders
+    - cp wavprg.exe Build
+    - cp deps/libaudiotap/audiotap.dll Build
+    - zip -r build Build
+
+deploy:
+    provider: releases
+    api_key:
+        secure: "60DJ299gHsv1NzB1riy2BvVzhwX7eEYpEcLG2gNQigsj8gd1DZdZjkpJhIzeJ97+ajdnjBImOPkn/VXURylCI8hgfCwC1HUfsyk3heH1H+vRpUhhY3JKvgMQXu4oeuj9pEk8ysO3AgVVomXkTm7T1EJ6ALDr262fOSvcaYl7pQnvTyStdzWjlJLJrOw4LO6OyfVz8om0DhJspUuJLuYOB6DRJ2fv1CuL1aEWp7UspVkO9nDizmOgce0FNvBqQPxDfy+jMWdVz4FN3hzuL+gfZvvcNwCq9tigKUMUOkYbnkRNxrgxy1ZVtqt7d0EmVBfQD9xgJXX2E78gltJRLsyEFKrG9//LQMD9weZ+x/FxTRVA5fs5kfcXXeo64PTjA5AK/E2aDdDugI9rdEx2P4ta30exyP4kx94f8Y1RIDpQnltEH8RsV9lq/kniSLVTmBHHGxI+voviveEF4jSParQiW1CDmcoGUu+pyV1zo2DPThxacBF3s7BB4qRAy9vcyZqDsl6Q9CJTaI9cU3kE1/zMRfrFIxRJXI2CzD+v5NxWpYUinLLWuEsTyb6blTaO9vSIaLc6+zKpSE4Oy1ls88bPTHn0cXT9t0ralbE/z4mWztgH/f3a8JfohyoGB/owMLvoGBlu5rRny1NweWnzePRKKzTfZxqM+qsNRCSndB4BwcI="
+
+    file: "build.zip"
+    skip_cleanup: true
+    on:
+        tags: true
+
