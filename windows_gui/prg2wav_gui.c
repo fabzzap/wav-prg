@@ -32,6 +32,17 @@
 #include "prg2wav_display_interface.h"
 #include "name_utils.h"
 
+// The mingw version in travis-ci, for some reason, lacks
+// this defines in its runtime implementation.
+
+#ifndef VK_MEDIA_PLAY_PAUSE
+#define VK_MEDIA_PLAY_PAUSE 0xB3
+#endif
+
+#ifndef VK_MEDIA_STOP
+#define VK_MEDIA_STOP   0xB2
+#endif
+
 struct prg2wav_params {
   struct audiotap *file;
   struct simple_block_list_element *program;
