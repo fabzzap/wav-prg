@@ -12,6 +12,9 @@ ifdef DEBUG
   CFLAGS+=-g
 endif
 
+sos: $(patsubst %.c,%.so,$(wildcard *.c))
+dlls: $(patsubst %.c,%.dll,$(wildcard *.c))
+
 clean:
 	rm -f *.dll *.so *.o *~
 
