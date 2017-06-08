@@ -11,7 +11,7 @@
 
 #include "wav2prg_api.h"
 
-static uint16_t alien_thresholds[]={0x2BC,0x4B0};
+static uint16_t alien_thresholds[]={0x2BC,0x450};
 
 static enum wav2prg_sync_result alien_get_sync(struct wav2prg_context* context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf)
 {
@@ -32,8 +32,7 @@ static enum wav2prg_sync_result alien_get_sync(struct wav2prg_context* context, 
 
 static enum wav2prg_bool alien_get_block_info(struct wav2prg_context *context, const struct wav2prg_functions* functions, struct wav2prg_plugin_conf* conf, struct program_block_info *info)
 {
-  uint16_t length;
-  uint8_t read_byte;
+  uint8_t numblocks,read_byte;
   int i;
 
   if (functions->get_data_byte_func(context, functions, conf, &read_byte, 0) == wav2prg_false)
@@ -45,16 +44,17 @@ static enum wav2prg_bool alien_get_block_info(struct wav2prg_context *context, c
   if (read_byte != 3 && read_byte != 7)
     return wav2prg_false;
   for (i = 0; i < 10; i++) {
-    if (functions->get_data_byte_func(context, functions, conf, &read_byte, 0) == wav2prg_false)
+    if (functions->get_data_byte_func(context, functions, conf, info->name + i, 0) == wav2prg_false)
       return wav2prg_false;
-    info->name[i] = read_byte;
   }
 
-  if (functions->get_data_word_func(context, functions, conf, &length) == wav2prg_false)
+  if (functions->get_data_byte_func(context, functions, conf, &read_byte, 0) == wav2prg_false) // ignored
+    return wav2prg_false;
+  if (functions->get_data_byte_func(context, functions, conf, &numblocks, 0) == wav2prg_false)
     return wav2prg_false;
   if (functions->get_data_word_func(context, functions, conf, &info->start) == wav2prg_false)
     return wav2prg_false;
-  info->end = info->start + length;
+  info->end = info->start + (numblocks << 8);
   if (functions->get_data_byte_func(context, functions, conf, &read_byte, 0) == wav2prg_false)
     return wav2prg_false;
   if (functions->get_data_byte_func(context, functions, conf, &read_byte, 0) == wav2prg_false)
@@ -105,4 +105,4 @@ static const struct wav2prg_loaders alien_functions[] = {
   {NULL}
 };
 
-WAV2PRG_LOADER(alien, 1, 0, "Alien (Argus Press)", alien_functions)
+WAV2PRG_LOADER(alien, 1, 1, "Alien (Argus Press)", alien_functions)
