@@ -34,7 +34,7 @@
    on the T64. If there are any duplicates in the range, they are not added to
    the list. */
 
-static void set_range(int lower, int upper, FILE *infile, struct simple_block_list_element **files_to_convert){
+static struct simple_block_list_element **set_range(int lower, int upper, FILE *infile, struct simple_block_list_element **files_to_convert){
   int count;
 
   for (count = lower; count <= upper; count++)
@@ -47,6 +47,7 @@ static void set_range(int lower, int upper, FILE *infile, struct simple_block_li
       remove_simple_block_list_element(files_to_convert);
     }
   }
+  return files_to_convert;
 }
 
 static int extract_number(char *range, int *pointer) {
@@ -65,7 +66,7 @@ static int extract_number(char *range, int *pointer) {
    files_to_convert accordingly via the set_range function. If range is empty,
    it does nothing. */
 
-static _Bool extract_numbers(char *range, FILE *infile, struct simple_block_list_element **files_to_convert) {
+static struct simple_block_list_element **extract_numbers(char *range, FILE *infile, struct simple_block_list_element **files_to_convert) {
   int pointer = 0;
   int start = 0;
   int end = 0;
@@ -80,7 +81,7 @@ static _Bool extract_numbers(char *range, FILE *infile, struct simple_block_list
         start = 1;
       else {
         printf("Empty range\n");
-        return false; /* empty range */
+        return NULL; /* empty range */
       }
     }
     if (range[pointer] == '-') {
@@ -95,38 +96,41 @@ static _Bool extract_numbers(char *range, FILE *infile, struct simple_block_list
       end_of_line = true;
     else if (range[pointer] != ',') {
       printf("Invalid character %c\n", range[pointer]);
-      return false;
+      return NULL;
     }
     if (end < start) {
       printf("The range %s is invalid\n", range);
-      return false;
+      return NULL;
     }
     if (start<1) {
       printf("Invalid start %d\n", start);
-      return false;
+      return NULL;
     }
     if (start>max_entries) {
       printf("Invalid start %d\n", start);
-      return false;
+      return NULL;
     }
     if (end>max_entries) {
       printf("Invalid end %d\n", end);
-      return false;
+      return NULL;
     }
-    set_range(start, end, infile, files_to_convert);
+    files_to_convert = set_range(start, end, infile, files_to_convert);
     pointer++;
   }while(!end_of_line);
-  return true;
+  return files_to_convert;
 }
 
-static void get_range_from_keyboard(FILE *infile, struct simple_block_list_element **files_to_convert){
+static struct simple_block_list_element **get_range_from_keyboard(FILE *infile, struct simple_block_list_element **files_to_convert){
   char buffer[100];
 
-  do {
+  while(1) {
 	  printf("Enter the numbers of the games you want to convert:");
 	  fgets(buffer, 100, stdin);
+    struct simple_block_list_element **new_files_to_convert = extract_numbers(buffer, infile, files_to_convert);
+    if (new_files_to_convert)
+      return new_files_to_convert;
     remove_all_simple_block_list_elements(files_to_convert);
-  } while (!extract_numbers(buffer, infile, files_to_convert));
+  }
 }
 
 static int list_contents(const char *filename, FILE *infile, char verbose){
@@ -191,7 +195,7 @@ struct simple_block_list_element *process_input_files(int numarg
                          ,uint8_t get_whole_t64
 ){
   FILE *infile;
-  struct simple_block_list_element *files_to_convert = NULL;
+  struct simple_block_list_element *files_to_convert = NULL, **add_here = &files_to_convert;
   int used_entries;
 
   for (; numarg; numarg--, argo++) {
@@ -205,13 +209,14 @@ struct simple_block_list_element *process_input_files(int numarg
       /* If there is only one used entry, */
       /* Only the used one will be converted */
       if (used_entries == 1 || get_whole_t64) {
-        add_all_entries_from_file(&files_to_convert, infile);
+        struct simple_block_list_element **new_add_here = add_all_entries_from_file(add_here, infile);
         if (use_filename_as_c64_name && detect_type(infile) == prg)
-          put_filename_in_entryname(*argo, files_to_convert->block.info.name);
+          put_filename_in_entryname(*argo, (*add_here)->block.info.name);
+        add_here = new_add_here;
       }
       else if (used_entries > 1)
         /* ask the user what to convert */
-        get_range_from_keyboard(infile, &files_to_convert);
+        add_here = get_range_from_keyboard(infile, add_here);
     }
     fclose(infile);
   }
