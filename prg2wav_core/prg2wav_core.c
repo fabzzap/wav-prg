@@ -153,6 +153,7 @@ static int turbotape_convert(struct audiotap *file,
   int i;
   unsigned char checksum = 0;
   unsigned char byte;
+  uint16_t len = program->info.end - program->info.start;
 
   for (i = 0; i < 630; i++)
     if (turbotape_write_byte(file, 2, threshold))
@@ -186,7 +187,7 @@ static int turbotape_convert(struct audiotap *file,
       return -1;
   if (turbotape_write_byte(file, 0, threshold))
     return -1;
-  for (i = 0; i < program->info.end - program->info.start; i++) {
+  for (i = 0; i < len; i++) {
     if (turbotape_write_byte(file, program->data[i], threshold))
       return -1;
     checksum ^= program->data[i];
@@ -359,7 +360,7 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
 
   for (block = block_list; block != NULL; block = block->next)
   {
-    uint32_t block_len = block->block.info.end - block->block.info.start;
+    uint16_t block_len = block->block.info.end - block->block.info.start;
     uint32_t total_len = block_len;
     uint32_t statusbar_len = 0;
     char is_last_block = block->next == NULL;
@@ -370,7 +371,7 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
         total_len += size_of_data_chunk;
     }
 
-    if (block->block.info.end < block->block.info.start)
+    if (block->block.info.end && block->block.info.end < block->block.info.start)
       continue;
 
     display_interface->start(display_interface_internal, total_len, block->block.info.name, ++current_block_num, nblocks);
