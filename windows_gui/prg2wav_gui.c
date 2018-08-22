@@ -192,7 +192,7 @@ static UINT_PTR APIENTRY frompc_hook_proc(HWND hwnd, UINT uimsg, WPARAM wparam, 
         if (fd == NULL) {
           MessageBoxA(hwnd, "Cannot open selected file", "WAV-PRG error",
                      MB_ICONERROR);
-          SetWindowLong(hwnd, DWL_MSGRESULT, -1);
+          SetWindowLongPtr(hwnd, DWLP_MSGRESULT, -1);
         }
         else
         {
@@ -262,7 +262,7 @@ static UINT_PTR APIENTRY frompc_hook_proc(HWND hwnd, UINT uimsg, WPARAM wparam, 
         if (fd != NULL)
           fclose(fd);
         if (*block == NULL){
-          SetWindowLong(hwnd, DWL_MSGRESULT, -1);
+          SetWindowLongPtr(hwnd, DWLP_MSGRESULT, -1);
           return 1;
         }
       }
@@ -397,7 +397,7 @@ INT_PTR CALLBACK prg2wav_status_window_proc(HWND hwndDlg,
   case WM_COMMAND:
     if (LOWORD(wParam) == IDCANCEL) {
       struct play_pause_stop *file =
-        (struct play_pause_stop *)GetWindowLong(hwndDlg, GWL_USERDATA);
+        (struct play_pause_stop *)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
       if (!file)
         MessageBoxA(hwndDlg, "Cannot stop operation", "WAV-PRG Error",
                    MB_ICONERROR);
@@ -408,7 +408,7 @@ INT_PTR CALLBACK prg2wav_status_window_proc(HWND hwndDlg,
       return 1;
     }
     if (LOWORD(wParam) == IDC_PLAYPAUSE) {
-      struct play_pause_stop *icon = (struct play_pause_stop *)GetWindowLong(hwndDlg, GWL_USERDATA);
+      struct play_pause_stop *icon = (struct play_pause_stop *)GetWindowLongPtr(hwndDlg, GWLP_USERDATA);
       if (icon->pause){
         tap2audio_resume(icon->file);
         SendDlgItemMessage(hwndDlg, IDC_PLAYPAUSE, BM_SETIMAGE, (WPARAM)IMAGE_BITMAP, (LPARAM)icon->pause_icon);
@@ -585,7 +585,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
   EnableWindow(hwnd, FALSE);
   ShowWindow(params->status_window, SW_SHOWNORMAL);
   UpdateWindow(params->status_window);
-  SetWindowLong(params->status_window, GWL_USERDATA, (LONG)&play_pause_stop);
+  SetWindowLongPtr(params->status_window, GWLP_USERDATA, (LONG_PTR)&play_pause_stop);
   thread = CreateThread(NULL, 0, prg2wav_thread, params, 0, &thread_id);
   is_to_sound = IsDlgButtonChecked(hwnd, IDC_TO_SOUND);
   if (is_to_sound) {
