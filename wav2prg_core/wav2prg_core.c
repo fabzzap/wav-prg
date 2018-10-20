@@ -467,10 +467,6 @@ static void delete_state(struct wav2prg_plugin_conf* conf)
   free(conf);
 }
 
-static struct wav2prg_tolerance* get_strict_tolerances(const char* loader_name){
-  return NULL;
-}
-
 /* Loader observation API. Through this API, a block can be analysed,
    and the format of the following block can be guessed */
  
