@@ -607,7 +607,7 @@ struct block_list_element* wav2prg_analyse(const char* start_loader,
                                            struct display_interface_internal *display_interface_internal)
 {
   const struct wav2prg_loaders* current_loader;
-  struct block_list_element *blocks, **pointer_to_current_block = &blocks, *current_block;
+  struct block_list_element *blocks = NULL, **pointer_to_current_block = &blocks, *current_block;
   struct wav2prg_context context =
   {
     input_object,
