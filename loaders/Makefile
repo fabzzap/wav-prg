@@ -12,7 +12,7 @@ ifdef DEBUG
   CFLAGS+=-g
 endif
 
-sos: $(patsubst %.c,%.so,$(wildcard *.c))
+sos: $(patsubst %.c,%.so,$(filter-out dll_entry_point.c, $(wildcard *.c)))
 dlls: $(patsubst %.c,%.dll,$(wildcard *.c))
 
 clean:
