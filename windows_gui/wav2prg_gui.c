@@ -167,29 +167,29 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
   HTREEITEM boundaries_item, info_item;
 
   if (!info /*&& !dependencies*/) {
-    _snprintf(text, sizeof(text), "Found start of block using %s but with no valid block", internal->loader_name);
+    snprintf(text, sizeof(text), "Found start of block using %s but with no valid block", internal->loader_name);
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
     return;
   }
   if (!info) {
-    _snprintf(text, sizeof(text), "Found start of block using %s but could not determine block info", internal->loader_name);
+    snprintf(text, sizeof(text), "Found start of block using %s but could not determine block info", internal->loader_name);
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
     return;
   }
 
   if (internal->observation_name)
-    _snprintf(text, sizeof(text), "Found a block using %s (%s)", internal->loader_name, internal->observation_name);
+    snprintf(text, sizeof(text), "Found a block using %s (%s)", internal->loader_name, internal->observation_name);
   else
-    _snprintf(text, sizeof(text), "Found a block using %s", internal->loader_name);
+    snprintf(text, sizeof(text), "Found a block using %s", internal->loader_name);
   internal->current_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-  _snprintf(text, sizeof(text), "Boundaries");
+  snprintf(text, sizeof(text), "Boundaries");
   is.hParent = internal->current_item;
   boundaries_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   is.hParent = boundaries_item;
-  _snprintf(text, sizeof(text), "end of info: %u (%x)", info_pos, info_pos);
+  snprintf(text, sizeof(text), "end of info: %u (%x)", info_pos, info_pos);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   is.hParent = internal->current_item;
-  _snprintf(text, sizeof(text), "Info");
+  snprintf(text, sizeof(text), "Info");
   info_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   is.hParent = info_item;
   {
@@ -197,13 +197,13 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
 
     convert_petscii_string(info->name, progname, wav2prg_true);
     if(strlen(progname) > 0){
-      _snprintf(text, sizeof(text), "Name: %s", progname);
+      snprintf(text, sizeof(text), "Name: %s", progname);
       TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
     }
   }
-  _snprintf(text, sizeof(text), "start: %u (%x)", info->start, info->start);
+  snprintf(text, sizeof(text), "start: %u (%x)", info->start, info->start);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-  _snprintf(text, sizeof(text), "end: %u (%x)", info->end, info->end);
+  snprintf(text, sizeof(text), "end: %u (%x)", info->end, info->end);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
 
   internal->start = info->start;
@@ -263,39 +263,39 @@ static void end(struct display_interface_internal *internal, unsigned char valid
   else
     state_string = "no errors detected";
 
-  _snprintf(text, sizeof(text), "State: %s", state_string);
+  snprintf(text, sizeof(text), "State: %s", state_string);
   state_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   if(loader_has_checksum &&
      (state == wav2prg_checksum_state_correct || state == wav2prg_checksum_state_load_error)
      ) {
     is.hParent = state_item;
-    _snprintf(text, sizeof(text), "Loaded checksum: %u (%02x)", internal->loaded_checksum, internal->loaded_checksum);
+    snprintf(text, sizeof(text), "Loaded checksum: %u (%02x)", internal->loaded_checksum, internal->loaded_checksum);
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-    _snprintf(text, sizeof(text), "Computed checksum: %u (%02x)", internal->computed_checksum, internal->computed_checksum);
+    snprintf(text, sizeof(text), "Computed checksum: %u (%02x)", internal->computed_checksum, internal->computed_checksum);
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   }
   is.hParent = boundaries_item;
-  _snprintf(text, sizeof(text), "Last data byte ends at: %u (%02x)", last_valid_pos, last_valid_pos);
+  snprintf(text, sizeof(text), "Last data byte ends at: %u (%02x)", last_valid_pos, last_valid_pos);
   TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
   is.hInsertAfter = TVI_LAST;
   for (sync = 0; sync < num_syncs; sync++){
-    _snprintf(text, sizeof(text), "Sync");
+    snprintf(text, sizeof(text), "Sync");
     sync_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
     is.hParent = sync_item;
-    _snprintf(text, sizeof(text), "start of sync: %u (%x)", syncs[sync].start_sync, syncs[sync].start_sync);
+    snprintf(text, sizeof(text), "start of sync: %u (%x)", syncs[sync].start_sync, syncs[sync].start_sync);
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-    _snprintf(text, sizeof(text), "end of sync: %u (%x)", syncs[sync].end_sync, syncs[sync].end_sync);
+    snprintf(text, sizeof(text), "end of sync: %u (%x)", syncs[sync].end_sync, syncs[sync].end_sync);
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-    _snprintf(text, sizeof(text), "End: %u (%02x)", syncs[sync].end, syncs[sync].end);
+    snprintf(text, sizeof(text), "End: %u (%02x)", syncs[sync].end, syncs[sync].end);
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
     is.hParent = boundaries_item;
   }
   if (bytes != theoretical_size){
     if (filling == first_to_last){
-      _snprintf(text, sizeof(text), "real end: %u (%x), %u bytes instead of %u", internal->start + bytes, internal->start + bytes, bytes, theoretical_size);
+      snprintf(text, sizeof(text), "real end: %u (%x), %u bytes instead of %u", internal->start + bytes, internal->start + bytes, bytes, theoretical_size);
     }
     else
-      _snprintf(text, sizeof(text), "real start: %u (%x), %u bytes instead of %u", internal->end - bytes, internal->end - bytes, bytes, theoretical_size);
+      snprintf(text, sizeof(text), "real start: %u (%x), %u bytes instead of %u", internal->end - bytes, internal->end - bytes, bytes, theoretical_size);
     is.hParent = info_item;
     is.hInsertAfter = TVI_LAST;
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
@@ -367,11 +367,11 @@ static void display_summary(struct block_list_element *blocks, HWND hwnd)
     else
       bad_blocks++;
   }
-  _snprintf(text, sizeof(text), "%u program%s found", good_blocks, good_blocks != 1 ? "s" : "");
+  snprintf(text, sizeof(text), "%u program%s found", good_blocks, good_blocks != 1 ? "s" : "");
   parent_item = TreeView_InsertItem(hwnd, &is);
   is.hParent = parent_item;
   if (bad_blocks != 0){
-    _snprintf(text, sizeof(text), "%u program%s had load errors", bad_blocks, bad_blocks != 1 ? "s" : "");
+    snprintf(text, sizeof(text), "%u program%s had load errors", bad_blocks, bad_blocks != 1 ? "s" : "");
     TreeView_InsertItem(hwnd, &is);
   }
 
@@ -407,7 +407,7 @@ static void display_summary(struct block_list_element *blocks, HWND hwnd)
         }
         if(!match_found){
           is.hParent = pulse_types[i].tree;
-          _snprintf(text, sizeof(text), block->loader_name);
+          snprintf(text, sizeof(text), block->loader_name);
           TreeView_InsertItem(hwnd, &is);
         }
       }
@@ -415,7 +415,7 @@ static void display_summary(struct block_list_element *blocks, HWND hwnd)
         HTREEITEM pulse_root;
 
         is.hParent = parent_item;
-        _snprintf(text, sizeof(text), "Pulse type %u", num_filled);
+        snprintf(text, sizeof(text), "Pulse type %u", num_filled);
         pulse_root = TreeView_InsertItem(hwnd, &is);
         pulse_types = realloc(pulse_types, sizeof(*pulse_types) * (num_filled + 1));
         add_pulse_type_to_summary(block, pulse_types + num_filled++, hwnd, pulse_root, &is);

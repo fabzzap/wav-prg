@@ -85,7 +85,7 @@ static void write_entries_to_window(HWND window, char *filename){
       num_of_entries = get_total_entries(fd);
       num_of_used_entries = get_used_entries(fd);
       get_tape_name(tape_name, fd);
-      _snprintf(message, 1000,
+      snprintf(message, 1000,
                 "T64 file with %u total entr%s, %u used entr%s, name %s",
                 num_of_entries, num_of_entries == 1 ? "y" : "ies",
                 num_of_used_entries, num_of_used_entries == 1 ? "y" : "ies",
@@ -332,7 +332,7 @@ static void prg2wav_display_start(struct display_interface_internal *internal, u
               0, 0);
   convert_petscii_string(name, ascii_name, wav2prg_true);
 
-  _snprintf(caption, sizeof(caption), "Converting %s (%u of %u)", ascii_name, index, total);
+  snprintf(caption, sizeof(caption), "Converting %s (%u of %u)", ascii_name, index, total);
   SetDlgItemTextA(internal->status_window, IDC_PRG2WAV_CURRENT, caption);
 }
 
