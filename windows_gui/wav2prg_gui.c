@@ -168,7 +168,7 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
 
   if (!info) {
     snprintf(text, sizeof(text), "Found start of block using %s but with no valid block", internal->loader_name);
-    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
     return;
   }
 
@@ -176,16 +176,16 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
     snprintf(text, sizeof(text), "Found a block using %s (%s)", internal->loader_name, internal->observation_name);
   else
     snprintf(text, sizeof(text), "Found a block using %s", internal->loader_name);
-  internal->current_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  internal->current_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   snprintf(text, sizeof(text), "Boundaries");
   is.hParent = internal->current_item;
-  boundaries_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  boundaries_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hParent = boundaries_item;
   snprintf(text, sizeof(text), "end of info: %u (%x)", info_pos, info_pos);
-  TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hParent = internal->current_item;
   snprintf(text, sizeof(text), "Info");
-  info_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  info_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hParent = info_item;
   {
     char progname[17];
@@ -193,13 +193,13 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
     convert_petscii_string(info->name, progname, wav2prg_true);
     if(strlen(progname) > 0){
       snprintf(text, sizeof(text), "Name: %s", progname);
-      TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+      SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
     }
   }
   snprintf(text, sizeof(text), "start: %u (%x)", info->start, info->start);
-  TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   snprintf(text, sizeof(text), "end: %u (%x)", info->end, info->end);
-  TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
 
   internal->start = info->start;
   internal->end = info->end;
@@ -259,30 +259,30 @@ static void end(struct display_interface_internal *internal, unsigned char valid
     state_string = "no errors detected";
 
   snprintf(text, sizeof(text), "State: %s", state_string);
-  state_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  state_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   if(loader_has_checksum &&
      (state == wav2prg_checksum_state_correct || state == wav2prg_checksum_state_load_error)
      ) {
     is.hParent = state_item;
     snprintf(text, sizeof(text), "Loaded checksum: %u (%02x)", internal->loaded_checksum, internal->loaded_checksum);
-    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
     snprintf(text, sizeof(text), "Computed checksum: %u (%02x)", internal->computed_checksum, internal->computed_checksum);
-    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   }
   is.hParent = boundaries_item;
   snprintf(text, sizeof(text), "Last data byte ends at: %u (%02x)", last_valid_pos, last_valid_pos);
-  TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+  SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hInsertAfter = TVI_LAST;
   for (sync = 0; sync < num_syncs; sync++){
     snprintf(text, sizeof(text), "Sync");
-    sync_item = TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    sync_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
     is.hParent = sync_item;
     snprintf(text, sizeof(text), "start of sync: %u (%x)", syncs[sync].start_sync, syncs[sync].start_sync);
-    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
     snprintf(text, sizeof(text), "end of sync: %u (%x)", syncs[sync].end_sync, syncs[sync].end_sync);
-    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
     snprintf(text, sizeof(text), "End: %u (%02x)", syncs[sync].end, syncs[sync].end);
-    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
     is.hParent = boundaries_item;
   }
   if (bytes != theoretical_size){
@@ -293,7 +293,7 @@ static void end(struct display_interface_internal *internal, unsigned char valid
       snprintf(text, sizeof(text), "real start: %u (%x), %u bytes instead of %u", internal->end - bytes, internal->end - bytes, bytes, theoretical_size);
     is.hParent = info_item;
     is.hInsertAfter = TVI_LAST;
-    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
+    SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   }
 }
 
@@ -323,27 +323,27 @@ static void add_pulse_type_to_summary(struct block_list_element *block,
   is->hParent = pulse_root;
   pulse_type->block = block;
   sprintf(is->item.pszText, "Used by");
-  pulse_type->tree = TreeView_InsertItem(hwnd, is);
+  pulse_type->tree = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
   is->hParent = pulse_type->tree;
   sprintf(is->item.pszText, block->loader_name);
-  TreeView_InsertItem(hwnd, is);
+  SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
   is->hParent = pulse_root;
   sprintf(is->item.pszText, "Thresholds");
-  is->hParent = TreeView_InsertItem(hwnd, is);
+  is->hParent = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
   for (i = 0; i < block->num_pulse_lengths - 1; i++){
     sprintf(is->item.pszText, "%u", block->thresholds[i]);
-    TreeView_InsertItem(hwnd, is);
+    SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
   }
   for (i = 0; i < block->num_pulse_lengths; i++){
     is->hParent = pulse_root;
     sprintf(is->item.pszText, "Pulse %u", i);
-    is->hParent = TreeView_InsertItem(hwnd, is);
+    is->hParent = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
     sprintf(is->item.pszText, "Min measured: %u", get_min_measured(tolerances, i));
-    TreeView_InsertItem(hwnd, is);
+    SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
     sprintf(is->item.pszText, "Max measured: %u", get_max_measured(tolerances, i));
-    TreeView_InsertItem(hwnd, is);
+    SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
     sprintf(is->item.pszText, "Average: %u", get_average(tolerances, i));
-    TreeView_InsertItem(hwnd, is);
+    SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
   }
 }
 
@@ -363,11 +363,11 @@ static void display_summary(struct block_list_element *blocks, HWND hwnd)
       bad_blocks++;
   }
   snprintf(text, sizeof(text), "%u program%s found", good_blocks, good_blocks != 1 ? "s" : "");
-  parent_item = TreeView_InsertItem(hwnd, &is);
+  parent_item = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hParent = parent_item;
   if (bad_blocks != 0){
     snprintf(text, sizeof(text), "%u program%s had load errors", bad_blocks, bad_blocks != 1 ? "s" : "");
-    TreeView_InsertItem(hwnd, &is);
+    SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)&is);
   }
 
   if(good_blocks + bad_blocks > 0){
@@ -395,15 +395,15 @@ static void display_summary(struct block_list_element *blocks, HWND hwnd)
 
         match_found = 0;
         for(item = TreeView_GetNextItem(hwnd, pulse_types[i].tree, TVGN_CHILD); item != NULL; item = TreeView_GetNextSibling(hwnd, item)){
-          TVITEM is2 = {TVIF_TEXT, item, 0, 0, text, sizeof(text)};
-          TreeView_GetItem(hwnd, &is2);
+          TVITEMA is2 = {TVIF_TEXT, item, 0, 0, text, sizeof(text)};
+          SendMessageA(hwnd, TVM_GETITEMA, 0, (LPARAM)&is2);
           if(!strcmp(block->loader_name, text))
             match_found = 1;
         }
         if(!match_found){
           is.hParent = pulse_types[i].tree;
           snprintf(text, sizeof(text), block->loader_name);
-          TreeView_InsertItem(hwnd, &is);
+          SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)&is);
         }
       }
       else{
@@ -411,7 +411,7 @@ static void display_summary(struct block_list_element *blocks, HWND hwnd)
 
         is.hParent = parent_item;
         snprintf(text, sizeof(text), "Pulse type %u", num_filled);
-        pulse_root = TreeView_InsertItem(hwnd, &is);
+        pulse_root = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)&is);
         pulse_types = realloc(pulse_types, sizeof(*pulse_types) * (num_filled + 1));
         add_pulse_type_to_summary(block, pulse_types + num_filled++, hwnd, pulse_root, &is);
       }
