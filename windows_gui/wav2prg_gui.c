@@ -176,16 +176,16 @@ static void sync(struct display_interface_internal *internal, uint32_t info_pos,
     snprintf(text, sizeof(text), "Found a block using %s (%s)", internal->loader_name, internal->observation_name);
   else
     snprintf(text, sizeof(text), "Found a block using %s", internal->loader_name);
-  internal->current_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
+  internal->current_item = (HTREEITEM)SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   snprintf(text, sizeof(text), "Boundaries");
   is.hParent = internal->current_item;
-  boundaries_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
+  boundaries_item = (HTREEITEM)SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hParent = boundaries_item;
   snprintf(text, sizeof(text), "end of info: %u (%x)", info_pos, info_pos);
   SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hParent = internal->current_item;
   snprintf(text, sizeof(text), "Info");
-  info_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
+  info_item = (HTREEITEM)SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hParent = info_item;
   {
     char progname[17];
@@ -259,7 +259,7 @@ static void end(struct display_interface_internal *internal, unsigned char valid
     state_string = "no errors detected";
 
   snprintf(text, sizeof(text), "State: %s", state_string);
-  state_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
+  state_item = (HTREEITEM)SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
   if(loader_has_checksum &&
      (state == wav2prg_checksum_state_correct || state == wav2prg_checksum_state_load_error)
      ) {
@@ -275,7 +275,7 @@ static void end(struct display_interface_internal *internal, unsigned char valid
   is.hInsertAfter = TVI_LAST;
   for (sync = 0; sync < num_syncs; sync++){
     snprintf(text, sizeof(text), "Sync");
-    sync_item = SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
+    sync_item = (HTREEITEM)SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
     is.hParent = sync_item;
     snprintf(text, sizeof(text), "start of sync: %u (%x)", syncs[sync].start_sync, syncs[sync].start_sync);
     SendMessageA(GetDlgItem(internal->window, IDC_FOUND), TVM_INSERTITEMA, 0, (LPARAM)&is);
@@ -323,13 +323,13 @@ static void add_pulse_type_to_summary(struct block_list_element *block,
   is->hParent = pulse_root;
   pulse_type->block = block;
   sprintf(is->item.pszText, "Used by");
-  pulse_type->tree = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
+  pulse_type->tree = (HTREEITEM)SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
   is->hParent = pulse_type->tree;
   sprintf(is->item.pszText, block->loader_name);
   SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
   is->hParent = pulse_root;
   sprintf(is->item.pszText, "Thresholds");
-  is->hParent = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
+  is->hParent = (HTREEITEM)SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
   for (i = 0; i < block->num_pulse_lengths - 1; i++){
     sprintf(is->item.pszText, "%u", block->thresholds[i]);
     SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
@@ -337,7 +337,7 @@ static void add_pulse_type_to_summary(struct block_list_element *block,
   for (i = 0; i < block->num_pulse_lengths; i++){
     is->hParent = pulse_root;
     sprintf(is->item.pszText, "Pulse %u", i);
-    is->hParent = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
+    is->hParent = (HTREEITEM)SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
     sprintf(is->item.pszText, "Min measured: %u", get_min_measured(tolerances, i));
     SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)is);
     sprintf(is->item.pszText, "Max measured: %u", get_max_measured(tolerances, i));
@@ -363,7 +363,7 @@ static void display_summary(struct block_list_element *blocks, HWND hwnd)
       bad_blocks++;
   }
   snprintf(text, sizeof(text), "%u program%s found", good_blocks, good_blocks != 1 ? "s" : "");
-  parent_item = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)&is);
+  parent_item = (HTREEITEM)SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)&is);
   is.hParent = parent_item;
   if (bad_blocks != 0){
     snprintf(text, sizeof(text), "%u program%s had load errors", bad_blocks, bad_blocks != 1 ? "s" : "");
@@ -411,7 +411,7 @@ static void display_summary(struct block_list_element *blocks, HWND hwnd)
 
         is.hParent = parent_item;
         snprintf(text, sizeof(text), "Pulse type %u", num_filled);
-        pulse_root = SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)&is);
+        pulse_root = (HTREEITEM)SendMessageA(hwnd, TVM_INSERTITEMA, 0, (LPARAM)&is);
         pulse_types = realloc(pulse_types, sizeof(*pulse_types) * (num_filled + 1));
         add_pulse_type_to_summary(block, pulse_types + num_filled++, hwnd, pulse_root, &is);
       }
