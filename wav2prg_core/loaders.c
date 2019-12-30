@@ -18,7 +18,7 @@
 #include "loaders.h"
 #include "observers.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
@@ -194,7 +194,7 @@ register_dynamic_loader(const char *filename)
 
 void register_loaders(void) {
 #ifdef DYNAMIC_LOADING
-#ifdef WIN32
+#ifdef _WIN32
   HANDLE dir;
   WIN32_FIND_DATAA file;
   int items = 0;

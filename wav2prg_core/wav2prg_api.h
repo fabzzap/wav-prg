@@ -182,7 +182,7 @@ struct wav2prg_all_observers {
   } *observers;
 };
 
-#if defined WIN32 || defined __CYGWIN__ || defined linux || defined __APPLE__ || defined __HAIKU__
+#if defined _WIN32 || defined __CYGWIN__ || defined linux || defined __APPLE__ || defined __HAIKU__
 #define DYNAMIC_LOADING
 #endif
 

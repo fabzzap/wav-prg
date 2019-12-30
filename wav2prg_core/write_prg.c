@@ -18,7 +18,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#ifdef WIN32
+#ifdef _WIN32
 #include <io.h>
 #else
 #include <unistd.h>
@@ -35,7 +35,7 @@ static int ReduceName(const char *sC64Name, char *pDosName){
   size_t iLen = strlen(sC64Name);
   int i;
   char *p = pDosName;
-#if (defined MSDOS || defined _WINDOWS)
+#if (defined MSDOS || defined _WIN32)
   int hFile;
 #endif
 
@@ -136,7 +136,7 @@ Copy:
   /* overcome limitations of FAT filesystem.
      A nicer, more portable way of finding names
      not accepted by FAT is needed */
-#if (defined MSDOS || defined _WINDOWS)
+#if (defined MSDOS || defined _WIN32)
   hFile = open(pDosName, O_RDONLY);
   if (hFile == -1) {
     return 1;
@@ -190,7 +190,7 @@ void write_prg(struct block_list_element *blocks, const char *dirname, enum wav2
         for (i = 0; i < 100; i++) {
           sprintf(extension, ".p%02d", i);
           /* What a pity: fopen does not support the flag "x" on all platforms */
-    #if (defined WIN32 || defined __CYGWIN__)
+    #if (defined _WIN32 || defined __CYGWIN__)
           fildes =
             open(fullpathname, O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
                  S_IREAD | S_IWRITE);
@@ -226,7 +226,7 @@ void write_prg(struct block_list_element *blocks, const char *dirname, enum wav2
         else
           sprintf(extension, "_%d.prg", i);
         fildes =
-  #if (defined WIN32 || defined __CYGWIN__)
+  #if (defined _WIN32 || defined __CYGWIN__)
               open(fullpathname, O_WRONLY | O_CREAT | O_EXCL | O_BINARY,
                    S_IREAD | S_IWRITE);
   #else
