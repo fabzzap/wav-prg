@@ -160,19 +160,14 @@ static void try_sync(struct display_interface_internal* internal, const char* lo
   internal->observation_name = observation_name;
 }
 
-static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct program_block_info* info/*, const struct wav2prg_observed_loaders* dependencies*/)
+static void sync(struct display_interface_internal *internal, uint32_t info_pos, struct program_block_info* info)
 {
   char text[1024];
   TVINSERTSTRUCTA is = {NULL,TVI_LAST,{TVIF_TEXT,NULL,0,0,text}};
   HTREEITEM boundaries_item, info_item;
 
-  if (!info /*&& !dependencies*/) {
-    snprintf(text, sizeof(text), "Found start of block using %s but with no valid block", internal->loader_name);
-    TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
-    return;
-  }
   if (!info) {
-    snprintf(text, sizeof(text), "Found start of block using %s but could not determine block info", internal->loader_name);
+    snprintf(text, sizeof(text), "Found start of block using %s but with no valid block", internal->loader_name);
     TreeView_InsertItem(GetDlgItem(internal->window, IDC_FOUND), &is);
     return;
   }
