@@ -45,15 +45,21 @@ static enum wav2prg_bool recognize_turbotape_slow_jackson(struct wav2prg_observe
   uint8_t signature[] = {0x84, 0xd7, 0xa9 /*,threshold low byte*/, 0x8d, 0x06, 0xdd, 0xa2/*,threshold high byte*/, 0x20};
   uint8_t signature_encrypted[] = {0x9, 0xaf, 0x53, 0x1b, 0xc, 0xbb, 0x45, 0x40};
   enum wav2prg_bool found = wav2prg_false, encrypted = wav2prg_false;
+  const uint8_t *data = 0;
+
   if (block->info.end - block->info.start == 1057
-    || block->info.end - block->info.start == 1058) {
-    found = check_signature(block->data, signature);
+    || block->info.end - block->info.start == 1058)
+    data = block->data;
+  else if (block->info.end - block->info.start == 1312)
+    data = block->data + 0x100;
+  if (data) {
+    found = check_signature(data, signature);
     if (!found) {
       encrypted = wav2prg_true;
-      found = check_signature(block->data, signature_encrypted);
+      found = check_signature(data, signature_encrypted);
     }
     if (found) {
-      uint8_t low_byte = block->data[0x102], high_byte = block->data[0x107];
+      uint8_t low_byte = data[0x102], high_byte = data[0x107];
       struct wav2prg_plugin_conf *conf = observer_functions->get_conf_func(observer_context);
       if (encrypted) {
         low_byte = decrypted_byte(low_byte);
