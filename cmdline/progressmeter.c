@@ -20,7 +20,7 @@
 #include <unistd.h>
 #endif
 #include <signal.h>
-#ifndef WIN32
+#ifndef _WIN32
 #include <sys/ioctl.h>
 #include <termios.h>
 #else
