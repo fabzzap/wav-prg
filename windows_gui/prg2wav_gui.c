@@ -441,7 +441,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
   BOOL end_found = FALSE;
   uint8_t videotype;
   LRESULT selected_clock, selected_waveform;
-  HBITMAP stop_icon;
+  HBITMAP stop_icon = NULL;
   BOOL is_to_sound;
 
   name[0] = 0;
@@ -638,7 +638,7 @@ static void choose_destination_file_and_convert(HWND hwnd, struct prg2wav_params
 
   tap2audio_close(params->file);
   remove_all_simple_block_list_elements(&params->program);
-  if (IsDlgButtonChecked(hwnd, IDC_TO_SOUND)) {
+  if (is_to_sound) {
     DeleteObject(play_pause_stop.play_icon);
     DeleteObject(play_pause_stop.pause_icon);
     DeleteObject(stop_icon);

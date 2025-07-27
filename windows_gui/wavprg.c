@@ -42,6 +42,7 @@ static void set_library_status_message(enum library_status status, HWND hwnd, in
     message="Present, but initialization failed";
     break;
   case LIBRARY_OK:
+  default:
     message="OK";
     break;
   }
@@ -123,8 +124,8 @@ LPARAM lParam // second message parameter
 }
 
 int WINAPI
-WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-        LPSTR lpCmdLine, int nCmdShow){
+WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPSTR lpCmdLine, _In_ int nCmdShow){
   char *current_directory;
   DWORD current_directory_len, current_directory_len2;
 

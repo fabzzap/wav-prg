@@ -317,6 +317,7 @@ void prg2wav_convert(struct simple_block_list_element *block_list,
 
   switch (machine){
   case TAP_MACHINE_C64:
+  default:
     header_chunk = c64_header_chunk;
     data_chunk = c64_data_chunk;
     size_of_header_chunk = sizeof(c64_header_chunk);
